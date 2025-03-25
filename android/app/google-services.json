@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "721239793207",
+    "project_id": "animal-health-d4d0d",
+    "storage_bucket": "animal-health-d4d0d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721239793207:android:4b0a3ea8e9851179e3a9b2",
+        "android_client_info": {
+          "package_name": "com.MouseInc.animal_health"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmYfIaPPuRZUrate1GgHJIZEBgFAG89yk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
