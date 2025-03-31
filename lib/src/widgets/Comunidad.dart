@@ -12,7 +12,7 @@ import 'ListadeAnimales.dart';
 import 'CompradeProductos.dart';
 import 'CuidadosyRecomendaciones.dart';
 import 'Emergencias.dart';
-import 'Cearpublicaciones.dart';
+import 'Crearpublicaciones.dart';
 
 class Comunidad extends StatelessWidget {
   const Comunidad({
@@ -27,7 +27,7 @@ class Comunidad extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -975,7 +975,7 @@ class Comunidad extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Cearpublicaciones(key: Key('Cearpublicaciones'),),
+                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones'),),
                 ),
               ],
               child: Container(

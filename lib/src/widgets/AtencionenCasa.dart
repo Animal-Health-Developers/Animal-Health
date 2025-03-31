@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
+import 'PerfilPublico.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'Emergencias.dart';
 import 'Home.dart';
@@ -9,10 +10,10 @@ import 'ListadeAnimales.dart';
 import 'CompradeProductos.dart';
 import 'CuidadosyRecomendaciones.dart';
 import 'Comunidad.dart';
-import 'Cearpublicaciones.dart';
+import 'Crearpublicaciones.dart';
 
 class AtencionenCasa extends StatelessWidget {
-  const AtencionenCasa({
+  AtencionenCasa({
     required Key key,
   }) : super(key: key);
   @override
@@ -24,11 +25,11 @@ class AtencionenCasa extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 307.0, end: 33.0),
@@ -65,7 +66,7 @@ class AtencionenCasa extends StatelessWidget {
               height: 31.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/busqueda1.png'),
                   fit: BoxFit.fill,
                 ),
               ),
@@ -74,13 +75,23 @@ class AtencionenCasa extends StatelessWidget {
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
             Pin(size: 60.0, middle: 0.1947),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
+            child: PageLink(
+              links: [
+                PageLinkInfo(
+                  transition: LinkTransition.Fade,
+                  ease: Curves.easeOut,
+                  duration: 0.3,
+                  pageBuilder: () => PerfilPublico(key: Key("PerfilPublico"),),
                 ),
-                borderRadius: BorderRadius.circular(10.0),
+              ],
+              child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
+                    fit: BoxFit.fill,
+                  ),
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
               ),
             ),
           ),
@@ -117,7 +128,7 @@ class AtencionenCasa extends StatelessWidget {
                       height: 32.0,
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: const AssetImage(''),
+                          image: const AssetImage('assets/images/back.png'),
                           fit: BoxFit.fill,
                         ),
                       ),
@@ -138,7 +149,7 @@ class AtencionenCasa extends StatelessWidget {
                 child: Stack(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -446.0),
+                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 446.0),
                       child: SingleChildScrollView(
                         primary: false,
                         child: Wrap(
@@ -596,7 +607,7 @@ class AtencionenCasa extends StatelessWidget {
                                       height: 120.0,
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                          image: const AssetImage(''),
+                                          image: const AssetImage('assets/images/adjuntarhistoria.png'),
                                           fit: BoxFit.fill,
                                         ),
                                       ),
@@ -632,7 +643,7 @@ class AtencionenCasa extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/solicitaratencion.png'),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -660,13 +671,13 @@ class AtencionenCasa extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
+                  pageBuilder: () => Home(),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -685,13 +696,13 @@ class AtencionenCasa extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -713,7 +724,7 @@ class AtencionenCasa extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -735,7 +746,7 @@ class AtencionenCasa extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -757,7 +768,7 @@ class AtencionenCasa extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/store.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -773,13 +784,13 @@ class AtencionenCasa extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
+                  pageBuilder: () => Home(),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/noticias.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -802,7 +813,7 @@ class AtencionenCasa extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/cuidadosrecomendaciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -825,7 +836,7 @@ class AtencionenCasa extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/emergencias.png'),
                     fit: BoxFit.fill,
                   ),
                   boxShadow: [
@@ -855,7 +866,7 @@ class AtencionenCasa extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/comunidad.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -871,13 +882,13 @@ class AtencionenCasa extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Cearpublicaciones(key: Key('Cearpublicaciones'),),
+                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/crearpublicacion.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

@@ -12,7 +12,7 @@ import 'CompradeProductos.dart';
 import 'CuidadosyRecomendaciones.dart';
 import 'Emergencias.dart';
 import 'Comunidad.dart';
-import 'Cearpublicaciones.dart';
+import 'Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Atragantamiento extends StatelessWidget {
@@ -601,7 +601,7 @@ class Atragantamiento extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Cearpublicaciones(key: Key('Cearpublicaciones'),),
+                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones'),),
                 ),
               ],
               child: Container(

@@ -13,11 +13,11 @@ import 'ListadeAnimales.dart';
 import 'CuidadosyRecomendaciones.dart';
 import 'Emergencias.dart';
 import 'Comunidad.dart';
-import 'Cearpublicaciones.dart';
+import 'Crearpublicaciones.dart';
 
 class Home extends StatelessWidget {
-  const Home({
-    required Key key,
+  Home({
+    Key? key,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -28,11 +28,11 @@ class Home extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
@@ -40,7 +40,7 @@ class Home extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/logo.png'),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.circular(15.0),
@@ -63,7 +63,7 @@ class Home extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -105,7 +105,7 @@ class Home extends StatelessWidget {
               height: 31.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/busqueda1.png'),
                   fit: BoxFit.fill,
                 ),
               ),
@@ -120,13 +120,13 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key("PerfilPublico"),),
+                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
                     fit: BoxFit.fill,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -145,7 +145,7 @@ class Home extends StatelessWidget {
                 child: Stack(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -1348.0),
+                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 1348.0),
                       child: GridView.count(
                         mainAxisSpacing: 9,
                         crossAxisSpacing: 20,
@@ -180,13 +180,13 @@ class Home extends StatelessWidget {
                                                 ease: Curves.easeOut,
                                                 duration: 0.3,
                                                 pageBuilder: () =>
-                                                    DetallesdeFotooVideo(key: Key("DetallesdeFotooVideo"),),
+                                                    DetallesdeFotooVideo(key: Key('DetallesdeFotooVideo'),),
                                               ),
                                             ],
                                             child: Container(
                                               decoration: BoxDecoration(
                                                 image: DecorationImage(
-                                                  image: const AssetImage(''),
+                                                  image: const AssetImage('assets/images/esterilizacion.jpg'),
                                                   fit: BoxFit.cover,
                                                 ),
                                               ),
@@ -214,13 +214,13 @@ class Home extends StatelessWidget {
                                                 ease: Curves.easeOut,
                                                 duration: 0.3,
                                                 pageBuilder: () =>
-                                                    DetallesdeFotooVideo(key: Key("DetallesdeFotooVideo"),),
+                                                    DetallesdeFotooVideo(key: Key('DetallesdeFotooVideo'),),
                                               ),
                                             ],
                                             child: Container(
                                               decoration: BoxDecoration(
                                                 image: DecorationImage(
-                                                  image: const AssetImage(''),
+                                                  image: const AssetImage('assets/images/perla.jpg'),
                                                   fit: BoxFit.cover,
                                                 ),
                                               ),
@@ -258,14 +258,14 @@ class Home extends StatelessWidget {
                                                     ease: Curves.easeOut,
                                                     duration: 0.3,
                                                     pageBuilder: () =>
-                                                        DetallesdeFotooVideo(key: Key("DetallesdeFotooVideo"),),
+                                                        DetallesdeFotooVideo(key: Key('DetallesdeFotooVideo'),),
                                                   ),
                                                 ],
                                                 child: Container(
                                                   decoration: BoxDecoration(
                                                     image: DecorationImage(
                                                       image:
-                                                          const AssetImage(''),
+                                                          const AssetImage('assets/images/imagenpublicacion.jpg'),
                                                       fit: BoxFit.cover,
                                                     ),
                                                     boxShadow: [
@@ -335,16 +335,27 @@ class Home extends StatelessWidget {
                                               Pinned.fromPins(
                                                 Pin(size: 40.0, start: 7.0),
                                                 Pin(size: 40.0, start: 6.0),
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    image: DecorationImage(
-                                                      image:
-                                                          const AssetImage(''),
-                                                      fit: BoxFit.fill,
+                                                child: PageLink(
+                                                  links: [
+                                                    PageLinkInfo(
+                                                      transition:
+                                                          LinkTransition.Fade,
+                                                      ease: Curves.easeOut,
+                                                      duration: 0.3,
+                                                      pageBuilder: () =>
+                                                          PerfilPublico(key: Key('PerfilPublico'),),
                                                     ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            5.0),
+                                                  ],
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      image: DecorationImage(
+                                                        image: const AssetImage('assets/images/perfilusuario.jpeg'),
+                                                        fit: BoxFit.fill,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              5.0),
+                                                    ),
                                                   ),
                                                 ),
                                               ),
@@ -451,7 +462,7 @@ class Home extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/like.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -494,14 +505,25 @@ class Home extends StatelessWidget {
                                         Pinned.fromPins(
                                           Pin(size: 40.0, start: 5.0),
                                           Pin(size: 40.0, start: 5.0),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: const AssetImage(''),
-                                                fit: BoxFit.fill,
+                                          child: PageLink(
+                                            links: [
+                                              PageLinkInfo(
+                                                transition: LinkTransition.Fade,
+                                                ease: Curves.easeOut,
+                                                duration: 0.3,
+                                                pageBuilder: () =>
+                                                    PerfilPublico(key: Key('PerfilPublico'),),
                                               ),
-                                              borderRadius:
-                                                  BorderRadius.circular(5.0),
+                                            ],
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                image: DecorationImage(
+                                                  image: const AssetImage('assets/images/minambiente.png'),
+                                                  fit: BoxFit.fill,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(5.0),
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -515,7 +537,7 @@ class Home extends StatelessWidget {
                                       height: 40.0,
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                          image: const AssetImage(''),
+                                          image: const AssetImage('assets/images/comments.png'),
                                           fit: BoxFit.fill,
                                         ),
                                       ),
@@ -527,7 +549,7 @@ class Home extends StatelessWidget {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                          image: const AssetImage(''),
+                                          image: const AssetImage('assets/images/save.png'),
                                           fit: BoxFit.fill,
                                         ),
                                       ),
@@ -626,7 +648,7 @@ class Home extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/like.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -638,7 +660,7 @@ class Home extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/comments.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -650,7 +672,7 @@ class Home extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/save.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -668,7 +690,7 @@ class Home extends StatelessWidget {
                                           ease: Curves.easeOut,
                                           duration: 0.3,
                                           pageBuilder: () =>
-                                              CompartirPublicacion(key: Key("CompartirPublicacion"),),
+                                              CompartirPublicacion(key: Key('CompartirPublicacion'),),
                                         ),
                                       ],
                                       child: Container(
@@ -676,7 +698,7 @@ class Home extends StatelessWidget {
                                         height: 40.0,
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/share.png'),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -719,7 +741,7 @@ class Home extends StatelessWidget {
                                           ease: Curves.easeOut,
                                           duration: 0.3,
                                           pageBuilder: () =>
-                                              CompartirPublicacion(key: Key("CompartirPublicacion"),),
+                                              CompartirPublicacion(key: Key('CompartirPublicacion'),),
                                         ),
                                       ],
                                       child: Container(
@@ -727,7 +749,7 @@ class Home extends StatelessWidget {
                                         height: 40.0,
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/share.png'),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -792,7 +814,7 @@ class Home extends StatelessWidget {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                          image: const AssetImage(''),
+                                          image: const AssetImage('assets/images/like.png'),
                                           fit: BoxFit.fill,
                                         ),
                                       ),
@@ -804,7 +826,7 @@ class Home extends StatelessWidget {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                          image: const AssetImage(''),
+                                          image: const AssetImage('assets/images/comments.png'),
                                           fit: BoxFit.fill,
                                         ),
                                       ),
@@ -816,7 +838,7 @@ class Home extends StatelessWidget {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                          image: const AssetImage(''),
+                                          image: const AssetImage('assets/images/save.png'),
                                           fit: BoxFit.fill,
                                         ),
                                       ),
@@ -879,13 +901,13 @@ class Home extends StatelessWidget {
                                           ease: Curves.easeOut,
                                           duration: 0.3,
                                           pageBuilder: () =>
-                                              CompartirPublicacion(key: Key("CompartirPublicacion"),),
+                                              CompartirPublicacion(key: Key('CompartirPublicacion'),),
                                         ),
                                       ],
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/share.png'),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -953,13 +975,23 @@ class Home extends StatelessWidget {
                               Pinned.fromPins(
                                 Pin(size: 40.0, start: 7.0),
                                 Pin(size: 40.0, middle: 0.3297),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                      image: const AssetImage(''),
-                                      fit: BoxFit.fill,
+                                child: PageLink(
+                                  links: [
+                                    PageLinkInfo(
+                                      transition: LinkTransition.Fade,
+                                      ease: Curves.easeOut,
+                                      duration: 0.3,
+                                      pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
                                     ),
-                                    borderRadius: BorderRadius.circular(5.0),
+                                  ],
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: const AssetImage('assets/images/La-Perla.jpg'),
+                                        fit: BoxFit.fill,
+                                      ),
+                                      borderRadius: BorderRadius.circular(5.0),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -970,7 +1002,7 @@ class Home extends StatelessWidget {
                                   height: 30.0,
                                   decoration: BoxDecoration(
                                     image: DecorationImage(
-                                      image: const AssetImage(''),
+                                      image: const AssetImage('assets/images/comments.png'),
                                       fit: BoxFit.fill,
                                     ),
                                   ),
@@ -995,13 +1027,13 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key("Settings"),),
+                  pageBuilder: () => Settings(key: Key('Settings'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -1017,13 +1049,13 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CompradeProductos(key: Key("CompradeProductos"),),
+                  pageBuilder: () => CompradeProductos(key: Key('CompradeProductos'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/store.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -1039,13 +1071,13 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key("ListadeAnimales"),),
+                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -1058,7 +1090,7 @@ class Home extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/noticias.png'),
                   fit: BoxFit.fill,
                 ),
                 boxShadow: [
@@ -1079,7 +1111,7 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CuidadosyRecomendaciones(key: Key("CuidadosyRecomendaciones"),),
+                  pageBuilder: () => CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones'),),
                 ),
               ],
               child: Container(
@@ -1087,7 +1119,7 @@ class Home extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/cuidadosrecomendaciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -1102,7 +1134,7 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Emergencias(key: Key("Emergencias"),),
+                  pageBuilder: () => Emergencias(key: Key('Emergencias'),),
                 ),
               ],
               child: Container(
@@ -1110,7 +1142,7 @@ class Home extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/emergencias.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -1125,7 +1157,7 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Comunidad(key: Key("Comunidad"),),
+                  pageBuilder: () => Comunidad(key: Key('Comunidad'),),
                 ),
               ],
               child: Container(
@@ -1133,7 +1165,7 @@ class Home extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/comunidad.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -1149,13 +1181,13 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Cearpublicaciones(key: Key("Cearpublicaciones"),),
+                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones')),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/crearpublicacion.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

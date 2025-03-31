@@ -12,7 +12,7 @@ import 'CompradeProductos.dart';
 import 'CuidadosyRecomendaciones.dart';
 import 'Emergencias.dart';
 import 'Comunidad.dart';
-import 'Cearpublicaciones.dart';
+import 'Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Alergias extends StatelessWidget {
@@ -586,7 +586,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Cearpublicaciones(key: Key("Cearpublicaciones"),),
+                  pageBuilder: () => Crearpublicaciones(key: Key("Crearpublicaciones"),),
                 ),
               ],
               child: Container(
@@ -603,6 +603,9 @@ class Alergias extends StatelessWidget {
       ),
     );
   }
+}
+
+class Cearpublicaciones {
 }
 
 const String _svg_k0evxa =

@@ -43,11 +43,11 @@ class Serviciosveterinarios extends StatelessWidget {
           Transform.translate(
             offset: Offset(53.5, 195.0),
             child: Container(
-              width: 42.0,
+              width: 45.0,
               height: 45.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/consultageneral.png'),
                   fit: BoxFit.fill,
                 ),
               ),

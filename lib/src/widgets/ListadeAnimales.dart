@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'PerfilPublico.dart';
-import 'CrearPerfildeAnimalesdeCompaia.dart';
-import 'Settings.dart';
-import 'EditarPerfildeAnimalesdeCompaia.dart';
+import './Ayuda.dart';
+import './PerfilPublico.dart';
+import './CrearPerfildeAnimalesdeCompaia.dart';
+import './Settings.dart';
+import './EditarPerfildeAnimalesdeCompaia.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ListadeAnimales extends StatelessWidget {
-  const ListadeAnimales({
+  ListadeAnimales({
     required Key key,
   }) : super(key: key);
   @override
@@ -23,11 +23,11 @@ class ListadeAnimales extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
@@ -38,13 +38,13 @@ class ListadeAnimales extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home')),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -73,7 +73,7 @@ class ListadeAnimales extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -89,13 +89,13 @@ class ListadeAnimales extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -117,7 +117,7 @@ class ListadeAnimales extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
                     fit: BoxFit.fill,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -163,13 +163,13 @@ class ListadeAnimales extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CrearPerfildeAnimalesdeCompaia(key: Key("CrearPerfildeAnimalesdeCompaia"),),
+                  pageBuilder: () => CrearPerfildeAnimalesdeCompaia(key: Key('CrearPerfildeAnimalesdeCompaia'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/crearperfilanimal.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -210,13 +210,13 @@ class ListadeAnimales extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key("Settings"),),
+                  pageBuilder: () => Settings(key: Key('Settings'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -234,7 +234,7 @@ class ListadeAnimales extends StatelessWidget {
                 child: Stack(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -369.0),
+                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 369.0),
                       child: SingleChildScrollView(
                         primary: false,
                         child: Wrap(
@@ -271,13 +271,13 @@ class ListadeAnimales extends StatelessWidget {
                                           ease: Curves.easeOut,
                                           duration: 0.3,
                                           pageBuilder: () =>
-                                              EditarPerfildeAnimalesdeCompaia(key: Key("EditarPerfildeAnimalesdeCompaia"),),
+                                              EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
                                         ),
                                       ],
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/kitty.jpg'),
                                             fit: BoxFit.fill,
                                           ),
                                           borderRadius:
@@ -300,7 +300,7 @@ class ListadeAnimales extends StatelessWidget {
                                               ease: Curves.easeOut,
                                               duration: 0.3,
                                               pageBuilder: () =>
-                                                  EditarPerfildeAnimalesdeCompaia(key: Key("EditarPerfildeAnimalesdeCompaia"),),
+                                                  EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
                                             ),
                                           ],
                                           child: Container(
@@ -331,7 +331,7 @@ class ListadeAnimales extends StatelessWidget {
                                               ease: Curves.easeOut,
                                               duration: 0.3,
                                               pageBuilder: () =>
-                                                  EditarPerfildeAnimalesdeCompaia(key: Key("EditarPerfildeAnimalesdeCompaia"),),
+                                                  EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
                                             ),
                                           ],
                                           child: Container(
@@ -374,7 +374,7 @@ class ListadeAnimales extends StatelessWidget {
                                           ease: Curves.easeOut,
                                           duration: 0.3,
                                           pageBuilder: () =>
-                                              EditarPerfildeAnimalesdeCompaia(key: Key("EditarPerfildeAnimalesdeCompaia"),),
+                                              EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
                                         ),
                                       ],
                                       child: Container(
@@ -382,7 +382,7 @@ class ListadeAnimales extends StatelessWidget {
                                         height: 80.0,
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/donut.jpg'),
                                             fit: BoxFit.fill,
                                           ),
                                           borderRadius:
@@ -394,14 +394,25 @@ class ListadeAnimales extends StatelessWidget {
                                   Pinned.fromPins(
                                     Pin(size: 80.0, start: 0.5),
                                     Pin(size: 80.0, end: 0.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.fill,
+                                    child: PageLink(
+                                      links: [
+                                        PageLinkInfo(
+                                          transition: LinkTransition.Fade,
+                                          ease: Curves.easeOut,
+                                          duration: 0.3,
+                                          pageBuilder: () =>
+                                              EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
                                         ),
-                                        borderRadius:
-                                            BorderRadius.circular(15.0),
+                                      ],
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            image: const AssetImage('assets/images/kitty.jpg'),
+                                            fit: BoxFit.fill,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(15.0),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -450,7 +461,7 @@ class ListadeAnimales extends StatelessWidget {
                                               ease: Curves.easeOut,
                                               duration: 0.3,
                                               pageBuilder: () =>
-                                                  EditarPerfildeAnimalesdeCompaia(key: Key("EditarPerfildeAnimalesdeCompaia"),),
+                                                  EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
                                             ),
                                           ],
                                           child: Container(

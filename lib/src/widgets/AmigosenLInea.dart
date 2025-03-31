@@ -13,7 +13,7 @@ import 'ListadeAnimales.dart';
 import 'CompradeProductos.dart';
 import 'CuidadosyRecomendaciones.dart';
 import 'Emergencias.dart';
-import 'Cearpublicaciones.dart';
+import 'Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AmigosenLInea extends StatelessWidget {
@@ -867,7 +867,7 @@ class AmigosenLInea extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Cearpublicaciones(key: Key('Cearpublicaciones'),),
+                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones'),),
                 ),
               ],
               child: Container(

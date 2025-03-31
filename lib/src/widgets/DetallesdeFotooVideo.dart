@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' show AssetImage, BackdropFilter, Border, BorderRadius, BoxDecoration, BoxFit, BuildContext, ClipRect, Color, Container, Curves, DecorationImage, EdgeInsets, FontWeight, Key, Scaffold, SingleChildScrollView, SizedBox, Stack, StatelessWidget, Text, TextAlign, TextHeightBehavior, TextStyle, Widget;
 import 'package:adobe_xd/pinned.dart';
 import 'Home.dart';
 import 'package:adobe_xd/page_link.dart';
@@ -23,7 +23,7 @@ class DetallesdeFotooVideo extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
