@@ -449,6 +449,7 @@ class AtencionenCasa extends StatelessWidget {
                                           softWrap: false,
                                         ),
                                       ),
+                                      //Icono de edad
                                       Transform.translate(
                                         offset: Offset(5.8, 66.5),
                                         child: Container(
@@ -456,7 +457,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/edad.png'),
                                               fit: BoxFit.fill,
                                             ),
                                           ),
@@ -469,7 +470,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/especie.png'),
                                               fit: BoxFit.fill,
                                             ),
                                           ),
@@ -482,7 +483,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/raza.png'),
                                               fit: BoxFit.fill,
                                             ),
                                           ),
@@ -495,7 +496,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/peso.png'),
                                               fit: BoxFit.fill,
                                             ),
                                           ),
@@ -508,7 +509,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/ancho.png'),
                                               fit: BoxFit.cover,
                                             ),
                                           ),
@@ -521,7 +522,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/largo.png'),
                                               fit: BoxFit.cover,
                                             ),
                                           ),
@@ -534,7 +535,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/nombreanimal.png'),
                                               fit: BoxFit.fill,
                                             ),
                                           ),
@@ -547,7 +548,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/infocontacto.png'),
                                               fit: BoxFit.fill,
                                             ),
                                           ),
@@ -560,7 +561,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/motivoconsulta.png'),
                                               fit: BoxFit.fill,
                                             ),
                                           ),
@@ -573,7 +574,7 @@ class AtencionenCasa extends StatelessWidget {
                                           height: 40.0,
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/ubicacion.png'),
                                               fit: BoxFit.fill,
                                             ),
                                             borderRadius:
