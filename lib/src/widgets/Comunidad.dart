@@ -31,7 +31,7 @@ class Comunidad extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
@@ -48,7 +48,7 @@ class Comunidad extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -73,7 +73,7 @@ class Comunidad extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -115,7 +115,7 @@ class Comunidad extends StatelessWidget {
               height: 31.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/busqueda1.png'),
                   fit: BoxFit.fill,
                 ),
               ),
@@ -136,7 +136,7 @@ class Comunidad extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
                     fit: BoxFit.fill,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -154,7 +154,7 @@ class Comunidad extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -294,7 +294,7 @@ class Comunidad extends StatelessWidget {
                 child: Stack(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -313.0),
+                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 313.0),
                       child: SingleChildScrollView(
                         primary: false,
                         child: Wrap(
@@ -608,7 +608,7 @@ class Comunidad extends StatelessWidget {
                                       height: 84.0,
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                          image: const AssetImage(''),
+                                          image: const AssetImage('assets/images/donut.jpg'),
                                           fit: BoxFit.fill,
                                         ),
                                         borderRadius:
@@ -623,7 +623,7 @@ class Comunidad extends StatelessWidget {
                                       height: 84.0,
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                          image: const AssetImage(''),
+                                          image: const AssetImage('assets/images/kitty.jpg'),
                                           fit: BoxFit.fill,
                                         ),
                                         borderRadius:
@@ -637,7 +637,7 @@ class Comunidad extends StatelessWidget {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
-                                          image: const AssetImage(''),
+                                          image: const AssetImage('assets/images/winter.jpg'),
                                           fit: BoxFit.fill,
                                         ),
                                         borderRadius:
@@ -827,7 +827,7 @@ class Comunidad extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -849,7 +849,7 @@ class Comunidad extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -871,7 +871,7 @@ class Comunidad extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/store.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -893,7 +893,7 @@ class Comunidad extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/noticias.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -916,7 +916,7 @@ class Comunidad extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/cuidadosrecomendaciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -939,7 +939,7 @@ class Comunidad extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/emergencias.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -953,7 +953,7 @@ class Comunidad extends StatelessWidget {
               height: 60.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/comunidad.png'),
                   fit: BoxFit.fill,
                 ),
                 boxShadow: [
@@ -981,7 +981,7 @@ class Comunidad extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/crearpublicacion.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

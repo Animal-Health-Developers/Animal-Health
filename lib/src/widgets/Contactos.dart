@@ -16,7 +16,7 @@ import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Contactos extends StatelessWidget {
-  const Contactos({
+  Contactos({
     required Key key,
   }) : super(key: key);
   @override
@@ -28,11 +28,11 @@ class Contactos extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
@@ -43,13 +43,13 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
+                  pageBuilder: () => Home(),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -68,13 +68,13 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
+                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -116,7 +116,7 @@ class Contactos extends StatelessWidget {
               height: 31.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/busqueda1.png'),
                   fit: BoxFit.fill,
                 ),
               ),
@@ -131,13 +131,13 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
+                  pageBuilder: () => PerfilPublico(key: Key("PerfilPublico"),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
                     fit: BoxFit.fill,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -154,13 +154,13 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key('Settings'),),
+                  pageBuilder: () => Settings(key: Key("Settings"),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -176,13 +176,13 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
+                  pageBuilder: () => ListadeAnimales(key: Key("ListadeAnimales"),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -198,13 +198,13 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CompradeProductos(key: Key('CompradeProductos'),),
+                  pageBuilder: () => CompradeProductos(key: Key("CompradeProductos"),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/store.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -220,13 +220,13 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
+                  pageBuilder: () => Home(),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/noticias.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -241,7 +241,7 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones'),),
+                  pageBuilder: () => CuidadosyRecomendaciones(key: Key("CuidadosyRecomendaciones"),),
                 ),
               ],
               child: Container(
@@ -249,7 +249,7 @@ class Contactos extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/cuidadosrecomendaciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -264,7 +264,7 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Emergencias(key: Key('Emergencias'),),
+                  pageBuilder: () => Emergencias(key: Key("Emergencias"),),
                 ),
               ],
               child: Container(
@@ -272,7 +272,7 @@ class Contactos extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/emergencias.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -287,7 +287,7 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Comunidad(key: Key('Comunidad'),),
+                  pageBuilder: () => Comunidad(key: Key("Comunidad"),),
                 ),
               ],
               child: Container(
@@ -295,7 +295,7 @@ class Contactos extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/comunidad.png'),
                     fit: BoxFit.fill,
                   ),
                   boxShadow: [
@@ -318,13 +318,13 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones'),),
+                  pageBuilder: () => Crearpublicaciones(key: Key("Crearpublicaciones"),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/crearpublicacion.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -339,7 +339,7 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Comunidad(key: Key('Comunidad'),),
+                  pageBuilder: () => Comunidad(key: Key("Comunidad"),),
                 ),
               ],
               child: Container(
@@ -374,7 +374,7 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => AmigosenLInea(key: Key('AmigosenLInea'),),
+                  pageBuilder: () => AmigosenLInea(key: Key("AmigosenLInea"),),
                 ),
               ],
               child: Container(
@@ -475,40 +475,301 @@ class Contactos extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 354.0, middle: 0.5),
-            Pin(size: 340.0, end: 96.0),
+            Pin(size: 353.0, middle: 0.4915),
+            Pin(size: 344.0, end: 94.0),
             child: SingleChildScrollView(
               primary: false,
               child: SizedBox(
-                width: 354.0,
-                height: 644.0,
+                width: 353.0,
+                height: 648.0,
                 child: Stack(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 24.0, -304.0),
+                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 304.0),
                       child: SingleChildScrollView(
                         primary: false,
                         child: Wrap(
                           alignment: WrapAlignment.center,
-                          spacing: 119,
-                          runSpacing: 20,
+                          spacing: 20,
+                          runSpacing: 24,
                           children: [{}, {}].map((itemData) {
                             return SizedBox(
-                              width: 231.0,
+                              width: 353.0,
                               height: 302.0,
                               child: Stack(
                                 children: <Widget>[
+                                  Pinned.fromPins(
+                                    Pin(size: 231.0, start: 0.0),
+                                    Pin(start: 0.0, end: 0.0),
+                                    child: Stack(
+                                      children: <Widget>[
+                                        Align(
+                                          alignment: Alignment(1.0, -0.574),
+                                          child: ClipRect(
+                                            child: BackdropFilter(
+                                              filter: ui.ImageFilter.blur(
+                                                  sigmaX: 36.0, sigmaY: 36.0),
+                                              child: Container(
+                                                width: 129.0,
+                                                height: 25.0,
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      const Color(0x7a54d1e0),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8.0),
+                                                  border: Border.all(
+                                                      width: 1.0,
+                                                      color: const Color(
+                                                          0xff707070)),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 110.0, end: 9.0),
+                                          Pin(size: 21.0, middle: 0.2171),
+                                          child: Text(
+                                            'Enviar Mensaje',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 15,
+                                              color: const Color(0xff000000),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 36.0, middle: 0.5333),
+                                          Pin(size: 21.0, start: 16.0),
+                                          child: Text(
+                                            'Kitty',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 15,
+                                              color: const Color(0xff000000),
+                                              fontWeight: FontWeight.w700,
+                                              height: 1,
+                                            ),
+                                            textHeightBehavior:
+                                                TextHeightBehavior(
+                                                    applyHeightToFirstAscent:
+                                                        false),
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment(0.095, -0.11),
+                                          child: SizedBox(
+                                            width: 41.0,
+                                            height: 21.0,
+                                            child: Text(
+                                              'Donut',
+                                              style: TextStyle(
+                                                fontFamily: 'Comic Sans MS',
+                                                fontSize: 15,
+                                                color: const Color(0xff000000),
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                              softWrap: false,
+                                            ),
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment(0.138, 0.665),
+                                          child: SizedBox(
+                                            width: 50.0,
+                                            height: 21.0,
+                                            child: Text(
+                                              'Winter',
+                                              style: TextStyle(
+                                                fontFamily: 'Comic Sans MS',
+                                                fontSize: 15,
+                                                color: const Color(0xff000000),
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                              softWrap: false,
+                                            ),
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Container(
+                                            width: 84.0,
+                                            height: 84.0,
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage('assets/images/donut.jpg'),
+                                                fit: BoxFit.fill,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(42.0),
+                                            ),
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment.topLeft,
+                                          child: Container(
+                                            width: 84.0,
+                                            height: 84.0,
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage('assets/images/kitty.jpg'),
+                                                fit: BoxFit.fill,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(42.0),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 84.0, start: 2.0),
+                                          Pin(size: 84.0, end: 0.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage('assets/images/winter.jpg'),
+                                                fit: BoxFit.fill,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(42.0),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 84.0, start: 2.0),
+                                          Pin(size: 84.0, end: 0.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage('assets/images/donut.jpg'),
+                                                fit: BoxFit.fill,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(42.0),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 84.0, start: 2.0),
+                                          Pin(size: 84.0, end: 0.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage('assets/images/kitty.jpg'),
+                                                fit: BoxFit.fill,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(42.0),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 84.0, start: 2.0),
+                                          Pin(size: 84.0, end: 0.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage('assets/images/winter.jpg'),
+                                                fit: BoxFit.fill,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(42.0),
+                                            ),
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment(1.0, 0.213),
+                                          child: ClipRect(
+                                            child: BackdropFilter(
+                                              filter: ui.ImageFilter.blur(
+                                                  sigmaX: 36.0, sigmaY: 36.0),
+                                              child: Container(
+                                                width: 129.0,
+                                                height: 25.0,
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      const Color(0x7a54d1e0),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8.0),
+                                                  border: Border.all(
+                                                      width: 1.0,
+                                                      color: const Color(
+                                                          0xff707070)),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 110.0, end: 9.0),
+                                          Pin(size: 21.0, middle: 0.605),
+                                          child: Text(
+                                            'Enviar Mensaje',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 15,
+                                              color: const Color(0xff000000),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment.bottomRight,
+                                          child: ClipRect(
+                                            child: BackdropFilter(
+                                              filter: ui.ImageFilter.blur(
+                                                  sigmaX: 36.0, sigmaY: 36.0),
+                                              child: Container(
+                                                width: 129.0,
+                                                height: 25.0,
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      const Color(0x7a54d1e0),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8.0),
+                                                  border: Border.all(
+                                                      width: 1.0,
+                                                      color: const Color(
+                                                          0xff707070)),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 110.0, end: 9.0),
+                                          Pin(size: 21.0, end: 2.0),
+                                          child: Text(
+                                            'Enviar Mensaje',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 15,
+                                              color: const Color(0xff000000),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   Align(
-                                    alignment: Alignment(1.0, -0.574),
+                                    alignment: Alignment(1.0, -0.581),
                                     child: ClipRect(
                                       child: BackdropFilter(
                                         filter: ui.ImageFilter.blur(
-                                            sigmaX: 36.0, sigmaY: 36.0),
+                                            sigmaX: 7.0, sigmaY: 7.0),
                                         child: Container(
-                                          width: 129.0,
+                                          width: 111.0,
                                           height: 25.0,
                                           decoration: BoxDecoration(
-                                            color: const Color(0x7a54d1e0),
+                                            color: const Color(0xffe4e4e4),
                                             borderRadius:
                                                 BorderRadius.circular(8.0),
                                             border: Border.all(
@@ -520,10 +781,10 @@ class Contactos extends StatelessWidget {
                                     ),
                                   ),
                                   Pinned.fromPins(
-                                    Pin(size: 110.0, end: 9.0),
-                                    Pin(size: 21.0, middle: 0.2171),
+                                    Pin(size: 57.0, end: 24.0),
+                                    Pin(size: 21.0, middle: 0.2135),
                                     child: Text(
-                                      'Enviar Mensaje',
+                                      'Eliminar',
                                       style: TextStyle(
                                         fontFamily: 'Comic Sans MS',
                                         fontSize: 15,
@@ -533,154 +794,17 @@ class Contactos extends StatelessWidget {
                                       softWrap: false,
                                     ),
                                   ),
-                                  Pinned.fromPins(
-                                    Pin(size: 36.0, middle: 0.5333),
-                                    Pin(size: 21.0, start: 16.0),
-                                    child: Text(
-                                      'Kitty',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 15,
-                                        color: const Color(0xff000000),
-                                        fontWeight: FontWeight.w700,
-                                        height: 1,
-                                      ),
-                                      textHeightBehavior: TextHeightBehavior(
-                                          applyHeightToFirstAscent: false),
-                                      softWrap: false,
-                                    ),
-                                  ),
                                   Align(
-                                    alignment: Alignment(0.095, -0.11),
-                                    child: SizedBox(
-                                      width: 41.0,
-                                      height: 21.0,
-                                      child: Text(
-                                        'Donut',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 15,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment(0.138, 0.665),
-                                    child: SizedBox(
-                                      width: 50.0,
-                                      height: 21.0,
-                                      child: Text(
-                                        'Winter',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 15,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      width: 84.0,
-                                      height: 84.0,
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.fill,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(42.0),
-                                      ),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Container(
-                                      width: 84.0,
-                                      height: 84.0,
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.fill,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(42.0),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 84.0, start: 2.0),
-                                    Pin(size: 84.0, end: 0.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.fill,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(42.0),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 84.0, start: 2.0),
-                                    Pin(size: 84.0, end: 0.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.fill,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(42.0),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 84.0, start: 2.0),
-                                    Pin(size: 84.0, end: 0.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.fill,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(42.0),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 84.0, start: 2.0),
-                                    Pin(size: 84.0, end: 0.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.fill,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(42.0),
-                                      ),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment(1.0, 0.213),
+                                    alignment: Alignment(1.0, 0.227),
                                     child: ClipRect(
                                       child: BackdropFilter(
                                         filter: ui.ImageFilter.blur(
-                                            sigmaX: 36.0, sigmaY: 36.0),
+                                            sigmaX: 7.0, sigmaY: 7.0),
                                         child: Container(
-                                          width: 129.0,
+                                          width: 111.0,
                                           height: 25.0,
                                           decoration: BoxDecoration(
-                                            color: const Color(0x7a54d1e0),
+                                            color: const Color(0xffe4e4e4),
                                             borderRadius:
                                                 BorderRadius.circular(8.0),
                                             border: Border.all(
@@ -692,10 +816,10 @@ class Contactos extends StatelessWidget {
                                     ),
                                   ),
                                   Pinned.fromPins(
-                                    Pin(size: 110.0, end: 9.0),
-                                    Pin(size: 21.0, middle: 0.605),
+                                    Pin(size: 57.0, end: 24.0),
+                                    Pin(size: 21.0, middle: 0.6121),
                                     child: Text(
-                                      'Enviar Mensaje',
+                                      'Eliminar',
                                       style: TextStyle(
                                         fontFamily: 'Comic Sans MS',
                                         fontSize: 15,
@@ -705,17 +829,16 @@ class Contactos extends StatelessWidget {
                                       softWrap: false,
                                     ),
                                   ),
-                                  Align(
-                                    alignment: Alignment.bottomRight,
+                                  Pinned.fromPins(
+                                    Pin(size: 111.0, end: 0.0),
+                                    Pin(size: 25.0, end: 1.0),
                                     child: ClipRect(
                                       child: BackdropFilter(
                                         filter: ui.ImageFilter.blur(
-                                            sigmaX: 36.0, sigmaY: 36.0),
+                                            sigmaX: 7.0, sigmaY: 7.0),
                                         child: Container(
-                                          width: 129.0,
-                                          height: 25.0,
                                           decoration: BoxDecoration(
-                                            color: const Color(0x7a54d1e0),
+                                            color: const Color(0xffe4e4e4),
                                             borderRadius:
                                                 BorderRadius.circular(8.0),
                                             border: Border.all(
@@ -727,10 +850,10 @@ class Contactos extends StatelessWidget {
                                     ),
                                   ),
                                   Pinned.fromPins(
-                                    Pin(size: 110.0, end: 9.0),
-                                    Pin(size: 21.0, end: 2.0),
+                                    Pin(size: 57.0, end: 24.0),
+                                    Pin(size: 21.0, end: 3.0),
                                     child: Text(
-                                      'Enviar Mensaje',
+                                      'Eliminar',
                                       style: TextStyle(
                                         fontFamily: 'Comic Sans MS',
                                         fontSize: 15,
@@ -745,192 +868,6 @@ class Contactos extends StatelessWidget {
                             );
                           }).toList(),
                         ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 111.0, end: 1.0),
-                      Pin(size: 25.0, middle: 0.1841),
-                      child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xffe4e4e4),
-                              borderRadius: BorderRadius.circular(8.0),
-                              border: Border.all(
-                                  width: 1.0, color: const Color(0xff707070)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 57.0, end: 25.0),
-                      Pin(size: 21.0, middle: 0.1881),
-                      child: Text(
-                        'Eliminar',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 15,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        softWrap: false,
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 111.0, end: 1.0),
-                      Pin(size: 25.0, middle: 0.5397),
-                      child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xffe4e4e4),
-                              borderRadius: BorderRadius.circular(8.0),
-                              border: Border.all(
-                                  width: 1.0, color: const Color(0xff707070)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 57.0, end: 25.0),
-                      Pin(size: 21.0, middle: 0.5392),
-                      child: Text(
-                        'Eliminar',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 15,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        softWrap: false,
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 111.0, end: 1.0),
-                      Pin(size: 25.0, end: 39.0),
-                      child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xffe4e4e4),
-                              borderRadius: BorderRadius.circular(8.0),
-                              border: Border.all(
-                                  width: 1.0, color: const Color(0xff707070)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 57.0, end: 25.0),
-                      Pin(size: 21.0, end: 41.0),
-                      child: Text(
-                        'Eliminar',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 15,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        softWrap: false,
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 111.0, end: 1.0),
-                      Pin(size: 25.0, end: -67.0),
-                      child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xffe4e4e4),
-                              borderRadius: BorderRadius.circular(8.0),
-                              border: Border.all(
-                                  width: 1.0, color: const Color(0xff707070)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 57.0, end: 25.0),
-                      Pin(size: 21.0, end: -65.0),
-                      child: Text(
-                        'Eliminar',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 15,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        softWrap: false,
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 111.0, end: 1.0),
-                      Pin(size: 25.0, end: -178.0),
-                      child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xffe4e4e4),
-                              borderRadius: BorderRadius.circular(8.0),
-                              border: Border.all(
-                                  width: 1.0, color: const Color(0xff707070)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 57.0, end: 25.0),
-                      Pin(size: 21.0, end: -176.0),
-                      child: Text(
-                        'Eliminar',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 15,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        softWrap: false,
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 111.0, end: 0.0),
-                      Pin(size: 25.0, end: -284.0),
-                      child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xffe4e4e4),
-                              borderRadius: BorderRadius.circular(8.0),
-                              border: Border.all(
-                                  width: 1.0, color: const Color(0xff707070)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 57.0, end: 24.0),
-                      Pin(size: 21.0, end: -282.0),
-                      child: Text(
-                        'Eliminar',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 15,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        softWrap: false,
                       ),
                     ),
                   ],
@@ -973,7 +910,7 @@ class Contactos extends StatelessWidget {
               height: 27.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/busqueda1.png'),
                   fit: BoxFit.fill,
                 ),
               ),

@@ -728,7 +728,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/edad.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -740,7 +740,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/especie.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -752,7 +752,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/raza.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -764,7 +764,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/peso.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -776,7 +776,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/ancho.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                             ),
@@ -788,7 +788,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/largo.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                             ),
@@ -800,7 +800,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/nombreanimal.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -812,7 +812,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/infocontacto.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -824,7 +824,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/motivoconsulta.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -836,7 +836,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/ubicacion.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                               borderRadius:
@@ -851,7 +851,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                             height: 120.0,
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/adjuntarhistoria.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -889,7 +889,7 @@ class ServiciodeAmbulancia extends StatelessWidget {
                                         child: Container(
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/pedirambulancia.png'),
                                               fit: BoxFit.fill,
                                             ),
                                           ),
