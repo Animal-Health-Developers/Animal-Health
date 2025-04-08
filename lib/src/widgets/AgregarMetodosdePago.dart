@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'PerfilPublico.dart';
-import 'EditaroActulizarMetododepago.dart';
-import 'MetododePago.dart';
+import './Ayuda.dart';
+import './PerfilPublico.dart';
+import './EditaroActulizarMetododepago.dart';
+import './MetododePago.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 
 class AgregarMetodosdePago extends StatelessWidget {
   const AgregarMetodosdePago({
@@ -22,7 +22,7 @@ class AgregarMetodosdePago extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -71,7 +71,7 @@ class AgregarMetodosdePago extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -113,7 +113,7 @@ class AgregarMetodosdePago extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda")),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -135,7 +135,7 @@ class AgregarMetodosdePago extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key("PerfilPublico"),),
+                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
                 ),
               ],
               child: Container(
@@ -186,9 +186,9 @@ class AgregarMetodosdePago extends StatelessWidget {
                                             child: PageLink(
                                               links: [
                                                 PageLinkInfo(
-                                                  duration: 1,
+                                                  duration: 0.3,
                                                   pageBuilder: () =>
-                                                      EditaroActulizarMetododepago(key: Key("EditaroActulizarMetododepago"),),
+                                                      EditaroActulizarMetododepago(key: Key('EditaroActulizarMetododepago'),),
                                                 ),
                                               ],
                                               child: Container(
@@ -227,9 +227,9 @@ class AgregarMetodosdePago extends StatelessWidget {
                                             child: PageLink(
                                               links: [
                                                 PageLinkInfo(
-                                                  duration: 1,
+                                                  duration: 0.3,
                                                   pageBuilder: () =>
-                                                      EditaroActulizarMetododepago(key: Key("EditaroActulizarMetododepago"),),
+                                                      EditaroActulizarMetododepago(key: Key('EditaroActulizarMetododepago'),),
                                                 ),
                                               ],
                                               child: SvgPicture.string(
@@ -265,9 +265,9 @@ class AgregarMetodosdePago extends StatelessWidget {
                                             child: PageLink(
                                               links: [
                                                 PageLinkInfo(
-                                                  duration: 1,
+                                                  duration: 0.3,
                                                   pageBuilder: () =>
-                                                      EditaroActulizarMetododepago(key: Key("EditaroActulizarMetododepago"),),
+                                                      EditaroActulizarMetododepago(key: Key('EditaroActulizarMetododepago'),),
                                                 ),
                                               ],
                                               child: SvgPicture.string(
@@ -284,9 +284,9 @@ class AgregarMetodosdePago extends StatelessWidget {
                                             child: PageLink(
                                               links: [
                                                 PageLinkInfo(
-                                                  duration: 1,
+                                                  duration: 0.3,
                                                   pageBuilder: () =>
-                                                      EditaroActulizarMetododepago(key: Key("EditaroActulizarMetododepago"),),
+                                                      EditaroActulizarMetododepago(key: Key('EditaroActulizarMetododepago'),),
                                                 ),
                                               ],
                                               child: SvgPicture.string(
@@ -488,8 +488,8 @@ class AgregarMetodosdePago extends StatelessWidget {
                                       child: PageLink(
                                         links: [
                                           PageLinkInfo(
-                                            duration: 1,
-                                            pageBuilder: () => MetododePago(key: Key("MetododePago"),),
+                                            duration: 0.3,
+                                            pageBuilder: () => MetododePago(key: Key('MetododePago'),),
                                           ),
                                         ],
                                         child: Container(
@@ -553,7 +553,7 @@ class AgregarMetodosdePago extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

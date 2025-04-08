@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'PerfilPublico.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
-import 'Carritodecompras.dart';
+import './Ayuda.dart';
+import './PerfilPublico.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
+import './Carritodecompras.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Pedidos extends StatelessWidget {
@@ -22,7 +22,7 @@ class Pedidos extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -37,7 +37,7 @@ class Pedidos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -155,12 +155,12 @@ class Pedidos extends StatelessWidget {
                                       children: <Widget>[
                                         Container(
                                           decoration: BoxDecoration(
-                                            color: const Color(0x8754d1e0),
+                                            color: const Color(0xe3a0f4fe),
                                             borderRadius:
-                                                BorderRadius.circular(20.0),
+                                                BorderRadius.circular(9.0),
                                             border: Border.all(
                                                 width: 1.0,
-                                                color: const Color(0x87000000)),
+                                                color: const Color(0xe3000000)),
                                           ),
                                         ),
                                         Pinned.fromPins(
@@ -288,12 +288,12 @@ class Pedidos extends StatelessWidget {
                                       children: <Widget>[
                                         Container(
                                           decoration: BoxDecoration(
-                                            color: const Color(0x8754d1e0),
+                                            color: const Color(0xe3a0f4fe),
                                             borderRadius:
-                                                BorderRadius.circular(20.0),
+                                                BorderRadius.circular(9.0),
                                             border: Border.all(
                                                 width: 1.0,
-                                                color: const Color(0x87000000)),
+                                                color: const Color(0xe3000000)),
                                           ),
                                         ),
                                         Pinned.fromPins(
@@ -421,12 +421,12 @@ class Pedidos extends StatelessWidget {
                                       children: <Widget>[
                                         Container(
                                           decoration: BoxDecoration(
-                                            color: const Color(0x8754d1e0),
+                                            color: const Color(0xe3a0f4fe),
                                             borderRadius:
-                                                BorderRadius.circular(20.0),
+                                                BorderRadius.circular(9.0),
                                             border: Border.all(
                                                 width: 1.0,
-                                                color: const Color(0x87000000)),
+                                                color: const Color(0xe3000000)),
                                           ),
                                         ),
                                         Pinned.fromPins(
@@ -600,7 +600,7 @@ class Pedidos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

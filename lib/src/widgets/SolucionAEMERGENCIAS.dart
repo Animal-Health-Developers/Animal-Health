@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'PerfilPublico.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
-import 'CompradeProductos.dart';
-import 'CuidadosyRecomendaciones.dart';
-import 'Emergencias.dart';
-import 'Comunidad.dart';
-import 'Crearpublicaciones.dart';
+import './Ayuda.dart';
+import './PerfilPublico.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
+import './CompradeProductos.dart';
+import './CuidadosyRecomendaciones.dart';
+import './Emergencias.dart';
+import './Comunidad.dart';
+import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class SolucionAEMERGENCIAS extends StatelessWidget {
@@ -26,7 +26,7 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -41,7 +41,7 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -82,42 +82,43 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
           Pinned.fromPins(
             Pin(size: 307.0, end: 33.0),
             Pin(size: 45.0, middle: 0.1995),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xffffffff),
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(width: 1.0, color: const Color(0xff707070)),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.255, -0.593),
-            child: SizedBox(
-              width: 216.0,
-              height: 28.0,
-              child: Text(
-                '¿Qué estás buscando?',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xffffffff),
+                    borderRadius: BorderRadius.circular(5.0),
+                    border:
+                        Border.all(width: 1.0, color: const Color(0xff707070)),
+                  ),
                 ),
-                softWrap: false,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(-0.585, -0.591),
-            child: Container(
-              width: 31.0,
-              height: 31.0,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
+                Pinned.fromPins(
+                  Pin(size: 216.0, end: 40.0),
+                  Pin(size: 28.0, middle: 0.4118),
+                  child: Text(
+                    '¿Qué estás buscando?',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
                 ),
-              ),
+                Pinned.fromPins(
+                  Pin(size: 31.0, start: 7.0),
+                  Pin(start: 7.0, end: 7.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Pinned.fromPins(
@@ -145,11 +146,11 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
           ),
           Pinned.fromPins(
             Pin(start: 5.0, end: 0.0),
-            Pin(size: 545.2, end: 36.8),
+            Pin(size: 513.2, end: 36.8),
             child: Stack(
               children: <Widget>[
                 Align(
-                  alignment: Alignment(1.0, 0.526),
+                  alignment: Alignment(1.0, 0.496),
                   child: SizedBox(
                     width: 0.0,
                     height: 0.0,
@@ -170,10 +171,11 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
                     ),
                   ),
                 ),
-                Pinned.fromPins(
-                  Pin(size: 260.0, middle: 0.483),
-                  Pin(size: 70.0, start: 32.0),
+                Align(
+                  alignment: Alignment(-0.034, -1.0),
                   child: Container(
+                    width: 260.0,
+                    height: 70.0,
                     decoration: BoxDecoration(
                       color: const Color(0x8754d1e0),
                       borderRadius: BorderRadius.circular(20.0),
@@ -184,7 +186,7 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
                 ),
                 Pinned.fromPins(
                   Pin(size: 248.0, middle: 0.4843),
-                  Pin(size: 56.0, start: 40.0),
+                  Pin(size: 56.0, start: 8.0),
                   child: Text(
                     'Siga los siguientes pasos \ny/o Recomendaciones',
                     style: TextStyle(
@@ -201,13 +203,13 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
                   Pin(start: 0.0, end: 5.0),
                   Pin(size: 408.2, end: 0.0),
                   child: SvgPicture.string(
-                    _svg_wyd83,
+                    _svg_xctxjh,
                     allowDrawingOutsideViewBox: true,
                     fit: BoxFit.fill,
                   ),
                 ),
                 Align(
-                  alignment: Alignment(0.003, -0.393),
+                  alignment: Alignment(0.003, -0.485),
                   child: SizedBox(
                     width: 26.0,
                     height: 28.0,
@@ -224,24 +226,24 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
                     ),
                   ),
                 ),
-                Pinned.fromPins(
-                  Pin(size: 33.9, start: 5.0),
-                  Pin(size: 32.0, start: 0.0),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: const AssetImage(''),
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
+              ],
+            ),
+          ),
+          Pinned.fromPins(
+            Pin(size: 33.9, start: 10.0),
+            Pin(size: 32.0, middle: 0.3605),
+            child: PageLink(
+              links: [
+                PageLinkInfo(),
+              ],
+              child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: const AssetImage(''),
+                    fit: BoxFit.fill,
                   ),
                 ),
-              ],
+              ),
             ),
           ),
           Pinned.fromPins(
@@ -259,7 +261,7 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -436,5 +438,5 @@ class SolucionAEMERGENCIAS extends StatelessWidget {
   }
 }
 
-const String _svg_wyd83 =
-    '<svg viewBox="5.0 139.0 402.0 408.2" ><path transform="translate(5.0, 139.0)" d="M 15 0 L 387 0 C 395.2842712402344 0 402 7.102325916290283 402 15.86348915100098 L 402 392.3569641113281 C 402 401.1181335449219 395.2842712402344 408.220458984375 387 408.220458984375 L 15 408.220458984375 C 6.715728759765625 408.220458984375 0 401.1181335449219 0 392.3569641113281 L 0 15.86348915100098 C 0 7.102325916290283 6.715728759765625 0 15 0 Z" fill="#54d1e0" fill-opacity="0.53" stroke="#000000" stroke-width="1" stroke-opacity="0.53" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
+const String _svg_xctxjh =
+    '<svg viewBox="5.0 447.0 402.0 408.2" ><path transform="translate(5.0, 447.0)" d="M 15 0 L 387 0 C 395.2842712402344 0 402 7.102325916290283 402 15.86348915100098 L 402 392.3569641113281 C 402 401.1181335449219 395.2842712402344 408.220458984375 387 408.220458984375 L 15 408.220458984375 C 6.715728759765625 408.220458984375 0 401.1181335449219 0 392.3569641113281 L 0 15.86348915100098 C 0 7.102325916290283 6.715728759765625 0 15 0 Z" fill="#54d1e0" fill-opacity="0.53" stroke="#000000" stroke-width="1" stroke-opacity="0.53" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';

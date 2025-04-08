@@ -3,7 +3,7 @@ import 'package:adobe_xd/pinned.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Componente8 extends StatelessWidget {
-  Componente8({
+  const Componente8({
     required Key key,
   }) : super(key: key);
   @override

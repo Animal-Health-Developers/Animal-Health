@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'EditarPerfildeAnimalesdeCompaia.dart';
-import 'CrearVacuna.dart';
-import 'FuncionesdelaApp.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './Ayuda.dart';
+import './EditarPerfildeAnimalesdeCompaia.dart';
+import './CrearVacuna.dart';
+import './FuncionesdelaApp.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class CarnetdeVacunacin extends StatelessWidget {
@@ -23,7 +23,7 @@ class CarnetdeVacunacin extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -198,7 +198,7 @@ class CarnetdeVacunacin extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -219,7 +219,7 @@ class CarnetdeVacunacin extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key("EditarPerfildeAnimalesdeCompaia"),),
+                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
                 ),
               ],
               child: Container(
@@ -246,7 +246,7 @@ class CarnetdeVacunacin extends StatelessWidget {
                 primary: false,
                 child: SizedBox(
                   width: 404.0,
-                  height: 1934.0,
+                  height: 1955.0,
                   child: Stack(
                     children: <Widget>[
                       Pinned.fromPins(
@@ -274,150 +274,245 @@ class CarnetdeVacunacin extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.fromLTRB(0.0, 45.0, 0.0, -1121.0),
+                        padding: EdgeInsets.fromLTRB(0.0, 45.0, 0.0, -1344.0),
                         child: SingleChildScrollView(
                           primary: false,
                           child: Wrap(
                             alignment: WrapAlignment.center,
                             spacing: 20,
-                            runSpacing: 7,
-                            children: [{}, {}, {}, {}].map((itemData) {
+                            runSpacing: 20,
+                            children: [{}].map((itemData) {
                               return SizedBox(
                                 width: 404.0,
-                                height: 412.0,
+                                height: 1889.0,
                                 child: Stack(
                                   children: <Widget>[
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xe3a0f4fe),
-                                        borderRadius:
-                                            BorderRadius.circular(20.0),
-                                        border: Border.all(
-                                            width: 1.0,
-                                            color: const Color(0xe3000000)),
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 168.0, middle: 0.5021),
-                                      Pin(size: 28.0, start: 14.0),
-                                      child: Text(
-                                        'Vacuna: Moquillo ',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(start: 19.0, end: 41.0),
-                                      Pin(size: 28.0, start: 52.0),
-                                      child: Text(
-                                        'Fecha de Vacunación: 05/03/2025 ',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 278.0, end: 51.0),
-                                      Pin(size: 28.0, middle: 0.2344),
-                                      child: Text(
-                                        'Proxima Dósis: 05/06/2025 ',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(start: 31.0, end: 53.0),
-                                      Pin(size: 28.0, middle: 0.3333),
-                                      child: Text(
-                                        'Lote: 19271315XE 01/02/2025 ',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
+                                    Padding(
+                                      padding: EdgeInsets.fromLTRB(
+                                          0.0, 0.0, 0.0, 164.0),
+                                      child: GridView.count(
+                                        mainAxisSpacing: 20,
+                                        crossAxisSpacing: 20,
+                                        crossAxisCount: 1,
+                                        childAspectRatio: 0.98,
+                                        children:
+                                            [{}, {}, {}, {}].map((itemData) {
+                                          return Stack(
+                                            children: <Widget>[
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      const Color(0xe3a0f4fe),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20.0),
+                                                  border: Border.all(
+                                                      width: 1.0,
+                                                      color: const Color(
+                                                          0xe3000000)),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(
+                                                    size: 168.0,
+                                                    middle: 0.5021),
+                                                Pin(size: 28.0, start: 14.0),
+                                                child: Text(
+                                                  'Vacuna: Moquillo ',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 20,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                  softWrap: false,
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(start: 19.0, end: 41.0),
+                                                Pin(size: 28.0, start: 52.0),
+                                                child: Text(
+                                                  'Fecha de Vacunación: 05/03/2025 ',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 20,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                  softWrap: false,
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 278.0, end: 51.0),
+                                                Pin(size: 28.0, middle: 0.2344),
+                                                child: Text(
+                                                  'Proxima Dósis: 05/06/2025 ',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 20,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                  softWrap: false,
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(start: 31.0, end: 53.0),
+                                                Pin(size: 28.0, middle: 0.3333),
+                                                child: Text(
+                                                  'Lote: 19271315XE 01/02/2025 ',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 20,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                  softWrap: false,
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment(0.0, -0.135),
+                                                child: SizedBox(
+                                                  width: 194.0,
+                                                  height: 28.0,
+                                                  child: Text(
+                                                    'Número de Dósis: 3',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 20,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment(0.0, 0.063),
+                                                child: SizedBox(
+                                                  width: 282.0,
+                                                  height: 28.0,
+                                                  child: Text(
+                                                    'Veterinario: Anderson Florez',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 20,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 110.6, middle: 0.5),
+                                                Pin(size: 120.0, end: 50.0),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image:
+                                                          const AssetImage(''),
+                                                      fit: BoxFit.fill,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 80.0, middle: 0.5),
+                                                Pin(size: 28.0, end: 17.0),
+                                                child: Text(
+                                                  'Aplicada',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 20,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                  softWrap: false,
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        }).toList(),
                                       ),
                                     ),
                                     Align(
-                                      alignment: Alignment(0.0, -0.135),
+                                      alignment: Alignment.bottomCenter,
                                       child: SizedBox(
-                                        width: 194.0,
-                                        height: 28.0,
-                                        child: Text(
-                                          'Número de Dósis: 3',
-                                          style: TextStyle(
-                                            fontFamily: 'Comic Sans MS',
-                                            fontSize: 20,
-                                            color: const Color(0xff000000),
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          softWrap: false,
+                                        width: 152.0,
+                                        height: 149.0,
+                                        child: Stack(
+                                          children: <Widget>[
+                                            Stack(
+                                              children: <Widget>[
+                                                Pinned.fromPins(
+                                                  Pin(start: 12.6, end: 12.6),
+                                                  Pin(size: 120.0, start: 0.0),
+                                                  child: PageLink(
+                                                    links: [
+                                                      PageLinkInfo(
+                                                        transition:
+                                                            LinkTransition.Fade,
+                                                        ease: Curves.easeOut,
+                                                        duration: 0.3,
+                                                        pageBuilder: () =>
+                                                            CrearVacuna(key: Key('CrearVacuna'),),
+                                                      ),
+                                                    ],
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        image: DecorationImage(
+                                                          image:
+                                                              const AssetImage(
+                                                                  ''),
+                                                          fit: BoxFit.fill,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Pinned.fromPins(
+                                                  Pin(start: 0.0, end: 0.0),
+                                                  Pin(size: 28.0, end: 0.0),
+                                                  child: Text(
+                                                    'Agregar Vacuna',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 20,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment(0.0, 0.063),
-                                      child: SizedBox(
-                                        width: 282.0,
-                                        height: 28.0,
-                                        child: Text(
-                                          'Veterinario: Anderson Florez',
-                                          style: TextStyle(
-                                            fontFamily: 'Comic Sans MS',
-                                            fontSize: 20,
-                                            color: const Color(0xff000000),
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          softWrap: false,
-                                        ),
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 110.6, middle: 0.5),
-                                      Pin(size: 120.0, end: 50.0),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: const AssetImage(''),
-                                            fit: BoxFit.fill,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 80.0, middle: 0.5),
-                                      Pin(size: 28.0, end: 17.0),
-                                      child: Text(
-                                        'Aplicada',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
                                       ),
                                     ),
                                   ],
@@ -425,51 +520,6 @@ class CarnetdeVacunacin extends StatelessWidget {
                               );
                             }).toList(),
                           ),
-                        ),
-                      ),
-                      Pinned.fromPins(
-                        Pin(size: 152.0, middle: 0.5),
-                        Pin(size: 149.0, end: -1323.0),
-                        child: Stack(
-                          children: <Widget>[
-                            Pinned.fromPins(
-                              Pin(start: 12.6, end: 12.6),
-                              Pin(size: 120.0, start: 0.0),
-                              child: PageLink(
-                                links: [
-                                  PageLinkInfo(
-                                    transition: LinkTransition.Fade,
-                                    ease: Curves.easeOut,
-                                    duration: 0.3,
-                                    pageBuilder: () => CrearVacuna(key: Key("CrearVacuna"),),
-                                  ),
-                                ],
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                      image: const AssetImage(''),
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Pinned.fromPins(
-                              Pin(start: 0.0, end: 0.0),
-                              Pin(size: 28.0, end: 0.0),
-                              child: Text(
-                                'Agregar Vacuna',
-                                style: TextStyle(
-                                  fontFamily: 'Comic Sans MS',
-                                  fontSize: 20,
-                                  color: const Color(0xff000000),
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                textAlign: TextAlign.center,
-                                softWrap: false,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
@@ -484,8 +534,8 @@ class CarnetdeVacunacin extends StatelessWidget {
             child: PageLink(
               links: [
                 PageLinkInfo(
-                  duration: 1,
-                  pageBuilder: () => FuncionesdelaApp(key: Key("FuncionesdelaApp"),),
+                  duration: 0.3,
+                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'),),
                 ),
               ],
               child: Container(
@@ -513,7 +563,7 @@ class CarnetdeVacunacin extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

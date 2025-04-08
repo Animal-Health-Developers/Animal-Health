@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'EditarPerfildeAnimalesdeCompaia.dart';
-import 'FuncionesdelaApp.dart';
+import './Ayuda.dart';
+import './EditarPerfildeAnimalesdeCompaia.dart';
+import './FuncionesdelaApp.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 
 class IndicedeMasaCoporal extends StatelessWidget {
   const IndicedeMasaCoporal({
@@ -23,7 +23,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -49,7 +49,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -100,7 +100,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -121,7 +121,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key("EditarPerfildeAnimalesdeCompaia"),),
+                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
                 ),
               ],
               child: Container(
@@ -143,8 +143,8 @@ class IndicedeMasaCoporal extends StatelessWidget {
             child: PageLink(
               links: [
                 PageLinkInfo(
-                  duration:  1,
-                  pageBuilder: () => FuncionesdelaApp(key: Key("FuncionesdelaApp"),),
+                  duration: 0.3,
+                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'),),
                 ),
               ],
               child: Container(
@@ -158,298 +158,323 @@ class IndicedeMasaCoporal extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 430.0, middle: 0.5),
+            Pin(start: -9.0, end: -9.0),
             Pin(size: 557.0, end: 42.0),
-            child: SingleChildScrollView(
-              primary: false,
-              child: SizedBox(
-                width: 430.0,
-                height: 1262.0,
-                child: Stack(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -705.0),
-                      child: SingleChildScrollView(
-                        primary: false,
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 20,
-                          runSpacing: 20,
-                          children: [{}].map((itemData) {
-                            return SizedBox(
-                              width: 412.0,
-                              height: 1230.0,
-                              child: Stack(
-                                children: <Widget>[
-                                  Pinned.fromPins(
-                                    Pin(start: 49.0, end: 48.0),
-                                    Pin(size: 45.0, start: 0.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xffffffff),
-                                        borderRadius:
-                                            BorderRadius.circular(12.0),
-                                        border: Border.all(
-                                            width: 1.0,
-                                            color: const Color(0xff000000)),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(start: 49.0, end: 48.0),
-                                    Pin(size: 45.0, start: 59.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xffffffff),
-                                        borderRadius:
-                                            BorderRadius.circular(12.0),
-                                        border: Border.all(
-                                            width: 1.0,
-                                            color: const Color(0xff000000)),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 42.0, middle: 0.4973),
-                                    Pin(size: 28.0, start: 10.0),
-                                    child: Text(
-                                      'Peso',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 20,
-                                        color: const Color(0xff000000),
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 166.0, middle: 0.5285),
-                                    Pin(size: 28.0, start: 69.0),
-                                    child: Text(
-                                      'Ancho del Animal',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 20,
-                                        color: const Color(0xff000000),
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 30.0, start: 60.0),
-                                    Pin(size: 30.0, start: 124.0),
-                                    child: SvgPicture.string(
-                                      _svg_skj7th,
-                                      allowDrawingOutsideViewBox: true,
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(start: 49.0, end: 48.0),
-                                    Pin(size: 45.0, start: 118.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xffffffff),
-                                        borderRadius:
-                                            BorderRadius.circular(12.0),
-                                        border: Border.all(
-                                            width: 1.0,
-                                            color: const Color(0xff000000)),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 161.0, middle: 0.5259),
-                                    Pin(size: 28.0, start: 126.0),
-                                    child: Text(
-                                      'Largo del Animal',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 20,
-                                        color: const Color(0xff000000),
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 40.7, start: 55.1),
-                                    Pin(size: 40.0, start: 2.5),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.fill,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 35.8, start: 55.4),
-                                    Pin(size: 40.0, start: 61.5),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 35.8, start: 55.4),
-                                    Pin(size: 40.0, start: 120.5),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(start: 85.0, end: 85.0),
-                                    Pin(size: 49.0, start: 175.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xff4ec8dd),
-                                        borderRadius:
-                                            BorderRadius.circular(15.0),
-                                        border: Border.all(
-                                            width: 1.0,
-                                            color: const Color(0xff000000)),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xff080808),
-                                            offset: Offset(0, 3),
-                                            blurRadius: 6,
+            child: Stack(
+              children: <Widget>[
+                Pinned.fromPins(
+                  Pin(size: 430.0, middle: 0.5),
+                  Pin(start: 0.0, end: 0.0),
+                  child: SingleChildScrollView(
+                    primary: false,
+                    child: SizedBox(
+                      width: 430.0,
+                      height: 1262.0,
+                      child: Stack(
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -705.0),
+                            child: SingleChildScrollView(
+                              primary: false,
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 20,
+                                runSpacing: 20,
+                                children: [{}].map((itemData) {
+                                  return SizedBox(
+                                    width: 412.0,
+                                    height: 1230.0,
+                                    child: Stack(
+                                      children: <Widget>[
+                                        Pinned.fromPins(
+                                          Pin(start: 49.0, end: 48.0),
+                                          Pin(size: 45.0, start: 0.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xffffffff),
+                                              borderRadius:
+                                                  BorderRadius.circular(12.0),
+                                              border: Border.all(
+                                                  width: 1.0,
+                                                  color:
+                                                      const Color(0xff000000)),
+                                            ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 136.0, middle: 0.5),
-                                    Pin(size: 28.0, start: 185.0),
-                                    child: Text(
-                                      'Ver Resultado',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 20,
-                                        color: const Color(0xff000000),
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(start: 0.0, end: 0.0),
-                                    Pin(size: 321.0, middle: 0.2574),
-                                    child: ClipRect(
-                                      child: BackdropFilter(
-                                        filter: ui.ImageFilter.blur(
-                                            sigmaX: 2.0, sigmaY: 2.0),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: const Color(0x5e4ec8dd),
-                                            borderRadius:
-                                                BorderRadius.circular(20.0),
-                                            border: Border.all(
-                                                width: 1.0,
-                                                color: const Color(0xff000000)),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: const Color(0x29000000),
-                                                offset: Offset(0, 3),
-                                                blurRadius: 6,
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(start: 49.0, end: 48.0),
+                                          Pin(size: 45.0, start: 59.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xffffffff),
+                                              borderRadius:
+                                                  BorderRadius.circular(12.0),
+                                              border: Border.all(
+                                                  width: 1.0,
+                                                  color:
+                                                      const Color(0xff000000)),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 42.0, middle: 0.4973),
+                                          Pin(size: 28.0, start: 10.0),
+                                          child: Text(
+                                            'Peso',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 20,
+                                              color: const Color(0xff000000),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 166.0, middle: 0.5285),
+                                          Pin(size: 28.0, start: 69.0),
+                                          child: Text(
+                                            'Ancho del Animal',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 20,
+                                              color: const Color(0xff000000),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 30.0, start: 60.0),
+                                          Pin(size: 30.0, start: 124.0),
+                                          child: SvgPicture.string(
+                                            _svg_skj7th,
+                                            allowDrawingOutsideViewBox: true,
+                                            fit: BoxFit.fill,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(start: 49.0, end: 48.0),
+                                          Pin(size: 45.0, start: 118.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xffffffff),
+                                              borderRadius:
+                                                  BorderRadius.circular(12.0),
+                                              border: Border.all(
+                                                  width: 1.0,
+                                                  color:
+                                                      const Color(0xff000000)),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 161.0, middle: 0.5259),
+                                          Pin(size: 28.0, start: 126.0),
+                                          child: Text(
+                                            'Largo del Animal',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 20,
+                                              color: const Color(0xff000000),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 40.7, start: 55.1),
+                                          Pin(size: 40.0, start: 2.5),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage(''),
+                                                fit: BoxFit.fill,
                                               ),
-                                            ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment(0.0, -0.599),
-                                    child: SizedBox(
-                                      width: 118.0,
-                                      height: 24.0,
-                                      child: Text(
-                                        'Resultado IMC',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 17,
-                                          color: const Color(0xff000000),
-                                          height: 0.8823529411764706,
-                                        ),
-                                        textHeightBehavior: TextHeightBehavior(
-                                            applyHeightToFirstAscent: false),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(start: 0.0, end: 0.0),
-                                    Pin(size: 632.0, end: 0.0),
-                                    child: ClipRect(
-                                      child: BackdropFilter(
-                                        filter: ui.ImageFilter.blur(
-                                            sigmaX: 2.0, sigmaY: 2.0),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: const Color(0x5e4ec8dd),
-                                            borderRadius:
-                                                BorderRadius.circular(20.0),
-                                            border: Border.all(
-                                                width: 1.0,
-                                                color: const Color(0xff000000)),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: const Color(0x29000000),
-                                                offset: Offset(0, 3),
-                                                blurRadius: 6,
+                                        Pinned.fromPins(
+                                          Pin(size: 35.8, start: 55.4),
+                                          Pin(size: 40.0, start: 61.5),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage(''),
+                                                fit: BoxFit.cover,
                                               ),
-                                            ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment(0.0, 0.022),
-                                    child: SizedBox(
-                                      width: 268.0,
-                                      height: 24.0,
-                                      child: Text(
-                                        'Recomendaciones de Alimentación',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 17,
-                                          color: const Color(0xff000000),
-                                          height: 0.8823529411764706,
+                                        Pinned.fromPins(
+                                          Pin(size: 35.8, start: 55.4),
+                                          Pin(size: 40.0, start: 120.5),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage(''),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
                                         ),
-                                        textHeightBehavior: TextHeightBehavior(
-                                            applyHeightToFirstAscent: false),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
+                                        Pinned.fromPins(
+                                          Pin(start: 85.0, end: 85.0),
+                                          Pin(size: 49.0, start: 175.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xff4ec8dd),
+                                              borderRadius:
+                                                  BorderRadius.circular(15.0),
+                                              border: Border.all(
+                                                  width: 1.0,
+                                                  color:
+                                                      const Color(0xff000000)),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color:
+                                                      const Color(0xff080808),
+                                                  offset: Offset(0, 3),
+                                                  blurRadius: 6,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 136.0, middle: 0.5),
+                                          Pin(size: 28.0, start: 185.0),
+                                          child: Text(
+                                            'Ver Resultado',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 20,
+                                              color: const Color(0xff000000),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(start: 0.0, end: 0.0),
+                                          Pin(size: 321.0, middle: 0.2574),
+                                          child: ClipRect(
+                                            child: BackdropFilter(
+                                              filter: ui.ImageFilter.blur(
+                                                  sigmaX: 2.0, sigmaY: 2.0),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      const Color(0x5e4ec8dd),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20.0),
+                                                  border: Border.all(
+                                                      width: 1.0,
+                                                      color: const Color(
+                                                          0xff000000)),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: const Color(
+                                                          0x29000000),
+                                                      offset: Offset(0, 3),
+                                                      blurRadius: 6,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment(0.0, -0.599),
+                                          child: SizedBox(
+                                            width: 118.0,
+                                            height: 24.0,
+                                            child: Text(
+                                              'Resultado IMC',
+                                              style: TextStyle(
+                                                fontFamily: 'Comic Sans MS',
+                                                fontSize: 17,
+                                                color: const Color(0xff000000),
+                                                height: 0.8823529411764706,
+                                              ),
+                                              textHeightBehavior:
+                                                  TextHeightBehavior(
+                                                      applyHeightToFirstAscent:
+                                                          false),
+                                              textAlign: TextAlign.center,
+                                              softWrap: false,
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(start: 0.0, end: 0.0),
+                                          Pin(size: 632.0, end: 0.0),
+                                          child: ClipRect(
+                                            child: BackdropFilter(
+                                              filter: ui.ImageFilter.blur(
+                                                  sigmaX: 2.0, sigmaY: 2.0),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      const Color(0x5e4ec8dd),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20.0),
+                                                  border: Border.all(
+                                                      width: 1.0,
+                                                      color: const Color(
+                                                          0xff000000)),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: const Color(
+                                                          0x29000000),
+                                                      offset: Offset(0, 3),
+                                                      blurRadius: 6,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment(0.0, 0.022),
+                                          child: SizedBox(
+                                            width: 268.0,
+                                            height: 24.0,
+                                            child: Text(
+                                              'Recomendaciones de Alimentación',
+                                              style: TextStyle(
+                                                fontFamily: 'Comic Sans MS',
+                                                fontSize: 17,
+                                                color: const Color(0xff000000),
+                                                height: 0.8823529411764706,
+                                              ),
+                                              textHeightBehavior:
+                                                  TextHeightBehavior(
+                                                      applyHeightToFirstAscent:
+                                                          false),
+                                              textAlign: TextAlign.center,
+                                              softWrap: false,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                  );
+                                }).toList(),
                               ),
-                            );
-                          }).toList(),
-                        ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
           Pinned.fromPins(
@@ -461,13 +486,13 @@ class IndicedeMasaCoporal extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key("Settings"),),
+                  pageBuilder: () => Settings(key: Key('Settings'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -483,7 +508,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key("ListadeAnimales"),),
+                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
                 ),
               ],
               child: Container(

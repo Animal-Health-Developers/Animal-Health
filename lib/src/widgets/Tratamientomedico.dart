@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'EditarPerfildeAnimalesdeCompaia.dart';
-import 'FuncionesdelaApp.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './Ayuda.dart';
+import './EditarPerfildeAnimalesdeCompaia.dart';
+import './FuncionesdelaApp.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Tratamientomedico extends StatelessWidget {
@@ -22,7 +22,7 @@ class Tratamientomedico extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -71,7 +71,7 @@ class Tratamientomedico extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -156,7 +156,7 @@ class Tratamientomedico extends StatelessWidget {
             child: PageLink(
               links: [
                 PageLinkInfo(
-                  duration: 1,
+                  duration: 0.3,
                   pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'),),
                 ),
               ],
@@ -179,7 +179,7 @@ class Tratamientomedico extends StatelessWidget {
                 primary: false,
                 child: SizedBox(
                   width: 404.0,
-                  height: 1126.0,
+                  height: 1483.0,
                   child: Stack(
                     children: <Widget>[
                       Pinned.fromPins(
@@ -210,164 +210,157 @@ class Tratamientomedico extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.fromLTRB(0.0, 63.0, 0.0, -525.0),
-                        child: SingleChildScrollView(
-                          primary: false,
-                          child: Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 20,
-                            runSpacing: 20,
-                            children: [{}, {}, {}].map((itemData) {
-                              return SizedBox(
-                                width: 404.0,
-                                height: 335.0,
-                                child: Stack(
-                                  children: <Widget>[
-                                    Pinned.fromPins(
-                                      Pin(size: 0.0, end: 7.0),
-                                      Pin(size: 0.0, middle: 0.7821),
-                                      child: Text(
-                                        '',
-                                        style: TextStyle(
-                                          fontFamily: 'Open Sans',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                        ),
-                                        softWrap: false,
-                                      ),
+                        padding: EdgeInsets.fromLTRB(0.0, 63.0, 0.0, -882.0),
+                        child: GridView.count(
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 20,
+                          crossAxisCount: 1,
+                          childAspectRatio: 1.21,
+                          children: [{}, {}, {}, {}].map((itemData) {
+                            return Stack(
+                              children: <Widget>[
+                                Pinned.fromPins(
+                                  Pin(size: 0.0, end: 7.0),
+                                  Pin(size: 0.0, middle: 0.7821),
+                                  child: Text(
+                                    '',
+                                    style: TextStyle(
+                                      fontFamily: 'Open Sans',
+                                      fontSize: 20,
+                                      color: const Color(0xff000000),
                                     ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xe3a0f4fe),
-                                        borderRadius:
-                                            BorderRadius.circular(20.0),
-                                        border: Border.all(
-                                            width: 1.0,
-                                            color: const Color(0xe3000000)),
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 252.0, middle: 0.5),
-                                      Pin(size: 28.0, start: 8.0),
-                                      child: Text(
-                                        'Medicamento: Cefalexina ',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 262.0, middle: 0.5),
-                                      Pin(size: 28.0, start: 46.0),
-                                      child: Text(
-                                        'Dósis: 30mL cada 8 horas ',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(start: 31.0, end: 31.0),
-                                      Pin(size: 28.0, middle: 0.2736),
-                                      child: Text(
-                                        'tiempo de tratamiento: 1 semana  ',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment(0.0, -0.205),
-                                      child: SizedBox(
-                                        width: 252.0,
-                                        height: 28.0,
-                                        child: Text(
-                                          'Medicamento: Cefalexina ',
-                                          style: TextStyle(
-                                            fontFamily: 'Comic Sans MS',
-                                            fontSize: 20,
-                                            color: const Color(0xff000000),
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          softWrap: false,
-                                        ),
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 120.5, start: 34.0),
-                                      Pin(size: 120.0, middle: 0.7628),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: const AssetImage(''),
-                                            fit: BoxFit.fill,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 110.4, end: 45.0),
-                                      Pin(size: 120.0, middle: 0.7628),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: const AssetImage(''),
-                                            fit: BoxFit.fill,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 134.0, start: 27.0),
-                                      Pin(size: 28.0, end: 13.0),
-                                      child: Text(
-                                        ' Redordatorio',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 132.0, end: 34.0),
-                                      Pin(size: 28.0, end: 13.0),
-                                      child: Text(
-                                        ' Suministrado',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                  ],
+                                    softWrap: false,
+                                  ),
                                 ),
-                              );
-                            }).toList(),
-                          ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xe3a0f4fe),
+                                    borderRadius: BorderRadius.circular(20.0),
+                                    border: Border.all(
+                                        width: 1.0,
+                                        color: const Color(0xe3000000)),
+                                  ),
+                                ),
+                                Pinned.fromPins(
+                                  Pin(size: 252.0, middle: 0.5),
+                                  Pin(size: 28.0, start: 8.0),
+                                  child: Text(
+                                    'Medicamento: Cefalexina ',
+                                    style: TextStyle(
+                                      fontFamily: 'Comic Sans MS',
+                                      fontSize: 20,
+                                      color: const Color(0xff000000),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: false,
+                                  ),
+                                ),
+                                Pinned.fromPins(
+                                  Pin(size: 262.0, middle: 0.5),
+                                  Pin(size: 28.0, start: 46.0),
+                                  child: Text(
+                                    'Dósis: 30mL cada 8 horas ',
+                                    style: TextStyle(
+                                      fontFamily: 'Comic Sans MS',
+                                      fontSize: 20,
+                                      color: const Color(0xff000000),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: false,
+                                  ),
+                                ),
+                                Pinned.fromPins(
+                                  Pin(start: 31.0, end: 31.0),
+                                  Pin(size: 28.0, middle: 0.2736),
+                                  child: Text(
+                                    'tiempo de tratamiento: 1 semana  ',
+                                    style: TextStyle(
+                                      fontFamily: 'Comic Sans MS',
+                                      fontSize: 20,
+                                      color: const Color(0xff000000),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: false,
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment(0.0, -0.205),
+                                  child: SizedBox(
+                                    width: 252.0,
+                                    height: 28.0,
+                                    child: Text(
+                                      'Medicamento: Cefalexina ',
+                                      style: TextStyle(
+                                        fontFamily: 'Comic Sans MS',
+                                        fontSize: 20,
+                                        color: const Color(0xff000000),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      softWrap: false,
+                                    ),
+                                  ),
+                                ),
+                                Pinned.fromPins(
+                                  Pin(size: 120.5, start: 34.0),
+                                  Pin(size: 120.0, middle: 0.7628),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: const AssetImage(''),
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Pinned.fromPins(
+                                  Pin(size: 110.4, end: 45.0),
+                                  Pin(size: 120.0, middle: 0.7628),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: const AssetImage(''),
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Pinned.fromPins(
+                                  Pin(size: 134.0, start: 27.0),
+                                  Pin(size: 28.0, end: 13.0),
+                                  child: Text(
+                                    ' Redordatorio',
+                                    style: TextStyle(
+                                      fontFamily: 'Comic Sans MS',
+                                      fontSize: 20,
+                                      color: const Color(0xff000000),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: false,
+                                  ),
+                                ),
+                                Pinned.fromPins(
+                                  Pin(size: 132.0, end: 34.0),
+                                  Pin(size: 28.0, end: 13.0),
+                                  child: Text(
+                                    ' Suministrado',
+                                    style: TextStyle(
+                                      fontFamily: 'Comic Sans MS',
+                                      fontSize: 20,
+                                      color: const Color(0xff000000),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: false,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
                         ),
                       ),
                     ],
@@ -391,7 +384,7 @@ class Tratamientomedico extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

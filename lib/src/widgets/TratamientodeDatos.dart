@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Componente83.dart';
-import 'Home.dart';
+import './Componente83.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'PerfilPublico.dart';
-import 'Ayuda.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './PerfilPublico.dart';
+import './Ayuda.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class TratamientodeDatos extends StatelessWidget {
@@ -21,7 +21,7 @@ class TratamientodeDatos extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -29,160 +29,166 @@ class TratamientodeDatos extends StatelessWidget {
           ),
           Pinned.fromPins(
             Pin(start: 0.0, end: 0.0),
-            Pin(size: 42.0, middle: 0.2282),
+            Pin(size: 542.0, middle: 0.5543),
             child: Stack(
               children: <Widget>[
-                Stack(
-                  children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xe3a0f4fe),
-                        borderRadius: BorderRadius.circular(6.0),
-                        border: Border.all(
-                            width: 1.0, color: const Color(0xe3000000)),
+                Pinned.fromPins(
+                  Pin(start: 0.0, end: 0.0),
+                  Pin(size: 42.0, start: 0.0),
+                  child: Stack(
+                    children: <Widget>[
+                      Stack(
+                        children: <Widget>[
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xe3a0f4fe),
+                              borderRadius: BorderRadius.circular(6.0),
+                              border: Border.all(
+                                  width: 1.0, color: const Color(0xe3000000)),
+                            ),
+                          ),
+                        ],
                       ),
+                    ],
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(104.0, 7.0),
+                  child: Text(
+                    'Tratamiento de Datos',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
                     ),
-                  ],
+                    softWrap: false,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xe3a0f4fe),
+                    borderRadius: BorderRadius.circular(20.0),
+                    border:
+                        Border.all(width: 1.0, color: const Color(0xe3000000)),
+                  ),
+                  margin: EdgeInsets.fromLTRB(14.0, 66.0, 13.0, 37.0),
+                ),
+                Transform.translate(
+                  offset: Offset(28.0, 513.0),
+                  child: Text(
+                    'Acepto',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(20.0, 101.0),
+                  child: Text(
+                    'Recopilar, Registrar, Consultar, Usar, Borrar\ny Destruir datos.',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 18,
+                      color: const Color(0xff000000),
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(17.5, 214.0),
+                  child: Text(
+                    'Leer y comprender completamente nuestra\npolítica de privacidad nos ayuda a desarrollar\nel uso excelente de nuestra Aplicación.',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 18,
+                      color: const Color(0xff000000),
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment(-0.437, 1.0),
+                  child: SizedBox(
+                    width: 53.0,
+                    height: 30.0,
+                    child: Componente83(key: Key('Componente83'),),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 53.0, end: 24.0),
+                  Pin(size: 30.0, end: 0.0),
+                  child: Componente83(key: Key('Componente83'),),
+                ),
+                Transform.translate(
+                  offset: Offset(227.0, 513.0),
+                  child: Text(
+                    'No Acepto',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(29.5, 73.5),
+                  child: Text(
+                    'Administración de Datos',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(27.0, 182.5),
+                  child: Text(
+                    'Política de Privacidad',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(30.0, 314.0),
+                  child: Text(
+                    'Política de Seguridad',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(17.5, 342.0),
+                  child: Text(
+                    'Leer y comprender completamente nuestra\npolítica de privacidad nos ayuda a desarrollar\nel uso excelente de nuestra Aplicación.',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 18,
+                      color: const Color(0xff000000),
+                    ),
+                    softWrap: false,
+                  ),
                 ),
               ],
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(104.0, 201.0),
-            child: Text(
-              'Tratamiento de Datos',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 14.0, end: 13.0),
-            Pin(size: 439.0, middle: 0.574),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xe3a0f4fe),
-                borderRadius: BorderRadius.circular(20.0),
-                border: Border.all(width: 1.0, color: const Color(0xe3000000)),
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(28.0, 707.0),
-            child: Text(
-              'Acepto',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(20.0, 295.0),
-            child: Text(
-              'Recopilar, Registrar, Consultar, Usar, Borrar\ny Destruir datos.',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 18,
-                color: const Color(0xff000000),
-              ),
-              softWrap: false,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(17.5, 408.0),
-            child: Text(
-              'Leer y comprender completamente nuestra\npolítica de privacidad nos ayuda a desarrollar\nel uso excelente de nuestra Aplicación.',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 18,
-                color: const Color(0xff000000),
-              ),
-              softWrap: false,
-            ),
-          ),
-          Align(
-            alignment: Alignment(-0.437, 0.638),
-            child: SizedBox(
-              width: 53.0,
-              height: 30.0,
-              child: Componente83(key: Key('Componente83'),),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 53.0, end: 24.0),
-            Pin(size: 30.0, middle: 0.819),
-            child: Componente83(key: Key('Componente83'),),
-          ),
-          Transform.translate(
-            offset: Offset(227.0, 707.0),
-            child: Text(
-              'No Acepto',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(29.5, 267.5),
-            child: Text(
-              'Administración de Datos',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(27.0, 376.5),
-            child: Text(
-              'Política de Privacidad',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(30.0, 508.0),
-            child: Text(
-              'Política de Seguridad',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(17.5, 536.0),
-            child: Text(
-              'Leer y comprender completamente nuestra\npolítica de privacidad nos ayuda a desarrollar\nel uso excelente de nuestra Aplicación.',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 18,
-                color: const Color(0xff000000),
-              ),
-              softWrap: false,
             ),
           ),
           Pinned.fromPins(
@@ -305,7 +311,7 @@ class TratamientodeDatos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

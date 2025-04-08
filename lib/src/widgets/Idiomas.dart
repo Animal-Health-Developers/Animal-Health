@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'PerfilPublico.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './Ayuda.dart';
+import './PerfilPublico.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Idiomas extends StatelessWidget {
@@ -21,7 +21,7 @@ class Idiomas extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -57,147 +57,151 @@ class Idiomas extends StatelessWidget {
               height: 295.0,
               child: Stack(
                 children: <Widget>[
-                  Pinned.fromPins(
-                    Pin(start: 0.0, end: 0.0),
-                    Pin(size: 49.0, start: 0.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
+                  Stack(
+                    children: <Widget>[
+                      Pinned.fromPins(
+                        Pin(start: 0.0, end: 0.0),
+                        Pin(size: 49.0, start: 0.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xff4ec8dd),
+                            borderRadius: BorderRadius.circular(15.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff000000)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xff080808),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Pinned.fromPins(
-                    Pin(size: 70.0, middle: 0.5023),
-                    Pin(size: 28.0, start: 10.0),
-                    child: Text(
-                      'Español',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 20,
-                        color: const Color(0xff000000),
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                      softWrap: false,
-                    ),
-                  ),
-                  Pinned.fromPins(
-                    Pin(start: 0.0, end: 0.0),
-                    Pin(size: 49.0, middle: 0.6667),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment(0.005, 0.303),
-                    child: SizedBox(
-                      width: 92.0,
-                      height: 28.0,
-                      child: Text(
-                        'Portugues',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 20,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
                         ),
-                        textAlign: TextAlign.center,
-                        softWrap: false,
                       ),
-                    ),
-                  ),
-                  Pinned.fromPins(
-                    Pin(start: 0.0, end: 0.0),
-                    Pin(size: 49.0, end: 0.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
+                      Pinned.fromPins(
+                        Pin(size: 70.0, middle: 0.5),
+                        Pin(size: 28.0, start: 10.5),
+                        child: Text(
+                          'Español',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 20,
+                            color: const Color(0xff000000),
+                            fontWeight: FontWeight.w700,
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Pinned.fromPins(
-                    Pin(start: 28.5, end: 27.5),
-                    Pin(size: 28.0, end: 10.0),
-                    child: Text(
-                      'Español latinoamericano',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 20,
-                        color: const Color(0xff000000),
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                      softWrap: false,
-                    ),
-                  ),
-                  Pinned.fromPins(
-                    Pin(start: 0.0, end: 0.0),
-                    Pin(size: 49.0, middle: 0.3333),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment(0.004, -0.311),
-                    child: SizedBox(
-                      width: 58.0,
-                      height: 28.0,
-                      child: Text(
-                        'Inglés',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 20,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
+                          textAlign: TextAlign.center,
+                          softWrap: false,
                         ),
-                        textAlign: TextAlign.center,
-                        softWrap: false,
                       ),
-                    ),
+                      Pinned.fromPins(
+                        Pin(start: 0.0, end: 0.0),
+                        Pin(size: 49.0, middle: 0.6667),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xff4ec8dd),
+                            borderRadius: BorderRadius.circular(15.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff000000)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xff080808),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment(0.0, 0.307),
+                        child: SizedBox(
+                          width: 92.0,
+                          height: 28.0,
+                          child: Text(
+                            'Portugues',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 20,
+                              color: const Color(0xff000000),
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                            softWrap: false,
+                          ),
+                        ),
+                      ),
+                      Pinned.fromPins(
+                        Pin(start: 0.0, end: 0.0),
+                        Pin(size: 49.0, end: 0.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xff4ec8dd),
+                            borderRadius: BorderRadius.circular(15.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff000000)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xff080808),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Pinned.fromPins(
+                        Pin(start: 28.0, end: 28.0),
+                        Pin(size: 28.0, end: 10.5),
+                        child: Text(
+                          'Español latinoamericano',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 20,
+                            color: const Color(0xff000000),
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
+                          softWrap: false,
+                        ),
+                      ),
+                      Pinned.fromPins(
+                        Pin(start: 0.0, end: 0.0),
+                        Pin(size: 49.0, middle: 0.3333),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xff4ec8dd),
+                            borderRadius: BorderRadius.circular(15.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff000000)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xff080808),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment(0.0, -0.307),
+                        child: SizedBox(
+                          width: 58.0,
+                          height: 28.0,
+                          child: Text(
+                            'Inglés',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 20,
+                              color: const Color(0xff000000),
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                            softWrap: false,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -212,7 +216,7 @@ class Idiomas extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -254,7 +258,7 @@ class Idiomas extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -276,7 +280,7 @@ class Idiomas extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key("PerfilPublico"),),
+                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
                 ),
               ],
               child: Container(
@@ -299,13 +303,13 @@ class Idiomas extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key("Settings"),),
+                  pageBuilder: () => Settings(key: Key('Settings'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -321,7 +325,7 @@ class Idiomas extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key("ListadeAnimales"),),
+                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
                 ),
               ],
               child: Container(

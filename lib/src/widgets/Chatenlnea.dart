@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'PerfilPublico.dart';
-import 'Ayuda.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './PerfilPublico.dart';
+import './Ayuda.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 
 class Chatenlnea extends StatelessWidget {
   const Chatenlnea({
@@ -21,7 +21,7 @@ class Chatenlnea extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -29,498 +29,506 @@ class Chatenlnea extends StatelessWidget {
           ),
           Pinned.fromPins(
             Pin(start: 4.0, end: 4.0),
-            Pin(size: 600.0, end: 107.0),
-            child: SvgPicture.string(
-              _svg_h3fdaz,
-              allowDrawingOutsideViewBox: true,
-              fit: BoxFit.fill,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 4.0, end: 4.0),
-            Pin(size: 1.0, middle: 0.298),
-            child: SvgPicture.string(
-              _svg_uzpewl,
-              allowDrawingOutsideViewBox: true,
-              fit: BoxFit.fill,
-            ),
-          ),
-          Align(
-            alignment: Alignment(-0.426, -0.522),
-            child: SizedBox(
-              width: 102.0,
-              height: 42.0,
-              child: Text(
-                'DogBot',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 30,
-                  color: const Color(0xff000000),
-                ),
-                softWrap: false,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.464, -0.521),
-            child: Container(
-              width: 40.0,
-              height: 40.0,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 63.0, middle: 0.5),
-            Pin(size: 63.0, end: 44.0),
+            Pin(size: 663.0, end: 44.0),
             child: Stack(
               children: <Widget>[
-                Stack(
-                  children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(),
-                    ),
-                  ],
-                ),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 3.9, vertical: 5.3),
-                  child: Stack(
-                    children: <Widget>[
-                      SizedBox.expand(
-                          child: SvgPicture.string(
-                        _svg_fb3q1,
-                        allowDrawingOutsideViewBox: true,
-                        fit: BoxFit.fill,
-                      )),
-                    ],
-                  ),
+                  padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 63.0),
+                  child: SizedBox.expand(
+                      child: SvgPicture.string(
+                    _svg_h3fdaz,
+                    allowDrawingOutsideViewBox: true,
+                    fit: BoxFit.fill,
+                  )),
                 ),
-              ],
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 4.0, end: 4.0),
-            Pin(size: 63.0, end: 44.0),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 0.0, sigmaY: 0.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(20.0),
-                    border:
-                        Border.all(width: 1.0, color: const Color(0xff000000)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xf2000000),
-                        offset: Offset(0, 3),
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 190.0, end: 56.0),
-            Pin(size: 56.0, end: 48.0),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 22.0, sigmaY: 22.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(20.0),
-                    border:
-                        Border.all(width: 1.0, color: const Color(0xff707070)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xf2000000),
-                        offset: Offset(0, 3),
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 43.5, middle: 0.8276),
-            Pin(size: 40.0, end: 55.5),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 13.2, end: 19.7),
-            Pin(size: 32.8, middle: 0.2419),
-            child: Stack(
-              children: <Widget>[
                 Pinned.fromPins(
-                  Pin(size: 7.0, middle: 0.5192),
-                  Pin(start: 4.0, end: 3.8),
-                  child: Stack(
-                    children: <Widget>[
-                      Container(
-                        decoration: BoxDecoration(),
-                      ),
-                    ],
+                  Pin(start: 0.0, end: 0.0),
+                  Pin(size: 1.0, start: 80.5),
+                  child: SvgPicture.string(
+                    _svg_uzpewl,
+                    allowDrawingOutsideViewBox: true,
+                    fit: BoxFit.fill,
                   ),
                 ),
-                Stack(
-                  children: <Widget>[
-                    Stack(
+                Pinned.fromPins(
+                  Pin(size: 102.0, middle: 0.2816),
+                  Pin(size: 42.0, start: 18.2),
+                  child: Text(
+                    'DogBot',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 30,
+                      color: const Color(0xff000000),
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 40.4, middle: 0.737),
+                  Pin(size: 40.0, start: 19.2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SizedBox(
+                    width: 63.0,
+                    height: 63.0,
+                    child: Stack(
                       children: <Widget>[
-                        Pinned.fromPins(
-                          Pin(start: 0.0, end: 1.2),
-                          Pin(size: 24.0, end: 0.0),
-                          child: SvgPicture.string(
-                            _svg_xrr992,
-                            allowDrawingOutsideViewBox: true,
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: Container(
-                            width: 6.0,
-                            height: 6.0,
-                            decoration: BoxDecoration(
-                              color: const Color(0xff000000),
-                              borderRadius: BorderRadius.all(
-                                  Radius.elliptical(9999.0, 9999.0)),
+                        Stack(
+                          children: <Widget>[
+                            Container(
+                              decoration: BoxDecoration(),
                             ),
+                          ],
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 3.9, vertical: 5.3),
+                          child: Stack(
+                            children: <Widget>[
+                              SizedBox.expand(
+                                  child: SvgPicture.string(
+                                _svg_fb3q1,
+                                allowDrawingOutsideViewBox: true,
+                                fit: BoxFit.fill,
+                              )),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 48.0, end: 15.0),
-            Pin(size: 48.0, middle: 0.2322),
-            child: Stack(
-              children: <Widget>[
-                Stack(
-                  children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 88.0, middle: 0.5401),
-            Pin(size: 28.0, end: 65.0),
-            child: Text.rich(
-              TextSpan(
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                ),
-                children: [
-                  TextSpan(
-                    text: 'Mensaje',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                    ),
                   ),
-                  TextSpan(
-                    text: '...',
-                    style: TextStyle(
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 40.1, middle: 0.2347),
-            Pin(size: 40.0, end: 55.5),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.cover,
                 ),
-                borderRadius: BorderRadius.circular(3.0),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 38.8, start: 44.8),
-            Pin(size: 40.0, end: 55.5),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 50.9, end: 39.0),
-            Pin(size: 40.0, middle: 0.2397),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 33.6, end: 15.3),
-            Pin(size: 40.0, end: 56.0),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 34.7, middle: 0.3474),
-            Pin(size: 40.0, end: 54.0),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 30.2, start: 11.0),
-            Pin(size: 40.0, end: 55.5),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 383.4, middle: 0.5),
-            Pin(size: 496.0, end: 115.3),
-            child: SingleChildScrollView(
-              primary: false,
-              child: SizedBox(
-                width: 383.0,
-                height: 1134.0,
-                child: Stack(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -638.0),
-                      child: SingleChildScrollView(
-                        primary: false,
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 23,
-                          runSpacing: 262,
-                          children: [
-                            {
-                              'text':
-                                  'Bienvenido al asistente virtual soy \nDogBot. A continuación, escriba su\nsolicitud.',
-                              'text_0':
-                                  'Tengo dudas, sobre como hago para\neditar mis datos.',
-                            },
-                            {
-                              'text':
-                                  'Bienvenido al asistente virtual soy \n.... y voy a resolver tus \nrequerimientos',
-                              'text_0':
-                                  'Bienvenido al asistente virtual soy \nDogBot. A continuación, escriba su\nsolicitud.',
-                            },
-                            {
-                              'text':
-                                  'Bienvenido al asistente virtual soy \n.... y voy a resolver tus \nrequerimientos',
-                              'text_0':
-                                  'Bienvenido al asistente virtual soy \nDogBot. A continuación, escriba su\nsolicitud.',
-                            }
-                          ].map((itemData) {
-                            final text = itemData['text'];
-                            final text_0 = itemData['text_0'];
-                            return SizedBox(
-                              width: 380.0,
-                              height: 259.0,
-                              child: Stack(
-                                children: <Widget>[
-                                  Pinned.fromPins(
-                                    Pin(size: 261.0, end: 0.0),
-                                    Pin(size: 69.7, end: 16.1),
-                                    child: SvgPicture.string(
-                                      _svg_x2icxv,
-                                      allowDrawingOutsideViewBox: true,
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(start: 33.6, end: 32.2),
-                                    Pin(size: 91.7, start: 0.0),
-                                    child: SvgPicture.string(
-                                      _svg_vtifg,
-                                      allowDrawingOutsideViewBox: true,
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment(1.0, -0.09),
-                                    child: SizedBox(
-                                      width: 314.0,
-                                      height: 70.0,
-                                      child: SvgPicture.string(
-                                        _svg_dtu8fg,
-                                        allowDrawingOutsideViewBox: true,
-                                      ),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment(-0.23, 0.619),
-                                    child: SizedBox(
-                                      width: 26.0,
-                                      height: 28.0,
-                                      child: Text(
-                                        '...',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 32.0, end: 8.4),
-                                    Pin(size: 18.0, middle: 0.6434),
-                                    child: Text(
-                                      'Leído',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 13,
-                                        color: const Color(0xff000000),
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 32.0, end: 8.4),
-                                    Pin(size: 18.0, end: 0.0),
-                                    child: Text(
-                                      'Leído',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 13,
-                                        color: const Color(0xff000000),
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 32.0, end: 8.4),
-                                    Pin(size: 18.0, end: 0.0),
-                                    child: Text(
-                                      'Leído',
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 13,
-                                        color: const Color(0xff000000),
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(start: 55.8, end: 50.4),
-                                    Pin(size: 72.0, start: 6.1),
-                                    child: Text(
-                                      text!,
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 17,
-                                        color: const Color(0xff000000),
-                                      ),
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 279.0, end: 15.2),
-                                    Pin(size: 48.0, middle: 0.4475),
-                                    child: Text(
-                                      text_0!,
-                                      style: TextStyle(
-                                        fontFamily: 'Comic Sans MS',
-                                        fontSize: 17,
-                                        color: const Color(0xff000000),
-                                      ),
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(size: 33.6, start: 0.0),
-                                    Pin(size: 40.0, start: 5.8),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: const AssetImage(''),
-                                          fit: BoxFit.fill,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                Pinned.fromPins(
+                  Pin(start: 0.0, end: 0.0),
+                  Pin(size: 63.0, end: 0.0),
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 0.0, sigmaY: 0.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(20.0),
+                          border: Border.all(
+                              width: 1.0, color: const Color(0xff000000)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xf2000000),
+                              offset: Offset(0, 3),
+                              blurRadius: 6,
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 58.9, start: 14.6),
-            Pin(size: 70.0, middle: 0.2314),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
+                Pinned.fromPins(
+                  Pin(size: 190.0, end: 52.0),
+                  Pin(size: 56.0, end: 4.0),
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 22.0, sigmaY: 22.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(20.0),
+                          border: Border.all(
+                              width: 1.0, color: const Color(0xff707070)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xf2000000),
+                              offset: Offset(0, 3),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                Pinned.fromPins(
+                  Pin(size: 43.5, end: 59.5),
+                  Pin(size: 40.0, end: 11.5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 13.2, end: 15.7),
+                  Pin(size: 32.8, start: 22.8),
+                  child: Stack(
+                    children: <Widget>[
+                      Pinned.fromPins(
+                        Pin(size: 7.0, middle: 0.5192),
+                        Pin(start: 4.0, end: 3.8),
+                        child: Stack(
+                          children: <Widget>[
+                            Container(
+                              decoration: BoxDecoration(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Stack(
+                        children: <Widget>[
+                          Stack(
+                            children: <Widget>[
+                              Pinned.fromPins(
+                                Pin(start: 0.0, end: 1.2),
+                                Pin(size: 24.0, end: 0.0),
+                                child: SvgPicture.string(
+                                  _svg_xrr992,
+                                  allowDrawingOutsideViewBox: true,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: Container(
+                                  width: 6.0,
+                                  height: 6.0,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xff000000),
+                                    borderRadius: BorderRadius.all(
+                                        Radius.elliptical(9999.0, 9999.0)),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 48.0, end: 11.0),
+                  Pin(size: 48.0, start: 11.0),
+                  child: Stack(
+                    children: <Widget>[
+                      Stack(
+                        children: <Widget>[
+                          Container(
+                            decoration: BoxDecoration(),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 88.0, middle: 0.5411),
+                  Pin(size: 28.0, end: 21.0),
+                  child: Text.rich(
+                    TextSpan(
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                      ),
+                      children: [
+                        TextSpan(
+                          text: 'Mensaje',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '...',
+                          style: TextStyle(
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 40.1, middle: 0.2289),
+                  Pin(size: 40.0, end: 11.5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.cover,
+                      ),
+                      borderRadius: BorderRadius.circular(3.0),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 38.8, start: 40.8),
+                  Pin(size: 40.0, end: 11.5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 50.9, end: 35.0),
+                  Pin(size: 40.0, start: 19.2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 33.6, end: 11.3),
+                  Pin(size: 40.0, end: 12.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 34.7, middle: 0.344),
+                  Pin(size: 40.0, end: 10.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 30.2, start: 7.0),
+                  Pin(size: 40.0, end: 11.5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 383.4, middle: 0.5),
+                  Pin(start: 95.7, end: 71.3),
+                  child: SingleChildScrollView(
+                    primary: false,
+                    child: SizedBox(
+                      width: 383.0,
+                      height: 1134.0,
+                      child: Stack(
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -638.0),
+                            child: SingleChildScrollView(
+                              primary: false,
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 23,
+                                runSpacing: 262,
+                                children: [
+                                  {
+                                    'text':
+                                        'Bienvenido al asistente virtual soy \nDogBot. A continuación, escriba su\nsolicitud.',
+                                    'text_0':
+                                        'Tengo dudas, sobre como hago para\neditar mis datos.',
+                                  },
+                                  {
+                                    'text':
+                                        'Bienvenido al asistente virtual soy \n.... y voy a resolver tus \nrequerimientos',
+                                    'text_0':
+                                        'Bienvenido al asistente virtual soy \nDogBot. A continuación, escriba su\nsolicitud.',
+                                  },
+                                  {
+                                    'text':
+                                        'Bienvenido al asistente virtual soy \n.... y voy a resolver tus \nrequerimientos',
+                                    'text_0':
+                                        'Bienvenido al asistente virtual soy \nDogBot. A continuación, escriba su\nsolicitud.',
+                                  }
+                                ].map((itemData) {
+                                  final text = itemData['text'];
+                                  final text_0 = itemData['text_0'];
+                                  return SizedBox(
+                                    width: 380.0,
+                                    height: 259.0,
+                                    child: Stack(
+                                      children: <Widget>[
+                                        Pinned.fromPins(
+                                          Pin(size: 261.0, end: 0.0),
+                                          Pin(size: 69.7, end: 16.1),
+                                          child: SvgPicture.string(
+                                            _svg_x2icxv,
+                                            allowDrawingOutsideViewBox: true,
+                                            fit: BoxFit.fill,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(start: 33.6, end: 32.2),
+                                          Pin(size: 91.7, start: 0.0),
+                                          child: SvgPicture.string(
+                                            _svg_vtifg,
+                                            allowDrawingOutsideViewBox: true,
+                                            fit: BoxFit.fill,
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment(1.0, -0.09),
+                                          child: SizedBox(
+                                            width: 314.0,
+                                            height: 70.0,
+                                            child: SvgPicture.string(
+                                              _svg_dtu8fg,
+                                              allowDrawingOutsideViewBox: true,
+                                            ),
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment(-0.23, 0.619),
+                                          child: SizedBox(
+                                            width: 26.0,
+                                            height: 28.0,
+                                            child: Text(
+                                              '...',
+                                              style: TextStyle(
+                                                fontFamily: 'Comic Sans MS',
+                                                fontSize: 20,
+                                                color: const Color(0xff000000),
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                              softWrap: false,
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 32.0, end: 8.4),
+                                          Pin(size: 18.0, middle: 0.6434),
+                                          child: Text(
+                                            'Leído',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 13,
+                                              color: const Color(0xff000000),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 32.0, end: 8.4),
+                                          Pin(size: 18.0, end: 0.0),
+                                          child: Text(
+                                            'Leído',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 13,
+                                              color: const Color(0xff000000),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 32.0, end: 8.4),
+                                          Pin(size: 18.0, end: 0.0),
+                                          child: Text(
+                                            'Leído',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 13,
+                                              color: const Color(0xff000000),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(start: 55.8, end: 50.4),
+                                          Pin(size: 72.0, start: 6.1),
+                                          child: Text(
+                                            text!,
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 17,
+                                              color: const Color(0xff000000),
+                                            ),
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 279.0, end: 15.2),
+                                          Pin(size: 48.0, middle: 0.4475),
+                                          child: Text(
+                                            text_0!,
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 17,
+                                              color: const Color(0xff000000),
+                                            ),
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 33.6, start: 0.0),
+                                          Pin(size: 40.0, start: 5.8),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: const AssetImage(''),
+                                                fit: BoxFit.fill,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 58.9, start: 10.6),
+                  Pin(size: 70.0, start: 5.2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Pinned.fromPins(
@@ -615,7 +623,7 @@ class Chatenlnea extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -643,7 +651,7 @@ class Chatenlnea extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

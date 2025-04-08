@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'PerfilPublico.dart';
-import 'GoogleMaps.dart';
+import './Ayuda.dart';
+import './PerfilPublico.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
+import './CompradeProductos.dart';
+import './CuidadosyRecomendaciones.dart';
+import './Comunidad.dart';
+import './Crearpublicaciones.dart';
+import './GoogleMaps.dart';
 import 'dart:ui' as ui;
-import 'PrimerosAuxilios.dart';
-import 'ServiciodeAmbulancia.dart';
-import 'AtencionenCasa.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
-import 'CompradeProductos.dart';
-import 'CuidadosyRecomendaciones.dart';
-import 'Comunidad.dart';
-import 'Crearpublicaciones.dart';
+import './PrimerosAuxilios.dart';
+import './ServiciodeAmbulancia.dart';
+import './AtencionenCasa.dart';
 
 class Emergencias extends StatelessWidget {
   const Emergencias({
@@ -44,7 +44,7 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -69,7 +69,7 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -85,42 +85,43 @@ class Emergencias extends StatelessWidget {
           Pinned.fromPins(
             Pin(size: 307.0, end: 33.0),
             Pin(size: 45.0, middle: 0.1995),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xffffffff),
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(width: 1.0, color: const Color(0xff707070)),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.255, -0.593),
-            child: SizedBox(
-              width: 216.0,
-              height: 28.0,
-              child: Text(
-                '¿Qué estás buscando?',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xffffffff),
+                    borderRadius: BorderRadius.circular(5.0),
+                    border:
+                        Border.all(width: 1.0, color: const Color(0xff707070)),
+                  ),
                 ),
-                softWrap: false,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(-0.585, -0.591),
-            child: Container(
-              width: 31.0,
-              height: 31.0,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/busqueda1.png'),
-                  fit: BoxFit.fill,
+                Pinned.fromPins(
+                  Pin(size: 216.0, end: 40.0),
+                  Pin(size: 28.0, middle: 0.4118),
+                  child: Text(
+                    '¿Qué estás buscando?',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
                 ),
-              ),
+                Pinned.fromPins(
+                  Pin(size: 31.0, start: 7.0),
+                  Pin(start: 7.0, end: 7.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/busqueda1.png'),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Pinned.fromPins(
@@ -132,7 +133,7 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key("PerfilPublico"),),
+                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
                 ),
               ],
               child: Container(
@@ -147,238 +148,6 @@ class Emergencias extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 178.0, start: 20.0),
-            Pin(size: 163.0, middle: 0.5185),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => GoogleMaps(key: Key("GoogleMaps"),),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x5e4ec8dd),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0x29000000),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 178.0, end: 16.0),
-            Pin(size: 163.0, middle: 0.5185),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => PrimerosAuxilios(key: Key("PrimerosAuxilios"),),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x5e4ec8dd),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0x29000000),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 178.0, start: 20.0),
-            Pin(size: 163.0, middle: 0.797),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => ServiciodeAmbulancia(key: Key("ServiciodeAmbulancia"),),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x5e4ec8dd),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0x29000000),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 178.0, end: 16.0),
-            Pin(size: 163.0, middle: 0.797),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => AtencionenCasa(key: Key("AtencionenCasa"),),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x5e4ec8dd),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0x29000000),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 158.0, start: 30.5),
-            Pin(size: 21.0, middle: 0.5792),
-            child: Text(
-              'Veterinarias cercanas',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              textAlign: TextAlign.center,
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 124.0, end: 43.0),
-            Pin(size: 21.0, middle: 0.5798),
-            child: Text(
-              'Primeros Auxilios',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              textAlign: TextAlign.center,
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 168.0, start: 25.0),
-            Pin(size: 21.0, middle: 0.8129),
-            child: Text(
-              'Servicio de Ambulancia',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              textAlign: TextAlign.center,
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 124.0, end: 41.0),
-            Pin(size: 21.0, middle: 0.8129),
-            child: Text(
-              'Atención en Casa',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              textAlign: TextAlign.center,
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 66.0, end: 66.0),
-            Pin(size: 36.0, middle: 0.3657),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xe3a0f4fe),
-                borderRadius: BorderRadius.circular(10.0),
-                border: Border.all(width: 1.0, color: const Color(0xe3000000)),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 82.0, end: 82.0),
-            Pin(size: 33.0, middle: 0.3667),
-            child: Text(
-              'Servicios de Emergencias',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
             child: PageLink(
@@ -387,7 +156,7 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key("Settings"),),
+                  pageBuilder: () => Settings(key: Key('Settings'),),
                 ),
               ],
               child: Container(
@@ -409,7 +178,7 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key("ListadeAnimales"),),
+                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
                 ),
               ],
               child: Container(
@@ -431,57 +200,13 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CompradeProductos(key: Key("CompradeProductos"),),
+                  pageBuilder: () => CompradeProductos(key: Key('CompradeProductos'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
                     image: const AssetImage('assets/images/store.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 116.0, end: 47.0),
-            Pin(size: 120.0, middle: 0.5),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => PrimerosAuxilios(key: Key("PrimerosAuxilios"),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/auxilios.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 103.4, start: 57.8),
-            Pin(size: 120.0, middle: 0.5),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => GoogleMaps(key: Key("GoogleMaps"),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/maps.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -497,7 +222,7 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -518,7 +243,7 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CuidadosyRecomendaciones(key: Key("CuidadosyRecomendaciones"),),
+                  pageBuilder: () => CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones'),),
                 ),
               ],
               child: Container(
@@ -561,7 +286,7 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Comunidad(key: Key("Comunidad"),),
+                  pageBuilder: () => Comunidad(key: Key('Comunidad'),),
                 ),
               ],
               child: Container(
@@ -585,7 +310,7 @@ class Emergencias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Crearpublicaciones(key: Key("Crearpublicaciones"),),
+                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones'),),
                 ),
               ],
               child: Container(
@@ -599,47 +324,336 @@ class Emergencias extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 125.5, end: 42.3),
-            Pin(size: 120.0, middle: 0.763),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => AtencionenCasa(key: Key("AtencionenCasa"),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/atencioncasa.png'),
-                    fit: BoxFit.fill,
+            Pin(start: 20.0, end: 16.0),
+            Pin(size: 431.0, middle: 0.679),
+            child: Stack(
+              children: <Widget>[
+                Align(
+                  alignment: Alignment(-1.0, -0.515),
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => GoogleMaps(key: Key('GoogleMaps'),),
+                          ),
+                        ],
+                        child: Container(
+                          width: 178.0,
+                          height: 163.0,
+                          decoration: BoxDecoration(
+                            color: const Color(0x5e4ec8dd),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 135.2, start: 41.4),
-            Pin(size: 120.0, middle: 0.763),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => ServiciodeAmbulancia(key: Key("ServiciodeAmbulancia"),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/ambulancia.png'),
-                    fit: BoxFit.fill,
+                Align(
+                  alignment: Alignment(1.0, -0.515),
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => PrimerosAuxilios(key: Key('PrimerosAuxilios'),),
+                          ),
+                        ],
+                        child: Container(
+                          width: 178.0,
+                          height: 163.0,
+                          decoration: BoxDecoration(
+                            color: const Color(0x5e4ec8dd),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => ServiciodeAmbulancia(key: Key('ServiciodeAmbulancia'),),
+                          ),
+                        ],
+                        child: Container(
+                          width: 178.0,
+                          height: 163.0,
+                          decoration: BoxDecoration(
+                            color: const Color(0x5e4ec8dd),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => AtencionenCasa(key: Key('AtencionenCasa'),),
+                          ),
+                        ],
+                        child: Container(
+                          width: 178.0,
+                          height: 163.0,
+                          decoration: BoxDecoration(
+                            color: const Color(0x5e4ec8dd),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 158.0, start: 10.5),
+                  Pin(size: 21.0, middle: 0.4671),
+                  child: Text(
+                    'Veterinarias cercanas',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 15,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 124.0, end: 27.0),
+                  Pin(size: 21.0, middle: 0.4683),
+                  child: Text(
+                    'Primeros Auxilios',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 15,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 168.0, start: 5.0),
+                  Pin(size: 21.0, end: 15.0),
+                  child: Text(
+                    'Servicio de Ambulancia',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 15,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 124.0, end: 25.0),
+                  Pin(size: 21.0, end: 15.0),
+                  child: Text(
+                    'Atención en Casa',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 15,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(start: 46.0, end: 50.0),
+                  Pin(size: 36.0, start: 0.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xe3a0f4fe),
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(
+                          width: 1.0, color: const Color(0xe3000000)),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 248.0, middle: 0.4844),
+                  Pin(size: 33.0, start: 2.0),
+                  child: Text(
+                    'Servicios de Emergencias',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 116.0, end: 31.0),
+                  Pin(size: 120.0, middle: 0.2347),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => PrimerosAuxilios(key: Key('PrimerosAuxilios'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage('assets/images/auxilios.png'),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 103.4, start: 37.8),
+                  Pin(size: 120.0, middle: 0.2347),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => GoogleMaps(key: Key('GoogleMaps'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage('assets/images/maps.png'),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 125.5, end: 26.3),
+                  Pin(size: 120.0, end: 35.0),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => AtencionenCasa(key: Key('AtencionenCasa'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage('assets/images/atencioncasa.png'),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 135.2, start: 21.4),
+                  Pin(size: 120.0, end: 35.0),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => ServiciodeAmbulancia(key: Key('ServiciodeAmbulancia'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage('assets/images/ambulancia.png'),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'ManualdeUso.dart';
-import 'TratamientodeDatos.dart';
-import 'SoporteTcnico.dart';
-import 'PerfilPublico.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './ManualdeUso.dart';
+import './TratamientodeDatos.dart';
+import './SoporteTcnico.dart';
+import './PerfilPublico.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Ayuda extends StatelessWidget {
@@ -26,7 +26,7 @@ class Ayuda extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 50.0, start: -7.5),
@@ -71,176 +71,182 @@ class Ayuda extends StatelessWidget {
               fit: BoxFit.fill,
             ),
           ),
-          Pinned.fromPins(
-            Pin(size: 284.0, end: 56.0),
-            Pin(size: 49.0, middle: 0.2112),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xff4ec8dd),
-                borderRadius: BorderRadius.circular(15.0),
-                border: Border.all(width: 1.0, color: const Color(0xff000000)),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xff080808),
-                    offset: Offset(0, 3),
-                    blurRadius: 6,
+          Align(
+            alignment: Alignment(0.008, -0.231),
+            child: SizedBox(
+              width: 285.0,
+              height: 302.0,
+              child: Stack(
+                children: <Widget>[
+                  Pinned.fromPins(
+                    Pin(start: 0.0, end: 1.0),
+                    Pin(size: 49.0, start: 0.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xff4ec8dd),
+                        borderRadius: BorderRadius.circular(15.0),
+                        border: Border.all(
+                            width: 1.0, color: const Color(0xff000000)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xff080808),
+                            offset: Offset(0, 3),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Pinned.fromPins(
+                    Pin(size: 114.0, middle: 0.5),
+                    Pin(size: 28.0, start: 10.0),
+                    child: Text(
+                      'Sugerencias',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                      softWrap: false,
+                    ),
+                  ),
+                  Pinned.fromPins(
+                    Pin(start: 0.0, end: 1.0),
+                    Pin(size: 49.0, middle: 0.6601),
+                    child: PageLink(
+                      links: [
+                        PageLinkInfo(
+                          duration: 0.3,
+                          pageBuilder: () => ManualdeUso(key: Key('ManualdeUso'),),
+                        ),
+                      ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xff4ec8dd),
+                          borderRadius: BorderRadius.circular(15.0),
+                          border: Border.all(
+                              width: 1.0, color: const Color(0xff000000)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xff080808),
+                              offset: Offset(0, 3),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment(0.0, 0.292),
+                    child: SizedBox(
+                      width: 142.0,
+                      height: 28.0,
+                      child: Text(
+                        'Manual de Uso',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 20,
+                          color: const Color(0xff000000),
+                          fontWeight: FontWeight.w700,
+                        ),
+                        textAlign: TextAlign.center,
+                        softWrap: false,
+                      ),
+                    ),
+                  ),
+                  Pinned.fromPins(
+                    Pin(start: 0.0, end: 1.0),
+                    Pin(size: 49.0, end: 0.0),
+                    child: PageLink(
+                      links: [
+                        PageLinkInfo(
+                          transition: LinkTransition.Fade,
+                          ease: Curves.easeOut,
+                          duration: 0.3,
+                          pageBuilder: () => TratamientodeDatos(key: Key('TratamientodeDatos'),),
+                        ),
+                      ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xff4ec8dd),
+                          borderRadius: BorderRadius.circular(15.0),
+                          border: Border.all(
+                              width: 1.0, color: const Color(0xff000000)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xff080808),
+                              offset: Offset(0, 3),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Pinned.fromPins(
+                    Pin(start: 35.5, end: 35.5),
+                    Pin(size: 28.0, end: 11.0),
+                    child: Text(
+                      'Tratamiento de Datos',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                      softWrap: false,
+                    ),
+                  ),
+                  Pinned.fromPins(
+                    Pin(start: 1.0, end: 0.0),
+                    Pin(size: 49.0, middle: 0.3241),
+                    child: PageLink(
+                      links: [
+                        PageLinkInfo(
+                          duration: 0.3,
+                          pageBuilder: () => SoporteTcnico(key: Key('SoporteTcnico'),),
+                        ),
+                      ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xff4ec8dd),
+                          borderRadius: BorderRadius.circular(15.0),
+                          border: Border.all(
+                              width: 1.0, color: const Color(0xff000000)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xff080808),
+                              offset: Offset(0, 3),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment(0.017, -0.328),
+                    child: SizedBox(
+                      width: 166.0,
+                      height: 28.0,
+                      child: Text(
+                        'Soporte Técnico ',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 20,
+                          color: const Color(0xff000000),
+                          fontWeight: FontWeight.w700,
+                        ),
+                        textAlign: TextAlign.center,
+                        softWrap: false,
+                      ),
+                    ),
                   ),
                 ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.057, -0.565),
-            child: SizedBox(
-              width: 114.0,
-              height: 28.0,
-              child: Text(
-                'Sugerencias',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-                softWrap: false,
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 284.0, end: 56.0),
-            Pin(size: 49.0, middle: 0.4093),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  duration:0.3,
-                  pageBuilder: () => ManualdeUso(key: Key('ManualdeUso'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xff4ec8dd),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xff080808),
-                      offset: Offset(0, 3),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.063, -0.178),
-            child: SizedBox(
-              width: 142.0,
-              height: 28.0,
-              child: Text(
-                'Manual de Uso',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-                softWrap: false,
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 284.0, end: 56.0),
-            Pin(size: 49.0, middle: 0.5113),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => TratamientodeDatos(key: Key('TratamientodeDatos'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xff4ec8dd),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xff080808),
-                      offset: Offset(0, 3),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.086, 0.021),
-            child: SizedBox(
-              width: 214.0,
-              height: 28.0,
-              child: Text(
-                'Tratamiento de Datos',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-                softWrap: false,
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 284.0, end: 55.0),
-            Pin(size: 49.0, middle: 0.3084),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  duration: 0.3,
-                  pageBuilder: () => SoporteTcnico(key: Key('SoporteTcnico'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xff4ec8dd),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xff080808),
-                      offset: Offset(0, 3),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.077, -0.375),
-            child: SizedBox(
-              width: 166.0,
-              height: 28.0,
-              child: Text(
-                'Soporte Técnico ',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-                softWrap: false,
               ),
             ),
           ),

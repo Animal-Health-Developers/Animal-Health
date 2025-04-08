@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
-import 'Carritodecompras.dart';
+import './Ayuda.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
+import './Carritodecompras.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class DirecciondeEnvio extends StatelessWidget {
@@ -21,7 +21,7 @@ class DirecciondeEnvio extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -495,7 +495,7 @@ class DirecciondeEnvio extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -511,7 +511,7 @@ class DirecciondeEnvio extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key("ListadeAnimales"),),
+                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
                 ),
               ],
               child: Container(

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'FuncionesdelaApp.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './Ayuda.dart';
+import './FuncionesdelaApp.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class EditarPerfildeAnimalesdeCompaia extends StatelessWidget {
@@ -21,7 +21,7 @@ class EditarPerfildeAnimalesdeCompaia extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -98,7 +98,7 @@ class EditarPerfildeAnimalesdeCompaia extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -136,8 +136,8 @@ class EditarPerfildeAnimalesdeCompaia extends StatelessWidget {
             child: PageLink(
               links: [
                 PageLinkInfo(
-                  duration: 1,
-                  pageBuilder: () => FuncionesdelaApp(key: Key("FuncionesdelaApp"),),
+                  duration: 0.3,
+                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'),),
                 ),
               ],
               child: Container(
@@ -159,13 +159,13 @@ class EditarPerfildeAnimalesdeCompaia extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key("Settings"),),
+                  pageBuilder: () => Settings(key: Key('Settings'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -181,7 +181,7 @@ class EditarPerfildeAnimalesdeCompaia extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key("ListadeAnimales"),),
+                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
                 ),
               ],
               child: Container(
@@ -208,420 +208,468 @@ class EditarPerfildeAnimalesdeCompaia extends StatelessWidget {
                     children: <Widget>[
                       Padding(
                         padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -72.0),
-                        child: SingleChildScrollView(
-                          primary: false,
-                          child: Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 20,
-                            runSpacing: 20,
-                            children: [{}].map((itemData) {
-                              return SizedBox(
-                                width: 316.0,
-                                height: 656.0,
-                                child: Stack(
-                                  children: <Widget>[
-                                    Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                          0.0, 54.0, 0.0, 0.0),
-                                      child: Stack(
-                                        children: <Widget>[
-                                          Pinned.fromPins(
-                                            Pin(start: 1.0, end: 0.0),
-                                            Pin(size: 45.0, start: 0.0),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 0.0, end: 1.0),
-                                            Pin(size: 45.0, start: 66.0),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 84.0, middle: 0.4978),
-                                            Pin(size: 28.0, start: 8.0),
-                                            child: Text(
-                                              'Nombre ',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 202.0, middle: 0.4912),
-                                            Pin(size: 28.0, start: 74.0),
-                                            child: Text(
-                                              'Fecha de Nacimiento',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 0.0, end: 1.0),
-                                            Pin(size: 45.0, middle: 0.237),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment: Alignment(0.012, -0.512),
-                                            child: SizedBox(
-                                              width: 71.0,
-                                              height: 28.0,
-                                              child: Text(
-                                                'Especie',
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 20,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                  fontWeight: FontWeight.w700,
+                        child: Stack(
+                          children: <Widget>[
+                            SingleChildScrollView(
+                              primary: false,
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 20,
+                                runSpacing: 20,
+                                children: [{}].map((itemData) {
+                                  return SizedBox(
+                                    width: 316.0,
+                                    height: 656.0,
+                                    child: Stack(
+                                      children: <Widget>[
+                                        Padding(
+                                          padding: EdgeInsets.fromLTRB(
+                                              0.0, 54.0, 0.0, 0.0),
+                                          child: Stack(
+                                            children: <Widget>[
+                                              Pinned.fromPins(
+                                                Pin(start: 1.0, end: 0.0),
+                                                Pin(size: 45.0, start: 0.0),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xffffffff),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0),
+                                                    border: Border.all(
+                                                        width: 1.0,
+                                                        color: const Color(
+                                                            0xff000000)),
+                                                  ),
                                                 ),
-                                                softWrap: false,
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 0.0, end: 1.0),
-                                            Pin(size: 45.0, middle: 0.3519),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment: Alignment(0.0, -0.289),
-                                            child: SizedBox(
-                                              width: 46.0,
-                                              height: 28.0,
-                                              child: Text(
-                                                'Raza',
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 20,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                  fontWeight: FontWeight.w700,
+                                              Pinned.fromPins(
+                                                Pin(start: 0.0, end: 1.0),
+                                                Pin(size: 45.0, start: 66.0),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xffffffff),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0),
+                                                    border: Border.all(
+                                                        width: 1.0,
+                                                        color: const Color(
+                                                            0xff000000)),
+                                                  ),
                                                 ),
-                                                softWrap: false,
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 0.0, end: 1.0),
-                                            Pin(size: 45.0, middle: 0.4704),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 0.0, end: 1.0),
-                                            Pin(size: 45.0, middle: 0.5925),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment:
-                                                Alignment(-0.015, -0.052),
-                                            child: SizedBox(
-                                              width: 42.0,
-                                              height: 28.0,
-                                              child: Text(
-                                                'Peso',
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 20,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                  fontWeight: FontWeight.w700,
+                                              Pinned.fromPins(
+                                                Pin(size: 84.0, middle: 0.4978),
+                                                Pin(size: 28.0, start: 8.0),
+                                                child: Text(
+                                                  'Nombre ',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 20,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  softWrap: false,
                                                 ),
-                                                softWrap: false,
                                               ),
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment: Alignment(0.08, 0.185),
-                                            child: SizedBox(
-                                              width: 166.0,
-                                              height: 28.0,
-                                              child: Text(
-                                                'Ancho del Animal',
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 20,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                  fontWeight: FontWeight.w700,
+                                              Pinned.fromPins(
+                                                Pin(
+                                                    size: 202.0,
+                                                    middle: 0.4912),
+                                                Pin(size: 28.0, start: 74.0),
+                                                child: Text(
+                                                  'Fecha de Nacimiento',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 20,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                  softWrap: false,
                                                 ),
-                                                softWrap: false,
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 30.0, start: 11.0),
-                                            Pin(size: 30.0, middle: 0.7063),
-                                            child: SvgPicture.string(
-                                              _svg_rkjof2,
-                                              allowDrawingOutsideViewBox: true,
-                                              fit: BoxFit.fill,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 0.0, end: 1.0),
-                                            Pin(size: 45.0, middle: 0.7145),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment: Alignment(0.071, 0.415),
-                                            child: SizedBox(
-                                              width: 161.0,
-                                              height: 28.0,
-                                              child: Text(
-                                                'Largo del Animal',
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 20,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                  fontWeight: FontWeight.w700,
+                                              Pinned.fromPins(
+                                                Pin(start: 0.0, end: 1.0),
+                                                Pin(size: 45.0, middle: 0.237),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xffffffff),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0),
+                                                    border: Border.all(
+                                                        width: 1.0,
+                                                        color: const Color(
+                                                            0xff000000)),
+                                                  ),
                                                 ),
-                                                softWrap: false,
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 35.2, start: 9.0),
-                                            Pin(size: 40.0, start: 68.5),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage(''),
+                                              Align(
+                                                alignment:
+                                                    Alignment(0.012, -0.512),
+                                                child: SizedBox(
+                                                  width: 71.0,
+                                                  height: 28.0,
+                                                  child: Text(
+                                                    'Especie',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 20,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(start: 0.0, end: 1.0),
+                                                Pin(size: 45.0, middle: 0.3519),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xffffffff),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0),
+                                                    border: Border.all(
+                                                        width: 1.0,
+                                                        color: const Color(
+                                                            0xff000000)),
+                                                  ),
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment(0.0, -0.289),
+                                                child: SizedBox(
+                                                  width: 46.0,
+                                                  height: 28.0,
+                                                  child: Text(
+                                                    'Raza',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 20,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(start: 0.0, end: 1.0),
+                                                Pin(size: 45.0, middle: 0.4704),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xffffffff),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0),
+                                                    border: Border.all(
+                                                        width: 1.0,
+                                                        color: const Color(
+                                                            0xff000000)),
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(start: 0.0, end: 1.0),
+                                                Pin(size: 45.0, middle: 0.5925),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xffffffff),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0),
+                                                    border: Border.all(
+                                                        width: 1.0,
+                                                        color: const Color(
+                                                            0xff000000)),
+                                                  ),
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment(-0.015, -0.052),
+                                                child: SizedBox(
+                                                  width: 42.0,
+                                                  height: 28.0,
+                                                  child: Text(
+                                                    'Peso',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 20,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment(0.08, 0.185),
+                                                child: SizedBox(
+                                                  width: 166.0,
+                                                  height: 28.0,
+                                                  child: Text(
+                                                    'Ancho del Animal',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 20,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 30.0, start: 11.0),
+                                                Pin(size: 30.0, middle: 0.7063),
+                                                child: SvgPicture.string(
+                                                  _svg_rkjof2,
+                                                  allowDrawingOutsideViewBox:
+                                                      true,
                                                   fit: BoxFit.fill,
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 40.3, start: 6.4),
-                                            Pin(size: 40.0, middle: 0.2393),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage(''),
-                                                  fit: BoxFit.fill,
+                                              Pinned.fromPins(
+                                                Pin(start: 0.0, end: 1.0),
+                                                Pin(size: 45.0, middle: 0.7145),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xffffffff),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0),
+                                                    border: Border.all(
+                                                        width: 1.0,
+                                                        color: const Color(
+                                                            0xff000000)),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 40.4, start: 6.4),
-                                            Pin(size: 40.0, middle: 0.3532),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage(''),
-                                                  fit: BoxFit.fill,
+                                              Align(
+                                                alignment:
+                                                    Alignment(0.071, 0.415),
+                                                child: SizedBox(
+                                                  width: 161.0,
+                                                  height: 28.0,
+                                                  child: Text(
+                                                    'Largo del Animal',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 20,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    softWrap: false,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 40.7, start: 6.1),
-                                            Pin(size: 40.0, middle: 0.4706),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage(''),
-                                                  fit: BoxFit.fill,
+                                              Pinned.fromPins(
+                                                Pin(size: 35.2, start: 9.0),
+                                                Pin(size: 40.0, start: 68.5),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image:
+                                                          const AssetImage(''),
+                                                      fit: BoxFit.fill,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 35.8, start: 6.4),
-                                            Pin(size: 40.0, middle: 0.5916),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage(''),
-                                                  fit: BoxFit.cover,
+                                              Pinned.fromPins(
+                                                Pin(size: 40.3, start: 6.4),
+                                                Pin(size: 40.0, middle: 0.2393),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image:
+                                                          const AssetImage(''),
+                                                      fit: BoxFit.fill,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 35.8, start: 6.4),
-                                            Pin(size: 40.0, middle: 0.7126),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage(''),
-                                                  fit: BoxFit.cover,
+                                              Pinned.fromPins(
+                                                Pin(size: 40.4, start: 6.4),
+                                                Pin(size: 40.0, middle: 0.3532),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image:
+                                                          const AssetImage(''),
+                                                      fit: BoxFit.fill,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 37.4, start: 11.0),
-                                            Pin(size: 40.0, start: 3.0),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage(''),
-                                                  fit: BoxFit.fill,
+                                              Pinned.fromPins(
+                                                Pin(size: 40.7, start: 6.1),
+                                                Pin(size: 40.0, middle: 0.4706),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image:
+                                                          const AssetImage(''),
+                                                      fit: BoxFit.fill,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment: Alignment.bottomCenter,
-                                            child: SizedBox(
-                                              width: 60.0,
-                                              height: 28.0,
-                                              child: Text(
-                                                'Editar',
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 20,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                  fontWeight: FontWeight.w700,
+                                              Pinned.fromPins(
+                                                Pin(size: 35.8, start: 6.4),
+                                                Pin(size: 40.0, middle: 0.5916),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image:
+                                                          const AssetImage(''),
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
                                                 ),
-                                                textAlign: TextAlign.center,
-                                                softWrap: false,
                                               ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(start: 38.0, end: 37.0),
-                                      Pin(size: 35.0, start: 0.0),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xe3a0f4fe),
-                                          borderRadius:
-                                              BorderRadius.circular(10.0),
-                                          border: Border.all(
-                                              width: 1.0,
-                                              color: const Color(0xe3000000)),
-                                        ),
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(start: 47.0, end: 45.0),
-                                      Pin(size: 28.0, start: 4.0),
-                                      child: Text(
-                                        'Editar Perfil de Animal',
-                                        style: TextStyle(
-                                          fontFamily: 'Comic Sans MS',
-                                          fontSize: 20,
-                                          color: const Color(0xff000000),
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                      ),
-                                    ),
-                                    Pinned.fromPins(
-                                      Pin(size: 127.3, middle: 0.5),
-                                      Pin(size: 120.0, end: 29.0),
-                                      child: PageLink(
-                                        links: [
-                                          PageLinkInfo(
-                                            transition: LinkTransition.Fade,
-                                            ease: Curves.easeOut,
-                                            duration: 0.3,
-                                            pageBuilder: () =>
-                                                ListadeAnimales(key: Key("ListadeAnimales"),),
-                                          ),
-                                        ],
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            image: DecorationImage(
-                                              image: const AssetImage(''),
-                                              fit: BoxFit.fill,
-                                            ),
+                                              Pinned.fromPins(
+                                                Pin(size: 35.8, start: 6.4),
+                                                Pin(size: 40.0, middle: 0.7126),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image:
+                                                          const AssetImage(''),
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 37.4, start: 11.0),
+                                                Pin(size: 40.0, start: 3.0),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image:
+                                                          const AssetImage(''),
+                                                      fit: BoxFit.fill,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment.bottomCenter,
+                                                child: SizedBox(
+                                                  width: 60.0,
+                                                  height: 28.0,
+                                                  child: Text(
+                                                    'Editar',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 20,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ),
+                                        Pinned.fromPins(
+                                          Pin(start: 38.0, end: 37.0),
+                                          Pin(size: 35.0, start: 0.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xe3a0f4fe),
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0),
+                                              border: Border.all(
+                                                  width: 1.0,
+                                                  color:
+                                                      const Color(0xe3000000)),
+                                            ),
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(start: 47.0, end: 45.0),
+                                          Pin(size: 28.0, start: 4.0),
+                                          child: Text(
+                                            'Editar Perfil de Animal',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 20,
+                                              color: const Color(0xff000000),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            softWrap: false,
+                                          ),
+                                        ),
+                                        Pinned.fromPins(
+                                          Pin(size: 127.3, middle: 0.5),
+                                          Pin(size: 120.0, end: 29.0),
+                                          child: PageLink(
+                                            links: [
+                                              PageLinkInfo(
+                                                transition: LinkTransition.Fade,
+                                                ease: Curves.easeOut,
+                                                duration: 0.3,
+                                                pageBuilder: () =>
+                                                    ListadeAnimales(key: Key('ListadeAnimales'),),
+                                              ),
+                                            ],
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                image: DecorationImage(
+                                                  image: const AssetImage(''),
+                                                  fit: BoxFit.fill,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

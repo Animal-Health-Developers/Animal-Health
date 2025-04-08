@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'CrearCuenta.dart';
-import 'Ayuda.dart';
-import 'Settingsoutsesion.dart';
+import 'package:adobe_xd/pinned.dart';
+import './CrearCuenta.dart';
+import './Ayuda.dart';
+import './Settingsoutsesion.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AnimalHealth extends StatelessWidget {
-  AnimalHealth({
+  const AnimalHealth({
     required Key key,
   }) : super(key: key);
   @override
@@ -24,7 +24,7 @@ class AnimalHealth extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Align(
             alignment: Alignment(0.004, -0.567),
@@ -41,127 +41,66 @@ class AnimalHealth extends StatelessWidget {
               ),
             ),
           ),
-          Pinned.fromPins(
-            Pin(start: 43.0, end: 43.0),
-            Pin(size: 45.0, middle: 0.5089),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xffffffff),
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(width: 1.0, color: const Color(0xff000000)),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 49.0, end: 48.0),
-            Pin(size: 45.0, middle: 0.5951),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xffffffff),
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(width: 1.0, color: const Color(0xff000000)),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 265.0, end: 54.0),
-            Pin(size: 28.0, middle: 0.5093),
-
-            child: Text(
-              'Email o Nombre de Usuario',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
           Align(
-            alignment: Alignment(0.0, 0.186),
+            alignment: Alignment(0.0, 0.454),
             child: SizedBox(
-              width: 106.0,
-              height: 28.0,
-              child: Text(
-                'Contraseña',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
-                ),
-                softWrap: false,
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 85.0, end: 85.0),
-            Pin(size: 49.0, middle: 0.7272),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xff4ec8dd),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xff080808),
-                      offset: Offset(0, 3),
-                      blurRadius: 6,
+              width: 242.0,
+              height: 49.0,
+              child: Stack(
+                children: <Widget>[
+                  PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => Home(key: Key('Home'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xff4ec8dd),
+                        borderRadius: BorderRadius.circular(15.0),
+                        border: Border.all(
+                            width: 1.0, color: const Color(0xff000000)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xff080808),
+                            offset: Offset(0, 3),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 220.0, start: 50.0),
-            Pin(size: 28.0, middle: 0.6354),
-            child: Text(
-              '¿Olvido la contraseña?',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.03, 0.443),
-            child: SizedBox(
-              width: 134.0,
-              height: 28.0,
-              child: PageLink(
-                links: [
-                  PageLinkInfo(
-                    transition: LinkTransition.Fade,
-                    ease: Curves.easeOut,
-                    duration: 0.3,
-                    pageBuilder: () => Home(),
+                  ),
+                  Align(
+                    alignment: Alignment(0.076, 0.0),
+                    child: SizedBox(
+                      width: 134.0,
+                      height: 28.0,
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => Home(key: Key('Home'),),
+                          ),
+                        ],
+                        child: Text(
+                          'Iniciar Sesion',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 20,
+                            color: const Color(0xff000000),
+                            fontWeight: FontWeight.w700,
+                          ),
+                          softWrap: false,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
-                child: Text(
-                  'Iniciar Sesion',
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 20,
-                    color: const Color(0xff000000),
-                    fontWeight: FontWeight.w700,
-                  ),
-                  softWrap: false,
-                ),
               ),
             ),
           ),
@@ -191,74 +130,82 @@ class AnimalHealth extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 245.0, middle: 0.4641),
-            Pin(size: 26.0, end: 76.2),
-            child: SingleChildScrollView(
-              primary: false,
-              child: Text(
-                '¿No tienes una cuenta?',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 85.0, end: 85.0),
-            Pin(size: 49.0, end: 102.2),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CrearCuenta(key: Key('CrearCuenta'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xff4ec8dd),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xff080808),
-                      offset: Offset(0, 3),
-                      blurRadius: 6,
+            Pin(size: 249.5, middle: 0.4769),
+            Pin(size: 75.0, end: 76.2),
+            child: Stack(
+              children: <Widget>[
+                Pinned.fromPins(
+                  Pin(start: 0.0, end: 4.5),
+                  Pin(size: 26.0, end: 0.0),
+                  child: SingleChildScrollView(
+                    primary: false,
+                    child: Text(
+                      '¿No tienes una cuenta?',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 110.0, middle: 0.5),
-            Pin(size: 28.0, end: 112.7),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CrearCuenta(key: Key('CrearCuenta'),),
+                Pinned.fromPins(
+                  Pin(start: 7.5, end: 0.0),
+                  Pin(size: 49.0, start: 0.0),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => CrearCuenta(key: Key('CrearCuenta'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xff4ec8dd),
+                        borderRadius: BorderRadius.circular(15.0),
+                        border: Border.all(
+                            width: 1.0, color: const Color(0xff000000)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xff080808),
+                            offset: Offset(0, 3),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 110.0, middle: 0.5269),
+                  Pin(size: 28.0, start: 10.5),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => CrearCuenta(key: Key('CrearCuenta'),),
+                      ),
+                    ],
+                    child: Text(
+                      'Registrarse',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                      softWrap: false,
+                    ),
+                  ),
                 ),
               ],
-              child: Text(
-                'Registrarse',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-                softWrap: false,
-              ),
             ),
           ),
           Pinned.fromPins(
@@ -284,27 +231,105 @@ class AnimalHealth extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 45.0, start: 45.0),
-            Pin(size: 45.0, middle: 0.5094),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/@.png'),
-                  fit: BoxFit.fill,
+            Pin(start: 43.0, end: 43.0),
+            Pin(size: 45.0, middle: 0.5089),
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xffffffff),
+                    borderRadius: BorderRadius.circular(12.0),
+                    border:
+                        Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
-              ),
+                Pinned.fromPins(
+                  Pin(size: 265.0, end: 11.0),
+                  Pin(size: 28.0, middle: 0.5288),
+                  child: Text(
+                    'Email o Nombre de Usuario',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 45.0, start: 1.0),
+                  Pin(start: 2.0, end: 1.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/@.png'),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 39.2, start: 52.9),
-            Pin(size: 40.0, middle: 0.5945),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/password.png'),
-                  fit: BoxFit.fill,
+            Pin(start: 49.0, end: 48.0),
+            Pin(size: 73.0, middle: 0.6154),
+            child: Stack(
+              children: <Widget>[
+                Pinned.fromPins(
+                  Pin(start: 0.0, end: 0.0),
+                  Pin(size: 45.0, start: 0.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xffffffff),
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(
+                          width: 1.0, color: const Color(0xff000000)),
+                    ),
+                  ),
                 ),
-              ),
+                Pinned.fromPins(
+                  Pin(size: 106.0, middle: 0.4976),
+                  Pin(size: 28.0, start: 8.5),
+                  child: Text(
+                    'Contraseña',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 220.0, start: 1.0),
+                  Pin(size: 28.0, end: 0.0),
+                  child: Text(
+                    '¿Olvido la contraseña?',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 39.2, start: 3.9),
+                  Pin(size: 40.0, start: 2.5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/password.png'),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Pinned.fromPins(

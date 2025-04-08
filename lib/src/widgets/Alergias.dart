@@ -28,7 +28,7 @@ class Alergias extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -43,7 +43,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -68,7 +68,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda")),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -84,42 +84,43 @@ class Alergias extends StatelessWidget {
           Pinned.fromPins(
             Pin(size: 307.0, end: 33.0),
             Pin(size: 45.0, middle: 0.1995),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xffffffff),
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(width: 1.0, color: const Color(0xff707070)),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.255, -0.593),
-            child: SizedBox(
-              width: 216.0,
-              height: 28.0,
-              child: Text(
-                '¿Qué estás buscando?',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xffffffff),
+                    borderRadius: BorderRadius.circular(5.0),
+                    border:
+                        Border.all(width: 1.0, color: const Color(0xff707070)),
+                  ),
                 ),
-                softWrap: false,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(-0.585, -0.591),
-            child: Container(
-              width: 31.0,
-              height: 31.0,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
+                Pinned.fromPins(
+                  Pin(size: 216.0, end: 40.0),
+                  Pin(size: 28.0, middle: 0.4118),
+                  child: Text(
+                    '¿Qué estás buscando?',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
                 ),
-              ),
+                Pinned.fromPins(
+                  Pin(size: 31.0, start: 7.0),
+                  Pin(start: 7.0, end: 7.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage(''),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Pinned.fromPins(
@@ -131,7 +132,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key("PerfilPublico"),),
+                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
                 ),
               ],
               child: Container(
@@ -150,250 +151,266 @@ class Alergias extends StatelessWidget {
             Pin(size: 476.0, end: 63.0),
             child: Stack(
               children: <Widget>[
-                SizedBox.expand(
-                    child: SvgPicture.string(
-                  _svg_k0evxa,
-                  allowDrawingOutsideViewBox: true,
-                  fit: BoxFit.fill,
-                )),
-                Pinned.fromPins(
-                  Pin(size: 104.0, middle: 0.3412),
-                  Pin(size: 28.0, start: 21.0),
-                  child: Text(
-                    'ALERGIAS',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 57.0, middle: 0.2917),
-                  Pin(size: 19.0, start: 48.0),
-                  child: Text(
-                    'síntomas',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 14,
-                      color: const Color(0xff000000),
-                      height: 1.7142857142857142,
-                    ),
-                    textHeightBehavior:
-                        TextHeightBehavior(applyHeightToFirstAscent: false),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(start: 9.0, end: 10.0),
-                  Pin(size: 45.0, middle: 0.2088),
-                  child: SvgPicture.string(
-                    _svg_kf22y,
-                    allowDrawingOutsideViewBox: true,
-                    fit: BoxFit.fill,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(start: 9.0, end: 10.0),
-                  Pin(size: 145.0, middle: 0.5408),
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 22.0, sigmaY: 22.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(20.0),
-                          border: Border.all(
-                              width: 1.0, color: const Color(0xff707070)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xf2000000),
-                              offset: Offset(0, 3),
-                              blurRadius: 6,
+                Stack(
+                  children: <Widget>[
+                    Stack(
+                      children: <Widget>[
+                        Stack(
+                          children: <Widget>[
+                            SizedBox.expand(
+                                child: SvgPicture.string(
+                              _svg_k0evxa,
+                              allowDrawingOutsideViewBox: true,
+                              fit: BoxFit.fill,
+                            )),
+                            Pinned.fromPins(
+                              Pin(size: 104.0, middle: 0.3412),
+                              Pin(size: 28.0, start: 21.0),
+                              child: Text(
+                                'ALERGIAS',
+                                style: TextStyle(
+                                  fontFamily: 'Comic Sans MS',
+                                  fontSize: 20,
+                                  color: const Color(0xff000000),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                softWrap: false,
+                              ),
+                            ),
+                            Pinned.fromPins(
+                              Pin(size: 57.0, middle: 0.2917),
+                              Pin(size: 19.0, start: 48.0),
+                              child: Text(
+                                'síntomas',
+                                style: TextStyle(
+                                  fontFamily: 'Comic Sans MS',
+                                  fontSize: 14,
+                                  color: const Color(0xff000000),
+                                  height: 1.7142857142857142,
+                                ),
+                                textHeightBehavior: TextHeightBehavior(
+                                    applyHeightToFirstAscent: false),
+                                softWrap: false,
+                              ),
+                            ),
+                            Pinned.fromPins(
+                              Pin(start: 9.0, end: 10.0),
+                              Pin(size: 45.0, middle: 0.2088),
+                              child: SvgPicture.string(
+                                _svg_kf22y,
+                                allowDrawingOutsideViewBox: true,
+                                fit: BoxFit.fill,
+                              ),
+                            ),
+                            Pinned.fromPins(
+                              Pin(start: 9.0, end: 10.0),
+                              Pin(size: 145.0, middle: 0.5408),
+                              child: ClipRect(
+                                child: BackdropFilter(
+                                  filter: ui.ImageFilter.blur(
+                                      sigmaX: 22.0, sigmaY: 22.0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(20.0),
+                                      border: Border.all(
+                                          width: 1.0,
+                                          color: const Color(0xff707070)),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xf2000000),
+                                          offset: Offset(0, 3),
+                                          blurRadius: 6,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Pinned.fromPins(
+                              Pin(size: 100.0, start: 20.0),
+                              Pin(size: 24.0, middle: 0.3274),
+                              child: Text(
+                                'Descripción:',
+                                style: TextStyle(
+                                  fontFamily: 'Comic Sans MS',
+                                  fontSize: 17,
+                                  color: const Color(0xff000000),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                softWrap: false,
+                              ),
+                            ),
+                            Pinned.fromPins(
+                              Pin(size: 165.0, start: 23.0),
+                              Pin(size: 24.0, middle: 0.2235),
+                              child: Text(
+                                'TIPO DE ALERGIA:',
+                                style: TextStyle(
+                                  fontFamily: 'Comic Sans MS',
+                                  fontSize: 17,
+                                  color: const Color(0xff000000),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                softWrap: false,
+                              ),
+                            ),
+                            Pinned.fromPins(
+                              Pin(size: 58.8, start: 14.5),
+                              Pin(size: 70.0, start: 13.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: const AssetImage(''),
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      ),
+                      ],
+                    ),
+                  ],
+                ),
+                Transform.translate(
+                  offset: Offset(21.0, 351.0),
+                  child: SizedBox(
+                    width: 147.0,
+                    height: 34.0,
+                    child: SvgPicture.string(
+                      _svg_p9e9w,
+                      allowDrawingOutsideViewBox: true,
                     ),
                   ),
                 ),
-                Pinned.fromPins(
-                  Pin(size: 100.0, start: 20.0),
-                  Pin(size: 24.0, middle: 0.3274),
-                  child: Text(
-                    'Descripción:',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 17,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 165.0, start: 23.0),
-                  Pin(size: 24.0, middle: 0.2235),
-                  child: Text(
-                    'TIPO DE ALERGIA:',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 17,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 58.8, start: 14.5),
-                  Pin(size: 70.0, start: 13.0),
+                Transform.translate(
+                  offset: Offset(213.0, 351.0),
                   child: Container(
+                    width: 147.0,
+                    height: 34.0,
                     decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: const AssetImage(''),
-                        fit: BoxFit.fill,
+                      color: const Color(0xff4ec8dd),
+                      borderRadius: BorderRadius.circular(8.0),
+                      border: Border.all(
+                          width: 1.0, color: const Color(0xff000000)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xff080808),
+                          offset: Offset(0, 3),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment(0.621, 0.575),
+                  child: SizedBox(
+                    width: 64.0,
+                    height: 24.0,
+                    child: Text(
+                      'Guardar',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 17,
+                        color: const Color(0xff000000),
                       ),
+                      softWrap: false,
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment(-0.566, 0.575),
+                  child: SizedBox(
+                    width: 49.0,
+                    height: 24.0,
+                    child: Text(
+                      'Envíar',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 17,
+                        color: const Color(0xff000000),
+                      ),
+                      softWrap: false,
+                    ),
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(21.0, 351.0),
+                  child: SizedBox(
+                    width: 147.0,
+                    height: 34.0,
+                    child: PageLink(
+                      links: [
+                        PageLinkInfo(
+                          transition: LinkTransition.Fade,
+                          ease: Curves.easeOut,
+                          duration: 0.3,
+                          pageBuilder: () => SolucionAEMERGENCIAS(key: Key('SolucionAEMERGENCIAS'),),
+                        ),
+                      ],
+                      child: SvgPicture.string(
+                        _svg_p9e9w,
+                        allowDrawingOutsideViewBox: true,
+                      ),
+                    ),
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(213.0, 351.0),
+                  child: Container(
+                    width: 147.0,
+                    height: 34.0,
+                    decoration: BoxDecoration(
+                      color: const Color(0xff4ec8dd),
+                      borderRadius: BorderRadius.circular(8.0),
+                      border: Border.all(
+                          width: 1.0, color: const Color(0xff000000)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xff080808),
+                          offset: Offset(0, 3),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment(0.621, 0.575),
+                  child: SizedBox(
+                    width: 64.0,
+                    height: 24.0,
+                    child: Text(
+                      'Guardar',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 17,
+                        color: const Color(0xff000000),
+                      ),
+                      softWrap: false,
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment(-0.566, 0.575),
+                  child: SizedBox(
+                    width: 49.0,
+                    height: 24.0,
+                    child: Text(
+                      'Envíar',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 17,
+                        color: const Color(0xff000000),
+                      ),
+                      softWrap: false,
                     ),
                   ),
                 ),
               ],
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(36.5, 704.0),
-            child: SizedBox(
-              width: 147.0,
-              height: 34.0,
-              child: SvgPicture.string(
-                _svg_p9e9w,
-                allowDrawingOutsideViewBox: true,
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(228.5, 704.0),
-            child: Container(
-              width: 147.0,
-              height: 34.0,
-              decoration: BoxDecoration(
-                color: const Color(0xff4ec8dd),
-                borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(width: 1.0, color: const Color(0xff000000)),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xff080808),
-                    offset: Offset(0, 3),
-                    blurRadius: 6,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.566, 0.634),
-            child: SizedBox(
-              width: 64.0,
-              height: 24.0,
-              child: Text(
-                'Guardar',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 17,
-                  color: const Color(0xff000000),
-                ),
-                softWrap: false,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(-0.518, 0.634),
-            child: SizedBox(
-              width: 49.0,
-              height: 24.0,
-              child: Text(
-                'Envíar',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 17,
-                  color: const Color(0xff000000),
-                ),
-                softWrap: false,
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(36.5, 704.0),
-            child: SizedBox(
-              width: 147.0,
-              height: 34.0,
-              child: PageLink(
-                links: [
-                  PageLinkInfo(
-                    transition: LinkTransition.Fade,
-                    ease: Curves.easeOut,
-                    duration: 0.3,
-                    pageBuilder: () => SolucionAEMERGENCIAS(key: Key("SolucionAEMERGENCIAS"),),
-                  ),
-                ],
-                child: SvgPicture.string(
-                  _svg_p9e9w,
-                  allowDrawingOutsideViewBox: true,
-                ),
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(228.5, 704.0),
-            child: Container(
-              width: 147.0,
-              height: 34.0,
-              decoration: BoxDecoration(
-                color: const Color(0xff4ec8dd),
-                borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(width: 1.0, color: const Color(0xff000000)),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xff080808),
-                    offset: Offset(0, 3),
-                    blurRadius: 6,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.566, 0.634),
-            child: SizedBox(
-              width: 64.0,
-              height: 24.0,
-              child: Text(
-                'Guardar',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 17,
-                  color: const Color(0xff000000),
-                ),
-                softWrap: false,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(-0.518, 0.634),
-            child: SizedBox(
-              width: 49.0,
-              height: 24.0,
-              child: Text(
-                'Envíar',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 17,
-                  color: const Color(0xff000000),
-                ),
-                softWrap: false,
-              ),
             ),
           ),
           Pinned.fromPins(
@@ -422,13 +439,13 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key("Settings"),),
+                  pageBuilder: () => Settings(key: Key('Settings'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -444,7 +461,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key("ListadeAnimales"),),
+                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
                 ),
               ],
               child: Container(
@@ -466,7 +483,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CompradeProductos(key: Key("CompradeProductos"),),
+                  pageBuilder: () => CompradeProductos(key: Key('CompradeProductos'),),
                 ),
               ],
               child: Container(
@@ -488,7 +505,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -509,7 +526,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CuidadosyRecomendaciones(key: Key("CuidadosyRecomendaciones"),),
+                  pageBuilder: () => CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones'),),
                 ),
               ],
               child: Container(
@@ -532,7 +549,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Emergencias(key: Key("Emergencias"),),
+                  pageBuilder: () => Emergencias(key: Key('Emergencias'),),
                 ),
               ],
               child: Container(
@@ -562,7 +579,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Comunidad(key: Key("Comunidad"),),
+                  pageBuilder: () => Comunidad(key: Key('Comunidad'),),
                 ),
               ],
               child: Container(
@@ -586,7 +603,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Crearpublicaciones(key: Key("Crearpublicaciones"),),
+                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones'),),
                 ),
               ],
               child: Container(
@@ -603,9 +620,6 @@ class Alergias extends StatelessWidget {
       ),
     );
   }
-}
-
-class Cearpublicaciones {
 }
 
 const String _svg_k0evxa =

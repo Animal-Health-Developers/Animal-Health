@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'PerfilPublico.dart';
-import 'chatconamigos.dart';
+import './Ayuda.dart';
+import './PerfilPublico.dart';
+import './chatconamigos.dart';
 import 'dart:ui' as ui;
-import 'Comunidad.dart';
-import 'Contactos.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
-import 'CompradeProductos.dart';
-import 'CuidadosyRecomendaciones.dart';
-import 'Emergencias.dart';
-import 'Crearpublicaciones.dart';
+import './Comunidad.dart';
+import './Contactos.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
+import './CompradeProductos.dart';
+import './CuidadosyRecomendaciones.dart';
+import './Emergencias.dart';
+import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AmigosenLInea extends StatelessWidget {
@@ -44,7 +44,7 @@ class AmigosenLInea extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key("Home"),),
+                  pageBuilder: () => Home(key: Key('Home'),),
                 ),
               ],
               child: Container(
@@ -69,7 +69,7 @@ class AmigosenLInea extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda")),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -85,42 +85,43 @@ class AmigosenLInea extends StatelessWidget {
           Pinned.fromPins(
             Pin(size: 307.0, end: 33.0),
             Pin(size: 45.0, middle: 0.1995),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xffffffff),
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(width: 1.0, color: const Color(0xff707070)),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.255, -0.593),
-            child: SizedBox(
-              width: 216.0,
-              height: 28.0,
-              child: Text(
-                '¿Qué estás buscando?',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xffffffff),
+                    borderRadius: BorderRadius.circular(5.0),
+                    border:
+                        Border.all(width: 1.0, color: const Color(0xff707070)),
+                  ),
                 ),
-                softWrap: false,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(-0.585, -0.591),
-            child: Container(
-              width: 31.0,
-              height: 31.0,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/busqueda1.png'),
-                  fit: BoxFit.fill,
+                Pinned.fromPins(
+                  Pin(size: 216.0, end: 40.0),
+                  Pin(size: 28.0, middle: 0.4118),
+                  child: Text(
+                    '¿Qué estás buscando?',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
                 ),
-              ),
+                Pinned.fromPins(
+                  Pin(size: 31.0, start: 7.0),
+                  Pin(start: 7.0, end: 7.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/busqueda1.png'),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Pinned.fromPins(
@@ -132,7 +133,7 @@ class AmigosenLInea extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key("PerfilPublico"),),
+                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
                 ),
               ],
               child: Container(
@@ -147,36 +148,48 @@ class AmigosenLInea extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(start: 0.0, end: 14.0),
-            Pin(size: 530.9, end: 51.1),
+            Pin(size: 1.0, start: 0.0),
+            Pin(size: 3.3, end: 51.1),
+            child: SvgPicture.string(
+              _svg_pp4nt,
+              allowDrawingOutsideViewBox: true,
+              fit: BoxFit.fill,
+            ),
+          ),
+          Pinned.fromPins(
+            Pin(size: 33.9, start: 10.0),
+            Pin(size: 32.0, middle: 0.3605),
+            child: PageLink(
+              links: [
+                PageLinkInfo(),
+              ],
+              child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: const AssetImage('assets/images/back.png'),
+                    fit: BoxFit.fill,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Pinned.fromPins(
+            Pin(start: 14.0, end: 14.0),
+            Pin(size: 488.1, end: 92.9),
             child: Stack(
               children: <Widget>[
-                Pinned.fromPins(
-                  Pin(start: 14.0, end: 0.0),
-                  Pin(size: 346.0, end: 41.8),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xe3a0f4fe),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xe3000000)),
-                    ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xe3a0f4fe),
+                    borderRadius: BorderRadius.circular(20.0),
+                    border:
+                        Border.all(width: 1.0, color: const Color(0xe3000000)),
                   ),
-                ),
-                Align(
-                  alignment: Alignment.bottomLeft,
-                  child: SizedBox(
-                    width: 1.0,
-                    height: 3.0,
-                    child: SvgPicture.string(
-                      _svg_jr8ex,
-                      allowDrawingOutsideViewBox: true,
-                    ),
-                  ),
+                  margin: EdgeInsets.fromLTRB(0.0, 142.1, 0.0, 0.0),
                 ),
                 Pinned.fromPins(
-                  Pin(size: 330.0, middle: 0.6029),
-                  Pin(size: 340.0, end: 46.9),
+                  Pin(size: 330.0, middle: 0.5),
+                  Pin(size: 340.0, end: 5.1),
                   child: SingleChildScrollView(
                     primary: false,
                     child: SizedBox(
@@ -193,6 +206,9 @@ class AmigosenLInea extends StatelessWidget {
                                 spacing: 117,
                                 runSpacing: 20,
                                 children: [
+                                  {
+                                    'text': 'En Linea',
+                                  },
                                   {
                                     'text': 'En linea',
                                   }
@@ -396,35 +412,7 @@ class AmigosenLInea extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage('assets/images/winter.jpg'),
-                                                fit: BoxFit.fill,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(42.0),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 84.0, start: 2.0),
-                                          Pin(size: 84.0, end: 0.0),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: const AssetImage('assets/images/donut.jpg'),
-                                                fit: BoxFit.fill,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(42.0),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 84.0, start: 2.0),
-                                          Pin(size: 84.0, end: 0.0),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: const AssetImage('assets/images/kitty.jpg'),
+                                                image: const AssetImage(''),
                                                 fit: BoxFit.fill,
                                               ),
                                               borderRadius:
@@ -558,34 +546,16 @@ class AmigosenLInea extends StatelessWidget {
                   ),
                 ),
                 Pinned.fromPins(
-                  Pin(size: 33.9, start: 10.0),
-                  Pin(size: 32.0, start: 0.0),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: const AssetImage('assets/images/back.png'),
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 1.0, middle: 0.4181),
-                  Pin(size: 1.0, start: 29.6),
+                  Pin(size: 1.0, middle: 0.3969),
+                  Pin(size: 1.0, start: 28.6),
                   child: SvgPicture.string(
-                    _svg_fejle,
+                    _svg_guxmqh,
                     allowDrawingOutsideViewBox: true,
                     fit: BoxFit.fill,
                   ),
                 ),
-                Pinned.fromPins(
-                  Pin(size: 143.0, middle: 0.543),
-                  Pin(size: 30.0, start: 1.0),
+                Align(
+                  alignment: Alignment(0.033, -1.0),
                   child: PageLink(
                     links: [
                       PageLinkInfo(
@@ -596,6 +566,8 @@ class AmigosenLInea extends StatelessWidget {
                       ),
                     ],
                     child: Container(
+                      width: 143.0,
+                      height: 30.0,
                       decoration: BoxDecoration(
                         color: const Color(0xe3a0f4fe),
                         borderRadius: BorderRadius.circular(10.0),
@@ -606,8 +578,8 @@ class AmigosenLInea extends StatelessWidget {
                   ),
                 ),
                 Pinned.fromPins(
-                  Pin(size: 129.0, start: 37.0),
-                  Pin(size: 30.0, start: 48.0),
+                  Pin(size: 129.0, start: 23.0),
+                  Pin(size: 30.0, start: 47.0),
                   child: Container(
                     decoration: BoxDecoration(
                       color: const Color(0xe3a0f4fe),
@@ -626,7 +598,7 @@ class AmigosenLInea extends StatelessWidget {
                 ),
                 Pinned.fromPins(
                   Pin(size: 129.0, end: 15.0),
-                  Pin(size: 30.0, start: 48.0),
+                  Pin(size: 30.0, start: 47.0),
                   child: PageLink(
                     links: [
                       PageLinkInfo(
@@ -647,8 +619,8 @@ class AmigosenLInea extends StatelessWidget {
                   ),
                 ),
                 Pinned.fromPins(
-                  Pin(size: 57.0, middle: 0.2228),
-                  Pin(size: 21.0, start: 52.0),
+                  Pin(size: 57.0, middle: 0.1895),
+                  Pin(size: 21.0, start: 51.0),
                   child: Text(
                     'En linea',
                     style: TextStyle(
@@ -662,7 +634,7 @@ class AmigosenLInea extends StatelessWidget {
                 ),
                 Pinned.fromPins(
                   Pin(size: 101.0, end: 29.0),
-                  Pin(size: 21.0, start: 53.0),
+                  Pin(size: 21.0, start: 52.0),
                   child: Text(
                     'Tus contactos',
                     style: TextStyle(
@@ -675,8 +647,8 @@ class AmigosenLInea extends StatelessWidget {
                   ),
                 ),
                 Pinned.fromPins(
-                  Pin(size: 78.0, middle: 0.5452),
-                  Pin(size: 21.0, start: 5.0),
+                  Pin(size: 78.0, middle: 0.5244),
+                  Pin(size: 21.0, start: 4.0),
                   child: Text(
                     'Solicitudes',
                     style: TextStyle(
@@ -883,7 +855,7 @@ class AmigosenLInea extends StatelessWidget {
   }
 }
 
-const String _svg_jr8ex =
-    '<svg viewBox="0.0 529.6 1.0 3.3" ><path transform="translate(0.0, 516.09)" d="M 0 13.5 C 0 13.5 0 20.95584487915039 0 13.5 Z" fill="#000000" fill-opacity="0.65" stroke="#000000" stroke-width="1" stroke-opacity="0.65" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
-const String _svg_fejle =
-    '<svg viewBox="166.0 31.6 1.0 1.0" ><path transform="translate(15.41, -298.91)" d="M 150.5888214111328 330.5046081542969" fill="#000000" stroke="#000000" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
+const String _svg_pp4nt =
+    '<svg viewBox="0.0 837.6 1.0 3.3" ><path transform="translate(0.0, 824.09)" d="M 0 13.5 C 0 13.5 0 20.95584487915039 0 13.5 Z" fill="#000000" fill-opacity="0.65" stroke="#000000" stroke-width="1" stroke-opacity="0.65" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
+const String _svg_guxmqh =
+    '<svg viewBox="166.0 339.6 1.0 1.0" ><path transform="translate(15.41, 9.09)" d="M 150.5888214111328 330.5046081542969" fill="#000000" stroke="#000000" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';

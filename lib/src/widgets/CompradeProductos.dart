@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'PerfilPublico.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
-import 'VenderProductos.dart';
-import 'Carritodecompras.dart';
-import 'DetallesdelProducto.dart';
-import 'ComprarAhora.dart';
+import './Ayuda.dart';
+import './PerfilPublico.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
+import './VenderProductos.dart';
+import './Carritodecompras.dart';
+import './DetallesdelProducto.dart';
+import './ComprarAhora.dart';
+import './Home.dart';
 
 class CompradeProductos extends StatelessWidget {
   const CompradeProductos({
@@ -24,50 +24,11 @@ class CompradeProductos extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
             margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
-          ),
-          Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-                borderRadius: BorderRadius.circular(44.0),
-                border: Border.all(width: 1.0, color: const Color(0xff070707)),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage(''),
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
-                ),
-              ),
-            ),
           ),
           Pinned.fromPins(
             Pin(size: 307.0, start: 16.0),
@@ -183,7 +144,7 @@ class CompradeProductos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -533,6 +494,31 @@ class CompradeProductos extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+          ),
+          Pinned.fromPins(
+            Pin(size: 74.0, middle: 0.5),
+            Pin(size: 73.0, start: 42.0),
+            child: PageLink(
+              links: [
+                PageLinkInfo(
+                  transition: LinkTransition.Fade,
+                  ease: Curves.easeOut,
+                  duration: 0.3,
+                  pageBuilder: () => Home(key: Key('Home'),),
+                ),
+              ],
+              child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: const AssetImage(''),
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.circular(15.0),
+                  border:
+                      Border.all(width: 1.0, color: const Color(0xff000000)),
                 ),
               ),
             ),

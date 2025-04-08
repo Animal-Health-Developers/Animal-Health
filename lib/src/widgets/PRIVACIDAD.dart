@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'PerfilPublico.dart';
-import 'Ayuda.dart';
-import 'ListadeAnimales.dart';
-import 'Settings.dart';
+import './PerfilPublico.dart';
+import './Ayuda.dart';
+import './ListadeAnimales.dart';
+import './Settings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class PRIVACIDAD extends StatelessWidget {
@@ -20,7 +20,7 @@ class PRIVACIDAD extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -110,155 +110,6 @@ class PRIVACIDAD extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(start: 0.0, end: 0.0),
-            Pin(size: 42.0, middle: 0.2282),
-            child: Stack(
-              children: <Widget>[
-                Stack(
-                  children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xe3a0f4fe),
-                        borderRadius: BorderRadius.circular(6.0),
-                        border: Border.all(
-                            width: 1.0, color: const Color(0xe3000000)),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(151.0, 201.0),
-            child: Text(
-              'PRIVACIDAD',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 14.0, end: 13.0),
-            Pin(size: 525.0, end: 107.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xe3a0f4fe),
-                borderRadius: BorderRadius.circular(20.0),
-                border: Border.all(width: 1.0, color: const Color(0xe3000000)),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 14.0, end: 13.6),
-            Pin(size: 75.5, middle: 0.3184),
-            child: SvgPicture.string(
-              _svg_x68tk,
-              allowDrawingOutsideViewBox: true,
-              fit: BoxFit.fill,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(132.0, 273.5),
-            child: Text(
-              'Datos de Perfil',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(24.0, 307.5),
-            child: Text(
-              'Información personal del usuario',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 14.0, end: 13.6),
-            Pin(size: 102.7, middle: 0.4251),
-            child: SvgPicture.string(
-              _svg_nn2fn,
-              allowDrawingOutsideViewBox: true,
-              fit: BoxFit.fill,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(157.5, 350.0),
-            child: Text(
-              'Anuncios',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(21.0, 378.0),
-            child: Text(
-              'Gestionar anuncios para mostrar en el\ndispositivo',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 14.0, end: 13.6),
-            Pin(size: 95.7, middle: 0.5545),
-            child: SvgPicture.string(
-              _svg_ngd42,
-              allowDrawingOutsideViewBox: true,
-              fit: BoxFit.fill,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(164.5, 453.8),
-            child: Text(
-              'Permisos',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(24.0, 481.8),
-            child: Text(
-              'Controla el acceso a los datos de la\naplicacione',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
             child: PageLink(
@@ -317,11 +168,166 @@ class PRIVACIDAD extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
               ),
+            ),
+          ),
+          Pinned.fromPins(
+            Pin(start: 0.0, end: 0.0),
+            Pin(size: 591.0, end: 107.0),
+            child: Stack(
+              children: <Widget>[
+                Pinned.fromPins(
+                  Pin(start: 0.0, end: 0.0),
+                  Pin(size: 42.0, start: 0.0),
+                  child: Stack(
+                    children: <Widget>[
+                      Stack(
+                        children: <Widget>[
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xe3a0f4fe),
+                              borderRadius: BorderRadius.circular(6.0),
+                              border: Border.all(
+                                  width: 1.0, color: const Color(0xe3000000)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xe3a0f4fe),
+                    borderRadius: BorderRadius.circular(20.0),
+                    border:
+                        Border.all(width: 1.0, color: const Color(0xe3000000)),
+                  ),
+                  margin: EdgeInsets.fromLTRB(14.0, 66.0, 13.0, 0.0),
+                ),
+                Pinned.fromPins(
+                  Pin(start: 14.0, end: 13.6),
+                  Pin(size: 75.5, start: 66.0),
+                  child: SvgPicture.string(
+                    _svg_x68tk,
+                    allowDrawingOutsideViewBox: true,
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(132.0, 79.5),
+                  child: Text(
+                    'Datos de Perfil',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(24.0, 113.5),
+                  child: Text(
+                    'Información personal del usuario',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(start: 14.0, end: 13.6),
+                  Pin(size: 102.7, middle: 0.2898),
+                  child: SvgPicture.string(
+                    _svg_nn2fn,
+                    allowDrawingOutsideViewBox: true,
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(157.5, 156.0),
+                  child: Text(
+                    'Anuncios',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(21.0, 184.0),
+                  child: Text(
+                    'Gestionar anuncios para mostrar en el\ndispositivo',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(start: 14.0, end: 13.6),
+                  Pin(size: 95.7, middle: 0.4997),
+                  child: SvgPicture.string(
+                    _svg_ngd42,
+                    allowDrawingOutsideViewBox: true,
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(164.5, 259.8),
+                  child: Text(
+                    'Permisos',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(24.0, 287.8),
+                  child: Text(
+                    'Controla el acceso a los datos de la\naplicacione',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(151.0, 7.0),
+                  child: Text(
+                    'PRIVACIDAD',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

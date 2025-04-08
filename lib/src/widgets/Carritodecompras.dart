@@ -8,7 +8,7 @@ import 'Elejirmetododepagoparacomprar.dart';
 import 'DirecciondeEnvio.dart';
 import 'Pedidos.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'Settings.dart';
+import './Settings.dart';
 
 class Carritodecompras extends StatelessWidget {
   const Carritodecompras({
@@ -23,7 +23,7 @@ class Carritodecompras extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -94,7 +94,7 @@ class Carritodecompras extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -299,7 +299,7 @@ class Carritodecompras extends StatelessWidget {
                                                 ease: Curves.easeOut,
                                                 duration: 0.3,
                                                 pageBuilder: () =>
-                                                    DetallesdelProducto(key: Key("DetallesdelProducto"),),
+                                                    DetallesdelProducto(key: Key('DetallesdelProducto'),),
                                               ),
                                             ],
                                             child: Container(
@@ -359,7 +359,7 @@ class Carritodecompras extends StatelessWidget {
                                                 ease: Curves.easeOut,
                                                 duration: 0.3,
                                                 pageBuilder: () =>
-                                                    DetallesdelProducto(key: Key("DetallesdelProducto"),),
+                                                    DetallesdelProducto(key: Key('DetallesdelProducto'),),
                                               ),
                                             ],
                                             child: Container(
@@ -385,7 +385,7 @@ class Carritodecompras extends StatelessWidget {
                                                 ease: Curves.easeOut,
                                                 duration: 0.3,
                                                 pageBuilder: () =>
-                                                    DetallesdelProducto(key: Key("DetallesdelProducto"),),
+                                                    DetallesdelProducto(key: Key('DetallesdelProducto'),),
                                               ),
                                             ],
                                             child: Container(
@@ -605,7 +605,7 @@ class Carritodecompras extends StatelessWidget {
                                                 ease: Curves.easeOut,
                                                 duration: 0.3,
                                                 pageBuilder: () =>
-                                                    DetallesdelProducto(key: Key("DetallesdelProducto"),),
+                                                    DetallesdelProducto(key: Key('DetallesdelProducto'),),
                                               ),
                                             ],
                                             child: Container(
@@ -1840,7 +1840,7 @@ class Carritodecompras extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

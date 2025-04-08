@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import 'Home.dart';
+import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'Ayuda.dart';
-import 'EditarPerfildeAnimalesdeCompaia.dart';
-import 'VisitasalVeterinario.dart';
+import './Ayuda.dart';
+import './EditarPerfildeAnimalesdeCompaia.dart';
+import './VisitasalVeterinario.dart';
 import 'dart:ui' as ui;
-import 'CarnetdeVacunacin.dart';
-import 'Tratamientomedico.dart';
-import 'HistoriaClnica.dart';
-import 'IndicedeMasaCoporal.dart';
-import 'Settings.dart';
-import 'ListadeAnimales.dart';
+import './CarnetdeVacunacin.dart';
+import './Tratamientomedico.dart';
+import './HistoriaClnica.dart';
+import './IndicedeMasaCoporal.dart';
+import './Settings.dart';
+import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class FuncionesdelaApp extends StatelessWidget {
@@ -27,7 +27,7 @@ class FuncionesdelaApp extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/BackGround.png'),
+                image: const AssetImage('assets/BackGround.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -118,7 +118,7 @@ class FuncionesdelaApp extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key("Ayuda"),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
                 ),
               ],
               child: Container(
@@ -139,7 +139,7 @@ class FuncionesdelaApp extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key("EditarPerfildeAnimalesdeCompaia"),),
+                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
                 ),
               ],
               child: Container(
@@ -156,402 +156,411 @@ class FuncionesdelaApp extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 178.0, start: 15.0),
-            Pin(size: 163.0, middle: 0.4252),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => VisitasalVeterinario(key: Key("VisitasalVeterinario"),),
+            Pin(start: 15.0, end: 19.0),
+            Pin(size: 585.0, end: 49.0),
+            child: Stack(
+              children: <Widget>[
+                Pinned.fromPins(
+                  Pin(size: 178.0, start: 0.0),
+                  Pin(size: 163.0, start: 52.0),
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => VisitasalVeterinario(key: Key('VisitasalVeterinario'),),
+                          ),
+                        ],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0x5e4ec8dd),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 178.0, end: 0.0),
+                  Pin(size: 163.0, start: 52.0),
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => CarnetdeVacunacin(key: Key('CarnetdeVacunacin'),),
+                          ),
+                        ],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0x5e4ec8dd),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment(-1.0, 0.118),
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => Tratamientomedico(key: Key('Tratamientomedico'),),
+                          ),
+                        ],
+                        child: Container(
+                          width: 178.0,
+                          height: 163.0,
+                          decoration: BoxDecoration(
+                            color: const Color(0x5e4ec8dd),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment(1.0, 0.118),
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => HistoriaClnica(key: Key('HistoriaClnica'),),
+                          ),
+                        ],
+                        child: Container(
+                          width: 178.0,
+                          height: 163.0,
+                          decoration: BoxDecoration(
+                            color: const Color(0x5e4ec8dd),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 154.0, start: 14.5),
+                  Pin(size: 21.0, middle: 0.3245),
+                  child: Text(
+                    'Visitas al Veterinario',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 15,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 156.0, end: 9.0),
+                  Pin(size: 21.0, middle: 0.3245),
+                  child: Text(
+                    'Carnet de Vacunación',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 15,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 100.0, start: 39.0),
+                  Pin(size: 21.0, middle: 0.6543),
+                  child: Text(
+                    'Medicamentos',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 15,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 110.0, end: 34.0),
+                  Pin(size: 21.0, middle: 0.6543),
+                  child: Text(
+                    'Historia Clínica',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 15,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 121.7, start: 28.6),
+                  Pin(size: 120.0, start: 61.0),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => VisitasalVeterinario(key: Key('VisitasalVeterinario'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage(''),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                      child: PageLink(
+                        links: [
+                          PageLinkInfo(
+                            transition: LinkTransition.Fade,
+                            ease: Curves.easeOut,
+                            duration: 0.3,
+                            pageBuilder: () => IndicedeMasaCoporal(key: Key('IndicedeMasaCoporal'),),
+                          ),
+                        ],
+                        child: Container(
+                          width: 178.0,
+                          height: 163.0,
+                          decoration: BoxDecoration(
+                            color: const Color(0x5e4ec8dd),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 112.0, start: 33.0),
+                  Pin(size: 21.0, end: 10.0),
+                  child: Text(
+                    'Indice de Masa',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 15,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                    textHeightBehavior:
+                        TextHeightBehavior(applyHeightToFirstAscent: false),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 122.5, start: 30.2),
+                  Pin(size: 120.0, end: 34.0),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => IndicedeMasaCoporal(key: Key('IndicedeMasaCoporal'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage(''),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 118.9, start: 31.6),
+                  Pin(size: 120.0, middle: 0.5355),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => Tratamientomedico(key: Key('Tratamientomedico'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage(''),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 100.1, end: 41.0),
+                  Pin(size: 120.0, middle: 0.5355),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => HistoriaClnica(key: Key('HistoriaClnica'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage(''),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(start: 43.0, end: 39.0),
+                  Pin(size: 35.0, start: 0.0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0x5e4ec8dd),
-                      borderRadius: BorderRadius.circular(20.0),
+                      color: const Color(0xe3a0f4fe),
+                      borderRadius: BorderRadius.circular(10.0),
                       border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0x29000000),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
-                        ),
-                      ],
+                          width: 1.0, color: const Color(0xe3000000)),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 178.0, end: 19.0),
-            Pin(size: 163.0, middle: 0.4252),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => CarnetdeVacunacin(key: Key("CarnetdeVacunacin"),),
+                Pinned.fromPins(
+                  Pin(size: 266.0, end: 50.0),
+                  Pin(size: 28.0, start: 4.0),
+                  child: Text(
+                    'Funciones de Animal Health',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
                     ),
-                  ],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x5e4ec8dd),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0x29000000),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
                   ),
                 ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 178.0, start: 15.0),
-            Pin(size: 163.0, middle: 0.6776),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => Tratamientomedico(key: Key("Tratamientomedico"),),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x5e4ec8dd),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0x29000000),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
+                Pinned.fromPins(
+                  Pin(size: 113.1, end: 32.4),
+                  Pin(size: 120.0, start: 63.0),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => CarnetdeVacunacin(key: Key('CarnetdeVacunacin'),),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage(''),
+                          fit: BoxFit.fill,
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 178.0, end: 19.0),
-            Pin(size: 163.0, middle: 0.6776),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => HistoriaClnica(key: Key("HistoriaClnica"),),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x5e4ec8dd),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0x29000000),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 154.0, start: 29.5),
-            Pin(size: 21.0, middle: 0.5063),
-            child: Text(
-              'Visitas al Veterinario',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              textAlign: TextAlign.center,
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 156.0, end: 28.0),
-            Pin(size: 21.0, middle: 0.5063),
-            child: Text(
-              'Carnet de Vacunación',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              textAlign: TextAlign.center,
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 100.0, start: 54.0),
-            Pin(size: 21.0, middle: 0.7199),
-            child: Text(
-              'Medicamentos',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              textAlign: TextAlign.center,
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 110.0, end: 53.0),
-            Pin(size: 21.0, middle: 0.7199),
-            child: Text(
-              'Historia Clínica',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              textAlign: TextAlign.center,
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 121.7, start: 43.6),
-            Pin(size: 120.0, middle: 0.4132),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => VisitasalVeterinario(key: Key("VisitasalVeterinario"),),
                 ),
               ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage(''),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 178.0, start: 15.0),
-            Pin(size: 163.0, end: 49.0),
-            child: ClipRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => IndicedeMasaCoporal(key: Key("IndicedeMasaCoporal"),),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0x5e4ec8dd),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0x29000000),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 112.0, start: 48.0),
-            Pin(size: 21.0, end: 59.0),
-            child: Text(
-              'Indice de Masa',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-              textHeightBehavior:
-                  TextHeightBehavior(applyHeightToFirstAscent: false),
-              textAlign: TextAlign.center,
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 122.5, start: 45.2),
-            Pin(size: 120.0, end: 83.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => IndicedeMasaCoporal(key: Key("IndicedeMasaCoporal"),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage(''),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 118.9, start: 46.6),
-            Pin(size: 120.0, middle: 0.6567),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Tratamientomedico(key: Key("Tratamientomedico"),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage(''),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 100.1, end: 60.0),
-            Pin(size: 120.0, middle: 0.6567),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => HistoriaClnica(key: Key("HistoriaClnica"),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage(''),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 58.0, end: 58.0),
-            Pin(size: 35.0, middle: 0.3011),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xe3a0f4fe),
-                borderRadius: BorderRadius.circular(10.0),
-                border: Border.all(width: 1.0, color: const Color(0xe3000000)),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.055, -0.394),
-            child: SizedBox(
-              width: 266.0,
-              height: 28.0,
-              child: Text(
-                'Funciones de Animal Health',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-                softWrap: false,
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 113.1, end: 51.4),
-            Pin(size: 120.0, middle: 0.4158),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CarnetdeVacunacin(key: Key("CarnetdeVacunacin"),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage(''),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
             ),
           ),
           Pinned.fromPins(
@@ -563,13 +572,13 @@ class FuncionesdelaApp extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key("Settings"),),
+                  pageBuilder: () => Settings(key: Key('Settings'),),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/settings.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
