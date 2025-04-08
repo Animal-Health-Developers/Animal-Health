@@ -16,7 +16,7 @@ import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Heridas extends StatelessWidget {
-  const Heridas({
+  Heridas({
     required Key key,
   }) : super(key: key);
   @override
@@ -330,77 +330,81 @@ class Heridas extends StatelessWidget {
                     ),
                   ),
                 ),
-                Transform.translate(
-                  offset: Offset(21.0, 352.0),
-                  child: SizedBox(
-                    width: 147.0,
-                    height: 34.0,
-                    child: PageLink(
-                      links: [
-                        PageLinkInfo(
-                          transition: LinkTransition.Fade,
-                          ease: Curves.easeOut,
-                          duration: 0.3,
-                          pageBuilder: () => SolucionAEMERGENCIAS(key: Key('SolucionAEMERGENCIAS'),),
+                Pinned.fromPins(
+                  Pin(size: 147.0, end: 21.0),
+                  Pin(size: 34.0, middle: 0.7964),
+                  child: Stack(
+                    children: <Widget>[
+                      Container(
+                        width: 147.0,
+                        height: 34.0,
+                        decoration: BoxDecoration(
+                          color: const Color(0xff4ec8dd),
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                              width: 1.0, color: const Color(0xff000000)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xff080808),
+                              offset: Offset(0, 3),
+                              blurRadius: 6,
+                            ),
+                          ],
                         ),
-                      ],
-                      child: SvgPicture.string(
-                        _svg_jwejqy,
-                        allowDrawingOutsideViewBox: true,
                       ),
-                    ),
-                  ),
-                ),
-                Transform.translate(
-                  offset: Offset(213.0, 352.0),
-                  child: Container(
-                    width: 147.0,
-                    height: 34.0,
-                    decoration: BoxDecoration(
-                      color: const Color(0xff4ec8dd),
-                      borderRadius: BorderRadius.circular(8.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff000000)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xff080808),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
+                      Pinned.fromPins(
+                        Pin(size: 64.0, middle: 0.5301),
+                        Pin(start: 5.0, end: 5.0),
+                        child: Text(
+                          'Guardar',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 17,
+                            color: const Color(0xff000000),
+                          ),
+                          softWrap: false,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                Align(
-                  alignment: Alignment(0.621, 0.58),
-                  child: SizedBox(
-                    width: 64.0,
-                    height: 24.0,
-                    child: Text(
-                      'Guardar',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 17,
-                        color: const Color(0xff000000),
+                Pinned.fromPins(
+                  Pin(size: 147.0, start: 21.0),
+                  Pin(size: 34.0, middle: 0.7964),
+                  child: Stack(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 147.0,
+                        height: 34.0,
+                        child: PageLink(
+                          links: [
+                            PageLinkInfo(
+                              transition: LinkTransition.Fade,
+                              ease: Curves.easeOut,
+                              duration: 0.3,
+                              pageBuilder: () => SolucionAEMERGENCIAS(key: Key('SolucionAEMERGENCIAS'),),
+                            ),
+                          ],
+                          child: SvgPicture.string(
+                            _svg_jwejqy,
+                            allowDrawingOutsideViewBox: true,
+                          ),
+                        ),
                       ),
-                      softWrap: false,
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(-0.566, 0.58),
-                  child: SizedBox(
-                    width: 49.0,
-                    height: 24.0,
-                    child: Text(
-                      'Envíar',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 17,
-                        color: const Color(0xff000000),
+                      Pinned.fromPins(
+                        Pin(size: 49.0, middle: 0.5204),
+                        Pin(start: 5.0, end: 5.0),
+                        child: Text(
+                          'Envíar',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 17,
+                            color: const Color(0xff000000),
+                          ),
+                          softWrap: false,
+                        ),
                       ),
-                      softWrap: false,
-                    ),
+                    ],
                   ),
                 ),
               ],
