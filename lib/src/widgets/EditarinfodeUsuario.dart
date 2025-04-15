@@ -19,11 +19,11 @@ class EditarinfodeUsuario extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Align(
             alignment: Alignment(-0.267, -0.258),
@@ -51,7 +51,7 @@ class EditarinfodeUsuario extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -88,20 +88,6 @@ class EditarinfodeUsuario extends StatelessWidget {
                 textAlign: TextAlign.center,
                 softWrap: false,
               ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 0.0, end: 11.0),
-            Pin(size: 0.0, middle: 0.6906),
-            child: Text(
-              '',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
             ),
           ),
           Pinned.fromPins(
@@ -280,7 +266,7 @@ class EditarinfodeUsuario extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -302,7 +288,7 @@ class EditarinfodeUsuario extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -315,7 +301,7 @@ class EditarinfodeUsuario extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/nombreusuario.png'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -327,7 +313,7 @@ class EditarinfodeUsuario extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/fechanacimientopersona.png'),
                   fit: BoxFit.fill,
                 ),
                 borderRadius: BorderRadius.circular(2.0),
@@ -340,7 +326,7 @@ class EditarinfodeUsuario extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/id.png'),
                   fit: BoxFit.fill,
                 ),
               ),
@@ -352,7 +338,7 @@ class EditarinfodeUsuario extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/numerocontacto.png'),
                   fit: BoxFit.fill,
                 ),
               ),
@@ -365,7 +351,7 @@ class EditarinfodeUsuario extends StatelessWidget {
               height: 150.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/perfilusuario.jpeg'),
                   fit: BoxFit.fill,
                 ),
                 borderRadius: BorderRadius.circular(25.0),
@@ -387,7 +373,7 @@ class EditarinfodeUsuario extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
