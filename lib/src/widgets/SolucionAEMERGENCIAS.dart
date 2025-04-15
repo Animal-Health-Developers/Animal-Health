@@ -14,7 +14,7 @@ import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class SolucionAEMERGENCIAS extends StatelessWidget {
-  SolucionAEMERGENCIAS({
+  const SolucionAEMERGENCIAS({
     required Key key,
   }) : super(key: key);
   @override

@@ -28,11 +28,11 @@ class Fracturas extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
@@ -351,7 +351,7 @@ class Fracturas extends StatelessWidget {
           ),
           Pinned.fromPins(
             Pin(start: 15.5, end: 15.5),
-            Pin(size: 476.0, end: 63.0),
+            Pin(size: 476.0, end: 10.0),
             child: Stack(
               children: <Widget>[
                 Stack(

@@ -16,7 +16,7 @@ import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Alergias extends StatelessWidget {
-  Alergias({
+  const Alergias({
     required Key key,
   }) : super(key: key);
   @override

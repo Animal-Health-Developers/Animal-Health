@@ -198,7 +198,7 @@ class AmigosenLInea extends StatelessWidget {
                       child: Stack(
                         children: <Widget>[
                           Padding(
-                            padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 304.0),
+                            padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                             child: SingleChildScrollView(
                               primary: false,
                               child: Wrap(

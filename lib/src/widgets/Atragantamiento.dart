@@ -16,7 +16,7 @@ import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Atragantamiento extends StatelessWidget {
-  Atragantamiento({
+  const Atragantamiento({
     required Key key,
   }) : super(key: key);
   @override

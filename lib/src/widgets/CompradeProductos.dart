@@ -24,36 +24,11 @@ class CompradeProductos extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
-          ),
-          Pinned.fromPins(
-            Pin(size: 307.0, start: 16.0),
-            Pin(size: 45.0, middle: 0.2137),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xffffffff),
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(width: 1.0, color: const Color(0xff707070)),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 226.0, start: 60.0),
-            Pin(size: 28.0, middle: 0.2188),
-            child: Text(
-              '¿Qué Producto Buscas?',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 52.9, start: 9.1),
@@ -65,7 +40,7 @@ class CompradeProductos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -87,7 +62,7 @@ class CompradeProductos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -95,15 +70,45 @@ class CompradeProductos extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 31.0, start: 20.0),
-            Pin(size: 31.0, middle: 0.2184),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
+            Pin(size: 307.0, start: 16.0),
+            Pin(size: 45.0, middle: 0.2137),
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xffffffff),
+                    borderRadius: BorderRadius.circular(5.0),
+                    border:
+                        Border.all(width: 1.0, color: const Color(0xff707070)),
+                  ),
                 ),
-              ),
+                Pinned.fromPins(
+                  Pin(start: 44.0, end: 37.0),
+                  Pin(size: 28.0, middle: 0.4706),
+                  child: Text(
+                    '¿Qué Producto Buscas?',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    softWrap: false,
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 31.0, start: 4.0),
+                  Pin(start: 7.0, end: 7.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/busqueda1.png'),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Pinned.fromPins(
@@ -121,7 +126,7 @@ class CompradeProductos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
                     fit: BoxFit.fill,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -144,7 +149,7 @@ class CompradeProductos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -166,7 +171,7 @@ class CompradeProductos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -188,7 +193,7 @@ class CompradeProductos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/vender.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -210,7 +215,7 @@ class CompradeProductos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/carrito.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -228,7 +233,7 @@ class CompradeProductos extends StatelessWidget {
                 child: Stack(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -323.0),
+                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                       child: GridView.count(
                         mainAxisSpacing: 20,
                         crossAxisSpacing: 20,
@@ -324,7 +329,7 @@ class CompradeProductos extends StatelessWidget {
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   image: DecorationImage(
-                                                    image: const AssetImage(''),
+                                                    image: const AssetImage('assets/images/fancy.jpg'),
                                                     fit: BoxFit.fill,
                                                   ),
                                                   borderRadius:
@@ -476,7 +481,7 @@ class CompradeProductos extends StatelessWidget {
                                               height: 40.0,
                                               decoration: BoxDecoration(
                                                 image: DecorationImage(
-                                                  image: const AssetImage(''),
+                                                  image: const AssetImage('assets/images/carrito.png'),
                                                   fit: BoxFit.fill,
                                                 ),
                                               ),
@@ -513,7 +518,7 @@ class CompradeProductos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),

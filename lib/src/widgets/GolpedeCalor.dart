@@ -16,7 +16,7 @@ import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class GolpedeCalor extends StatelessWidget {
-  GolpedeCalor({
+  const GolpedeCalor({
     required Key key,
   }) : super(key: key);
   @override

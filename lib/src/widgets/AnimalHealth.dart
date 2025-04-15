@@ -74,7 +74,7 @@ class AnimalHealth extends StatelessWidget {
                     ),
                   ),
                   Align(
-                    alignment: Alignment(0.076, 0.0),
+                    alignment: Alignment(0.19, 0.0),
                     child: SizedBox(
                       width: 134.0,
                       height: 28.0,
@@ -130,7 +130,7 @@ class AnimalHealth extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 249.5, middle: 0.4769),
+            Pin(size: 249.5, middle: 0.496),
             Pin(size: 75.0, end: 76.2),
             child: Stack(
               children: <Widget>[

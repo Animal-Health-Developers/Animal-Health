@@ -310,7 +310,7 @@ class Home extends StatelessWidget {
             ),
           ),
           Align(
-            alignment: Alignment(0.0, 2.0),
+            alignment: Alignment(0.0, 3.0),
             child: SizedBox(
               width: 413.0,
               height: 595.0,
@@ -322,7 +322,7 @@ class Home extends StatelessWidget {
                   child: Stack(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 1230.0),
+                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 100.0),
                         child: SingleChildScrollView(
                           primary: false,
                           child: Wrap(

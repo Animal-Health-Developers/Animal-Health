@@ -11,7 +11,7 @@ import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ListadeAnimales extends StatelessWidget {
-  const ListadeAnimales({
+  ListadeAnimales({
     required Key key,
   }) : super(key: key);
   @override
@@ -140,18 +140,9 @@ class ListadeAnimales extends StatelessWidget {
           ),
           Pinned.fromPins(
             Pin(start: 30.0, end: 29.0),
-            Pin(size: 705.0, end: 36.0),
+            Pin(size: 714.0, end: 27.0),
             child: Stack(
               children: <Widget>[
-                Pinned.fromPins(
-                  Pin(start: 0.0, end: 0.0),
-                  Pin(size: 489.0, start: 49.0),
-                  child: SvgPicture.string(
-                    _svg_ebm9j,
-                    allowDrawingOutsideViewBox: true,
-                    fit: BoxFit.fill,
-                  ),
-                ),
                 Pinned.fromPins(
                   Pin(start: 62.0, end: 62.0),
                   Pin(size: 35.0, start: 0.0),
@@ -165,23 +156,8 @@ class ListadeAnimales extends StatelessWidget {
                   ),
                 ),
                 Pinned.fromPins(
-                  Pin(size: 170.0, middle: 0.5027),
-                  Pin(size: 28.0, start: 4.0),
-                  child: Text(
-                    'Lista de Animales',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    textAlign: TextAlign.center,
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
                   Pin(size: 110.7, middle: 0.4979),
-                  Pin(size: 120.0, end: 38.0),
+                  Pin(size: 120.0, end: 35.0),
                   child: PageLink(
                     links: [
                       PageLinkInfo(
@@ -202,7 +178,7 @@ class ListadeAnimales extends StatelessWidget {
                   ),
                 ),
                 Align(
-                  alignment: Alignment(0.009, 1.0),
+                  alignment: Alignment.bottomCenter,
                   child: Container(
                     width: 135.0,
                     height: 35.0,
@@ -215,8 +191,8 @@ class ListadeAnimales extends StatelessWidget {
                   ),
                 ),
                 Pinned.fromPins(
-                  Pin(size: 98.0, middle: 0.502),
-                  Pin(size: 24.0, end: 7.0),
+                  Pin(size: 98.0, middle: 0.498),
+                  Pin(size: 24.0, end: 6.0),
                   child: Text(
                     'Crear Perfil',
                     style: TextStyle(
@@ -229,311 +205,377 @@ class ListadeAnimales extends StatelessWidget {
                   ),
                 ),
                 Pinned.fromPins(
-                  Pin(size: 245.5, start: 26.6),
-                  Pin(size: 489.0, start: 49.5),
-                  child: SingleChildScrollView(
-                    primary: false,
-                    child: SizedBox(
-                      width: 246.0,
-                      height: 858.0,
-                      child: Stack(
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 369.0),
-                            child: SingleChildScrollView(
-                              primary: false,
-                              child: Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 20,
-                                runSpacing: 20,
-                                children: [{}, {}, {}].map((itemData) {
-                                  return SizedBox(
-                                    width: 246.0,
-                                    height: 267.0,
-                                    child: Stack(
-                                      children: <Widget>[
-                                        Pinned.fromPins(
-                                          Pin(size: 36.0, middle: 0.7446),
-                                          Pin(size: 21.0, start: 10.5),
-                                          child: Text(
-                                            'Kitty',
-                                            style: TextStyle(
-                                              fontFamily: 'Comic Sans MS',
-                                              fontSize: 15,
-                                              color: const Color(0xff000000),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 80.0, start: 0.5),
-                                          Pin(size: 80.0, start: 0.0),
-                                          child: PageLink(
-                                            links: [
-                                              PageLinkInfo(
-                                                transition: LinkTransition.Fade,
-                                                ease: Curves.easeOut,
-                                                duration: 0.3,
-                                                pageBuilder: () =>
-                                                    EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
+                  Pin(start: 0.0, end: 0.0),
+                  Pin(size: 489.0, start: 58.0),
+                  child: Stack(
+                    children: <Widget>[
+                      SizedBox.expand(
+                          child: SvgPicture.string(
+                        _svg_jvl87d,
+                        allowDrawingOutsideViewBox: true,
+                        fit: BoxFit.fill,
+                      )),
+                      Pinned.fromPins(
+                        Pin(size: 245.5, middle: 0.4953),
+                        Pin(start: 0.5, end: 1.5),
+                        child: SingleChildScrollView(
+                          primary: false,
+                          child: SizedBox(
+                            width: 246.0,
+                            height: 858.0,
+                            child: Stack(
+                              children: <Widget>[
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                      0.0, 0.0, 0.0, 0.0),
+                                  child: SingleChildScrollView(
+                                    primary: false,
+                                    child: Wrap(
+                                      alignment: WrapAlignment.center,
+                                      spacing: 20,
+                                      runSpacing: 20,
+                                      children: [{}, {}, {}].map((itemData) {
+                                        return SizedBox(
+                                          width: 246.0,
+                                          height: 267.0,
+                                          child: Stack(
+                                            children: <Widget>[
+                                              Pinned.fromPins(
+                                                Pin(size: 36.0, middle: 0.7446),
+                                                Pin(size: 21.0, start: 10.5),
+                                                child: Text(
+                                                  'Kitty',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 15,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  softWrap: false,
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 80.0, start: 0.5),
+                                                Pin(size: 80.0, start: 0.0),
+                                                child: PageLink(
+                                                  links: [
+                                                    PageLinkInfo(
+                                                      transition:
+                                                          LinkTransition.Fade,
+                                                      ease: Curves.easeOut,
+                                                      duration: 0.3,
+                                                      pageBuilder: () =>
+                                                          EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
+                                                    ),
+                                                  ],
+                                                  //Foto de animal de lista de animales
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      image: DecorationImage(
+                                                        image: const AssetImage(
+                                                            'assets/images/kitty.jpg'),
+                                                        fit: BoxFit.fill,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              15.0),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 143.0, end: 0.0),
+                                                Pin(size: 31.0, start: 40.0),
+                                                child: ClipRect(
+                                                  child: BackdropFilter(
+                                                    filter: ui.ImageFilter.blur(
+                                                        sigmaX: 36.0,
+                                                        sigmaY: 36.0),
+                                                    child: PageLink(
+                                                      links: [
+                                                        PageLinkInfo(
+                                                          transition:
+                                                              LinkTransition
+                                                                  .Fade,
+                                                          ease: Curves.easeOut,
+                                                          duration: 0.3,
+                                                          pageBuilder: () =>
+                                                              EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
+                                                        ),
+                                                      ],
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: const Color(
+                                                              0x7a54d1e0),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      8.0),
+                                                          border: Border.all(
+                                                              width: 1.0,
+                                                              color: const Color(
+                                                                  0xff707070)),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment(1.0, 0.136),
+                                                child: ClipRect(
+                                                  child: BackdropFilter(
+                                                    filter: ui.ImageFilter.blur(
+                                                        sigmaX: 36.0,
+                                                        sigmaY: 36.0),
+                                                    child: PageLink(
+                                                      links: [
+                                                        PageLinkInfo(
+                                                          transition:
+                                                              LinkTransition
+                                                                  .Fade,
+                                                          ease: Curves.easeOut,
+                                                          duration: 0.3,
+                                                          pageBuilder: () =>
+                                                              EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
+                                                        ),
+                                                      ],
+                                                      child: Container(
+                                                        width: 143.0,
+                                                        height: 31.0,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: const Color(
+                                                              0x7a54d1e0),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      8.0),
+                                                          border: Border.all(
+                                                              width: 1.0,
+                                                              color: const Color(
+                                                                  0xff707070)),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 119.0, end: 12.0),
+                                                Pin(size: 21.0, middle: 0.565),
+                                                child: Text(
+                                                  'Ver Informacion',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 15,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  softWrap: false,
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment(-1.0, 0.005),
+                                                child: PageLink(
+                                                  links: [
+                                                    PageLinkInfo(
+                                                      transition:
+                                                          LinkTransition.Fade,
+                                                      ease: Curves.easeOut,
+                                                      duration: 0.3,
+                                                      pageBuilder: () =>
+                                                          EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
+                                                    ),
+                                                  ],
+                                                  child: Container(
+                                                    width: 80.0,
+                                                    height: 80.0,
+                                                    decoration: BoxDecoration(
+                                                      image: DecorationImage(
+                                                        image: const AssetImage(
+                                                            'assets/images/winter.jpg'),
+                                                        fit: BoxFit.fill,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              15.0),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 80.0, start: 0.5),
+                                                Pin(size: 80.0, end: 0.0),
+                                                child: PageLink(
+                                                  links: [
+                                                    PageLinkInfo(
+                                                      transition:
+                                                          LinkTransition.Fade,
+                                                      ease: Curves.easeOut,
+                                                      duration: 0.3,
+                                                      pageBuilder: () =>
+                                                          EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
+                                                    ),
+                                                  ],
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      image: DecorationImage(
+                                                        image: const AssetImage(
+                                                            'assets/images/donut.jpg'),
+                                                        fit: BoxFit.fill,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              15.0),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment(0.487, 0.614),
+                                                child: SizedBox(
+                                                  width: 41.0,
+                                                  height: 21.0,
+                                                  child: Text(
+                                                    'Donut',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 15,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 119.0, end: 13.5),
+                                                Pin(size: 21.0, middle: 0.1829),
+                                                child: Text(
+                                                  'Ver Informacion',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 15,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  softWrap: false,
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 143.0, end: 0.0),
+                                                Pin(size: 31.0, end: 9.0),
+                                                child: ClipRect(
+                                                  child: BackdropFilter(
+                                                    filter: ui.ImageFilter.blur(
+                                                        sigmaX: 36.0,
+                                                        sigmaY: 36.0),
+                                                    child: PageLink(
+                                                      links: [
+                                                        PageLinkInfo(
+                                                          transition:
+                                                              LinkTransition
+                                                                  .Fade,
+                                                          ease: Curves.easeOut,
+                                                          duration: 0.3,
+                                                          pageBuilder: () =>
+                                                              EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
+                                                        ),
+                                                      ],
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: const Color(
+                                                              0x7a54d1e0),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      8.0),
+                                                          border: Border.all(
+                                                              width: 1.0,
+                                                              color: const Color(
+                                                                  0xff707070)),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Pinned.fromPins(
+                                                Pin(size: 119.0, end: 12.0),
+                                                Pin(size: 21.0, end: 14.0),
+                                                child: Text(
+                                                  'Ver Informacion',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Comic Sans MS',
+                                                    fontSize: 15,
+                                                    color:
+                                                        const Color(0xff000000),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  softWrap: false,
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment:
+                                                    Alignment(0.528, -0.15),
+                                                child: SizedBox(
+                                                  width: 50.0,
+                                                  height: 21.0,
+                                                  child: Text(
+                                                    'Winter',
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          'Comic Sans MS',
+                                                      fontSize: 15,
+                                                      color: const Color(
+                                                          0xff000000),
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                    softWrap: false,
+                                                  ),
+                                                ),
                                               ),
                                             ],
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage('assets/images/kitty.jpg'),
-                                                  fit: BoxFit.fill,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(15.0),
-                                              ),
-                                            ),
                                           ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 143.0, end: 0.0),
-                                          Pin(size: 31.0, start: 40.0),
-                                          child: ClipRect(
-                                            child: BackdropFilter(
-                                              filter: ui.ImageFilter.blur(
-                                                  sigmaX: 36.0, sigmaY: 36.0),
-                                              child: PageLink(
-                                                links: [
-                                                  PageLinkInfo(
-                                                    transition:
-                                                        LinkTransition.Fade,
-                                                    ease: Curves.easeOut,
-                                                    duration: 0.3,
-                                                    pageBuilder: () =>
-                                                        EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
-                                                  ),
-                                                ],
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        const Color(0x7a54d1e0),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8.0),
-                                                    border: Border.all(
-                                                        width: 1.0,
-                                                        color: const Color(
-                                                            0xff707070)),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(1.0, 0.136),
-                                          child: ClipRect(
-                                            child: BackdropFilter(
-                                              filter: ui.ImageFilter.blur(
-                                                  sigmaX: 36.0, sigmaY: 36.0),
-                                              child: PageLink(
-                                                links: [
-                                                  PageLinkInfo(
-                                                    transition:
-                                                        LinkTransition.Fade,
-                                                    ease: Curves.easeOut,
-                                                    duration: 0.3,
-                                                    pageBuilder: () =>
-                                                        EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
-                                                  ),
-                                                ],
-                                                child: Container(
-                                                  width: 143.0,
-                                                  height: 31.0,
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        const Color(0x7a54d1e0),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8.0),
-                                                    border: Border.all(
-                                                        width: 1.0,
-                                                        color: const Color(
-                                                            0xff707070)),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 119.0, end: 12.0),
-                                          Pin(size: 21.0, middle: 0.565),
-                                          child: Text(
-                                            'Ver Informacion',
-                                            style: TextStyle(
-                                              fontFamily: 'Comic Sans MS',
-                                              fontSize: 15,
-                                              color: const Color(0xff000000),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(-1.0, 0.005),
-                                          child: PageLink(
-                                            links: [
-                                              PageLinkInfo(
-                                                transition: LinkTransition.Fade,
-                                                ease: Curves.easeOut,
-                                                duration: 0.3,
-                                                pageBuilder: () =>
-                                                    EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
-                                              ),
-                                            ],
-                                            child: Container(
-                                              width: 80.0,
-                                              height: 80.0,
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage('assets/images/winter.jpg'),
-                                                  fit: BoxFit.fill,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(15.0),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 80.0, start: 0.5),
-                                          Pin(size: 80.0, end: 0.0),
-                                          child: PageLink(
-                                            links: [
-                                              PageLinkInfo(
-                                                transition: LinkTransition.Fade,
-                                                ease: Curves.easeOut,
-                                                duration: 0.3,
-                                                pageBuilder: () =>
-                                                    EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
-                                              ),
-                                            ],
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: const AssetImage('assets/images/donut.jpg'),
-                                                  fit: BoxFit.fill,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(15.0),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(0.487, 0.614),
-                                          child: SizedBox(
-                                            width: 41.0,
-                                            height: 21.0,
-                                            child: Text(
-                                              'Donut',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 15,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 119.0, end: 13.5),
-                                          Pin(size: 21.0, middle: 0.1829),
-                                          child: Text(
-                                            'Ver Informacion',
-                                            style: TextStyle(
-                                              fontFamily: 'Comic Sans MS',
-                                              fontSize: 15,
-                                              color: const Color(0xff000000),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 143.0, end: 0.0),
-                                          Pin(size: 31.0, end: 9.0),
-                                          child: ClipRect(
-                                            child: BackdropFilter(
-                                              filter: ui.ImageFilter.blur(
-                                                  sigmaX: 36.0, sigmaY: 36.0),
-                                              child: PageLink(
-                                                links: [
-                                                  PageLinkInfo(
-                                                    transition:
-                                                        LinkTransition.Fade,
-                                                    ease: Curves.easeOut,
-                                                    duration: 0.3,
-                                                    pageBuilder: () =>
-                                                        EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
-                                                  ),
-                                                ],
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        const Color(0x7a54d1e0),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8.0),
-                                                    border: Border.all(
-                                                        width: 1.0,
-                                                        color: const Color(
-                                                            0xff707070)),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 119.0, end: 12.0),
-                                          Pin(size: 21.0, end: 14.0),
-                                          child: Text(
-                                            'Ver Informacion',
-                                            style: TextStyle(
-                                              fontFamily: 'Comic Sans MS',
-                                              fontSize: 15,
-                                              color: const Color(0xff000000),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(0.528, -0.15),
-                                          child: SizedBox(
-                                            width: 50.0,
-                                            height: 21.0,
-                                            child: Text(
-                                              'Winter',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 15,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                        );
+                                      }).toList(),
                                     ),
-                                  );
-                                }).toList(),
-                              ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+                Pinned.fromPins(
+                  Pin(size: 170.0, middle: 0.5027),
+                  Pin(size: 28.0, start: 4.0),
+                  child: Text(
+                    'Lista de Animales',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
                     ),
+                    textAlign: TextAlign.center,
+                    softWrap: false,
                   ),
                 ),
               ],
@@ -545,5 +587,5 @@ class ListadeAnimales extends StatelessWidget {
   }
 }
 
-const String _svg_ebm9j =
-    '<svg viewBox="30.0 200.0 353.0 489.0" ><path transform="translate(30.0, 200.0)" d="M 20 0 L 333 0 C 344.0456848144531 0 353 8.954304695129395 353 20 L 353 469 C 353 480.0456848144531 344.0456848144531 489 333 489 L 20 489 C 8.954304695129395 489 0 480.0456848144531 0 469 L 0 20 C 0 8.954304695129395 8.954304695129395 0 20 0 Z" fill="#54d1e0" fill-opacity="0.53" stroke="#000000" stroke-width="1" stroke-opacity="0.53" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
+const String _svg_jvl87d =
+    '<svg viewBox="30.0 209.0 353.0 489.0" ><path transform="translate(30.0, 209.0)" d="M 20 0 L 333 0 C 344.0456848144531 0 353 8.954304695129395 353 20 L 353 469 C 353 480.0456848144531 344.0456848144531 489 333 489 L 20 489 C 8.954304695129395 489 0 480.0456848144531 0 469 L 0 20 C 0 8.954304695129395 8.954304695129395 0 20 0 Z" fill="#54d1e0" fill-opacity="0.53" stroke="#000000" stroke-width="1" stroke-opacity="0.53" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';

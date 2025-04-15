@@ -13,7 +13,7 @@ import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class CuidadosyRecomendaciones extends StatelessWidget {
-  CuidadosyRecomendaciones({
+  const CuidadosyRecomendaciones({
     required Key key,
   }) : super(key: key);
   @override
@@ -320,7 +320,7 @@ class CuidadosyRecomendaciones extends StatelessWidget {
             ),
           ),
           Align(
-            alignment: Alignment(0.0, 2.0),
+            alignment: Alignment(0.0, 3.0),
             child: SizedBox(
               width: 412.0,
               height: 589.0,
@@ -332,7 +332,7 @@ class CuidadosyRecomendaciones extends StatelessWidget {
                   child: Stack(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 1059.0),
+                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                         child: SingleChildScrollView(
                           primary: false,
                           child: Wrap(

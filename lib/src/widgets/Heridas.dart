@@ -16,7 +16,7 @@ import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Heridas extends StatelessWidget {
-  Heridas({
+  const Heridas({
     required Key key,
   }) : super(key: key);
   @override

@@ -16,7 +16,7 @@ import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Intoxicacion extends StatelessWidget {
-  Intoxicacion({
+  const Intoxicacion({
     required Key key,
   }) : super(key: key);
   @override

@@ -16,7 +16,7 @@ import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ViasRespiratorias extends StatelessWidget {
-  ViasRespiratorias({
+  const ViasRespiratorias({
     required Key key,
   }) : super(key: key);
   @override
