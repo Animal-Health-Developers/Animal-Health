@@ -28,11 +28,11 @@ class ViasRespiratorias extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
@@ -49,7 +49,7 @@ class ViasRespiratorias extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -74,7 +74,7 @@ class ViasRespiratorias extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -114,7 +114,7 @@ class ViasRespiratorias extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: const AssetImage(''),
+                        image: const AssetImage('assets/images/busqueda1.png'),
                         fit: BoxFit.fill,
                       ),
                     ),
@@ -138,7 +138,7 @@ class ViasRespiratorias extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
                     fit: BoxFit.fill,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -196,14 +196,15 @@ class ViasRespiratorias extends StatelessWidget {
                       Pin(size: 194.0, middle: 0.4504),
                       child: ClipRect(
                         child: BackdropFilter(
-                          filter:
-                              ui.ImageFilter.blur(sigmaX: 22.0, sigmaY: 22.0),
+                          filter: ui.ImageFilter.blur(
+                              sigmaX: 22.0, sigmaY: 22.0),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.transparent,
+                              color: const Color(0xe3a0f4fe),
                               borderRadius: BorderRadius.circular(20.0),
                               border: Border.all(
-                                  width: 1.0, color: const Color(0xff707070)),
+                                  width: 1.0,
+                                  color: const Color(0xff707070)),
                               boxShadow: [
                                 BoxShadow(
                                   color: const Color(0xf2000000),
@@ -236,76 +237,13 @@ class ViasRespiratorias extends StatelessWidget {
                       child: Container(
                         decoration: BoxDecoration(
                           image: DecorationImage(
-                            image: const AssetImage(''),
+                            image: const AssetImage('assets/images/vias respiratorias.png'),
                             fit: BoxFit.fill,
                           ),
                         ),
                       ),
                     ),
                   ],
-                ),
-                Transform.translate(
-                  offset: Offset(21.0, 332.0),
-                  child: SizedBox(
-                    width: 147.0,
-                    height: 34.0,
-                    child: SvgPicture.string(
-                      _svg_kpwrxw,
-                      allowDrawingOutsideViewBox: true,
-                    ),
-                  ),
-                ),
-                Transform.translate(
-                  offset: Offset(213.0, 332.0),
-                  child: Container(
-                    width: 147.0,
-                    height: 34.0,
-                    decoration: BoxDecoration(
-                      color: const Color(0xff4ec8dd),
-                      borderRadius: BorderRadius.circular(8.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff000000)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xff080808),
-                          offset: Offset(0, 3),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(0.621, 0.491),
-                  child: SizedBox(
-                    width: 64.0,
-                    height: 24.0,
-                    child: Text(
-                      'Guardar',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 17,
-                        color: const Color(0xff000000),
-                      ),
-                      softWrap: false,
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(-0.566, 0.491),
-                  child: SizedBox(
-                    width: 49.0,
-                    height: 24.0,
-                    child: Text(
-                      'Envíar',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 17,
-                        color: const Color(0xff000000),
-                      ),
-                      softWrap: false,
-                    ),
-                  ),
                 ),
                 Pinned.fromPins(
                   Pin(size: 147.0, end: 21.0),
@@ -397,7 +335,7 @@ class ViasRespiratorias extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -419,7 +357,7 @@ class ViasRespiratorias extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -441,7 +379,7 @@ class ViasRespiratorias extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -463,7 +401,7 @@ class ViasRespiratorias extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/store.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -485,7 +423,7 @@ class ViasRespiratorias extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/noticias.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -508,7 +446,7 @@ class ViasRespiratorias extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/cuidadosrecomendaciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -531,7 +469,7 @@ class ViasRespiratorias extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/emergencias.png'),
                     fit: BoxFit.fill,
                   ),
                   boxShadow: [
@@ -561,7 +499,7 @@ class ViasRespiratorias extends StatelessWidget {
                 height: 60.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/comunidad.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -583,7 +521,7 @@ class ViasRespiratorias extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/crearpublicacion.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

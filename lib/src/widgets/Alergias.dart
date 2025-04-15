@@ -148,7 +148,7 @@ class Alergias extends StatelessWidget {
           ),
           Pinned.fromPins(
             Pin(start: 15.5, end: 15.5),
-            Pin(size: 476.0, end: 63.0),
+            Pin(size: 476.0, end: 10.0),
             child: Stack(
               children: <Widget>[
                 Stack(
@@ -290,8 +290,7 @@ class Alergias extends StatelessWidget {
                     ),
                   ),
                 ),
-
-                Pinned.fromPins(
+                  Pinned.fromPins(
                   Pin(size: 147.0, end: 21.0),
                   Pin(size: 34.0, middle: 0.7941),
                   child: Stack(
@@ -334,9 +333,7 @@ class Alergias extends StatelessWidget {
                   Pin(size: 34.0, middle: 0.7941),
                   child: Stack(
                     children: <Widget>[
-                      SizedBox(
-                        width: 147.0,
-                        height: 34.0,
+                      SizedBox(width: 147.0, height: 34.0,
                         child: PageLink(
                           links: [
                             PageLinkInfo(
