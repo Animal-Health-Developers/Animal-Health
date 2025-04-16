@@ -22,11 +22,11 @@ class Pedidos extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
@@ -43,7 +43,7 @@ class Pedidos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -72,7 +72,7 @@ class Pedidos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -94,7 +94,7 @@ class Pedidos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -116,7 +116,7 @@ class Pedidos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
                     fit: BoxFit.fill,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -135,7 +135,7 @@ class Pedidos extends StatelessWidget {
                 child: Stack(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -405.0),
+                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                       child: SingleChildScrollView(
                         primary: false,
                         child: Wrap(
@@ -169,7 +169,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/shampoo.jpg'),
                                                 fit: BoxFit.fill,
                                               ),
                                               borderRadius:
@@ -213,7 +213,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/fancy.jpg'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -227,7 +227,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/probioticos.jpg'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -241,7 +241,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/camagato.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -255,7 +255,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/jabon.jpg'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -270,7 +270,7 @@ class Pedidos extends StatelessWidget {
                                             height: 100.0,
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/shampoo2.jpg'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -302,7 +302,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/fancy.jpg'),
                                                 fit: BoxFit.fill,
                                               ),
                                               borderRadius:
@@ -346,7 +346,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/fancy.jpg'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -360,7 +360,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/camagato.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -374,7 +374,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/shampoo.jpg'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -388,7 +388,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/shampoo4.jpg'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -403,7 +403,7 @@ class Pedidos extends StatelessWidget {
                                             height: 100.0,
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/jabon.jpg'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -435,7 +435,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/jabon.jpg'),
                                                 fit: BoxFit.fill,
                                               ),
                                               borderRadius:
@@ -479,7 +479,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/jabon.jpg'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -493,7 +493,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/camagato.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -507,7 +507,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/camagato.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -521,7 +521,7 @@ class Pedidos extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/camagato.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -536,7 +536,7 @@ class Pedidos extends StatelessWidget {
                                             height: 100.0,
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/camagato.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius:
@@ -600,7 +600,7 @@ class Pedidos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -622,7 +622,7 @@ class Pedidos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -644,7 +644,7 @@ class Pedidos extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/carrito.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

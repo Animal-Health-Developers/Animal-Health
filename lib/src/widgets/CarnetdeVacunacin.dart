@@ -11,7 +11,7 @@ import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class CarnetdeVacunacin extends StatelessWidget {
-  const CarnetdeVacunacin({
+  CarnetdeVacunacin({
     required Key key,
   }) : super(key: key);
   @override
@@ -23,11 +23,11 @@ class CarnetdeVacunacin extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
@@ -44,130 +44,12 @@ class CarnetdeVacunacin extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
                   border:
                       Border.all(width: 1.0, color: const Color(0xff000000)),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 0.0, end: 0.5),
-            Pin(size: 448.0, end: 118.0),
-            child: SingleChildScrollView(
-              primary: false,
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: 340.0,
-                height: 448.0,
-                child: Stack(
-                  children: <Widget>[
-                    Pinned.fromPins(
-                      Pin(size: 42.0, end: -391.5),
-                      Pin(size: 56.0, start: 0.0),
-                      child: Text(
-                        'Lote\n',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 20,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        textAlign: TextAlign.center,
-                        softWrap: false,
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 63.0, end: -607.5),
-                      Pin(size: 74.0, start: 27.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: const AssetImage(''),
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 63.0, end: -604.5),
-                      Pin(size: 74.0, middle: 0.2567),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: const AssetImage(''),
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 63.0, end: -604.5),
-                      Pin(size: 74.0, middle: 0.4251),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: const AssetImage(''),
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 63.0, end: -604.5),
-                      Pin(size: 74.0, middle: 0.8021),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: const AssetImage(''),
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 63.0, end: -604.5),
-                      Pin(size: 74.0, middle: 0.623),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: const AssetImage(''),
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 63.0, end: -604.5),
-                      Pin(size: 74.0, end: 0.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: const AssetImage(''),
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 208.0, end: -689.5),
-                      Pin(size: 28.0, start: 0.0),
-                      child: Text(
-                        'Firma del Veterinario',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 20,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
-                        ),
-                        textAlign: TextAlign.center,
-                        softWrap: false,
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -182,7 +64,7 @@ class CarnetdeVacunacin extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -204,7 +86,7 @@ class CarnetdeVacunacin extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -227,7 +109,7 @@ class CarnetdeVacunacin extends StatelessWidget {
                 height: 90.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/kitty.jpg'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(25.0),
@@ -274,7 +156,7 @@ class CarnetdeVacunacin extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.fromLTRB(0.0, 45.0, 0.0, -1344.0),
+                        padding: EdgeInsets.fromLTRB(0.0, 45.0, 0.0, 0.0),
                         child: SingleChildScrollView(
                           primary: false,
                           child: Wrap(
@@ -429,7 +311,7 @@ class CarnetdeVacunacin extends StatelessWidget {
                                                   decoration: BoxDecoration(
                                                     image: DecorationImage(
                                                       image:
-                                                          const AssetImage(''),
+                                                          const AssetImage('assets/images/vacunaaplicada.png'),
                                                       fit: BoxFit.fill,
                                                     ),
                                                   ),
@@ -484,7 +366,7 @@ class CarnetdeVacunacin extends StatelessWidget {
                                                         image: DecorationImage(
                                                           image:
                                                               const AssetImage(
-                                                                  ''),
+                                                                  'assets/images/agregarvacuna.png'),
                                                           fit: BoxFit.fill,
                                                         ),
                                                       ),
@@ -541,7 +423,7 @@ class CarnetdeVacunacin extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/funciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -563,7 +445,7 @@ class CarnetdeVacunacin extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -585,7 +467,7 @@ class CarnetdeVacunacin extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

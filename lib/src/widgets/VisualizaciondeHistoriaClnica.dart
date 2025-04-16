@@ -22,34 +22,11 @@ class VisualizaciondeHistoriaClnica extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
-          ),
-          Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-                borderRadius: BorderRadius.circular(44.0),
-                border: Border.all(width: 1.0, color: const Color(0xff070707)),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 50.0, start: -7.5),
-            Pin(size: 1.0, start: 128.0),
-            child: SvgPicture.string(
-              _svg_i3j02g,
-              allowDrawingOutsideViewBox: true,
-              fit: BoxFit.fill,
-            ),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(start: 91.5, end: 91.5),
@@ -95,7 +72,7 @@ class VisualizaciondeHistoriaClnica extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -115,7 +92,7 @@ class VisualizaciondeHistoriaClnica extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -137,7 +114,7 @@ class VisualizaciondeHistoriaClnica extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -160,7 +137,7 @@ class VisualizaciondeHistoriaClnica extends StatelessWidget {
                 height: 90.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/kitty.jpg'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(25.0),
@@ -181,7 +158,7 @@ class VisualizaciondeHistoriaClnica extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/funciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -203,7 +180,7 @@ class VisualizaciondeHistoriaClnica extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -225,7 +202,7 @@ class VisualizaciondeHistoriaClnica extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

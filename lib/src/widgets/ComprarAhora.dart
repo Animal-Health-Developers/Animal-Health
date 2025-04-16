@@ -4,6 +4,7 @@ import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
 import './PerfilPublico.dart';
+import './DetallesdelProducto.dart';
 import './Elejirmetododepagoparacomprar.dart';
 import './DirecciondeEnvio.dart';
 import './Pedidos.dart';
@@ -12,7 +13,7 @@ import './ListadeAnimales.dart';
 import './Carritodecompras.dart';
 
 class ComprarAhora extends StatelessWidget {
-  const ComprarAhora({
+  ComprarAhora({
     required Key key,
   }) : super(key: key);
   @override
@@ -24,11 +25,11 @@ class ComprarAhora extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
@@ -45,7 +46,7 @@ class ComprarAhora extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -65,7 +66,7 @@ class ComprarAhora extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -87,7 +88,7 @@ class ComprarAhora extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -109,7 +110,7 @@ class ComprarAhora extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
                     fit: BoxFit.fill,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -136,131 +137,84 @@ class ComprarAhora extends StatelessWidget {
                 ),
                 Pinned.fromPins(
                   Pin(size: 150.0, start: 9.0),
-                  Pin(size: 150.0, start: 10.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: const AssetImage(''),
-                        fit: BoxFit.fill,
+                  Pin(size: 150.0, start: 11.0),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => DetallesdelProducto(key: Key('DetallesdelProducto'),),
                       ),
-                      borderRadius: BorderRadius.circular(16.0),
+                    ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: const AssetImage('assets/images/shampoo.jpg'),
+                          fit: BoxFit.fill,
+                        ),
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
                     ),
                   ),
                 ),
                 Pinned.fromPins(
                   Pin(size: 185.0, end: 28.0),
-                  Pin(size: 36.0, middle: 0.2043),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xffffffff),
-                      borderRadius: BorderRadius.circular(11.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 168.0, end: 37.0),
-                  Pin(size: 28.0, middle: 0.2073),
-                  child: Text(
-                    'Precio  \$ 17.761',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    textAlign: TextAlign.center,
-                    softWrap: false,
-                  ),
-                ),
-                Transform.translate(
-                  offset: Offset(199.0, 40.0),
-                  child: Container(
-                    width: 185.0,
-                    height: 32.0,
-                    decoration: BoxDecoration(
-                      color: const Color(0xffffffff),
-                      borderRadius: BorderRadius.circular(5.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff707070)),
-                    ),
-                  ),
-                ),
-                Transform.translate(
-                  offset: Offset(102.5, 41.0),
-                  child: SizedBox(
-                    width: 289.0,
-                    child: Text(
-                      'Cantidad',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 20,
-                        color: const Color(0xff000000),
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                      softWrap: false,
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 34.0, end: 37.0),
-                  Pin(size: 28.0, start: 41.0),
+                  Pin(size: 90.0, start: 40.0),
                   child: Stack(
                     children: <Widget>[
                       Pinned.fromPins(
-                        Pin(size: 8.0, start: 0.0),
                         Pin(start: 0.0, end: 0.0),
-                        child: Text(
-                          '-',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 20,
-                            color: const Color(0xffff0000),
+                        Pin(size: 36.0, end: 0.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xffffffff),
+                            borderRadius: BorderRadius.circular(11.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xff707070)),
                           ),
-                          softWrap: false,
                         ),
                       ),
                       Pinned.fromPins(
-                        Pin(size: 12.0, middle: 0.4545),
-                        Pin(start: 0.0, end: 0.0),
+                        Pin(start: 8.0, end: 9.0),
+                        Pin(size: 28.0, end: 5.0),
                         child: Text(
-                          '3',
+                          'Precio  \$ 17.761',
                           style: TextStyle(
                             fontFamily: 'Comic Sans MS',
                             fontSize: 20,
                             color: const Color(0xff000000),
                             fontWeight: FontWeight.w700,
                           ),
+                          textAlign: TextAlign.center,
                           softWrap: false,
                         ),
                       ),
-                      Pinned.fromPins(
-                        Pin(size: 10.0, end: 0.0),
-                        Pin(start: 0.0, end: 0.0),
-                        child: Text(
-                          '+',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 20,
-                            color: const Color(0xff00ff20),
-                          ),
-                          softWrap: false,
+                      Container(
+                        width: 185.0,
+                        height: 32.0,
+                        decoration: BoxDecoration(
+                          color: const Color(0xffffffff),
+                          borderRadius: BorderRadius.circular(5.0),
+                          border: Border.all(
+                              width: 1.0, color: const Color(0xff707070)),
                         ),
                       ),
-                      Pinned.fromPins(
-                        Pin(size: 12.0, middle: 0.4545),
-                        Pin(start: 0.0, end: 0.0),
-                        child: Text(
-                          '3',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 20,
-                            color: const Color(0xff000000),
-                            fontWeight: FontWeight.w700,
+                      Transform.translate(
+                        offset: Offset(3.0, 1.0),
+                        child: SizedBox(
+                          width: 90.0,
+                          child: Text(
+                            'Cantidad',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 20,
+                              color: const Color(0xff000000),
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                            softWrap: false,
                           ),
-                          softWrap: false,
                         ),
                       ),
                     ],
@@ -422,7 +376,7 @@ class ComprarAhora extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -444,7 +398,7 @@ class ComprarAhora extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -466,7 +420,7 @@ class ComprarAhora extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/carrito.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

@@ -9,7 +9,7 @@ import './Settings.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class PRIVACIDAD extends StatelessWidget {
-  const PRIVACIDAD({
+  PRIVACIDAD({
     required Key key,
   }) : super(key: key);
   @override
@@ -177,49 +177,105 @@ class PRIVACIDAD extends StatelessWidget {
           ),
           Pinned.fromPins(
             Pin(start: 0.0, end: 0.0),
-            Pin(size: 591.0, end: 107.0),
+            Pin(size: 42.0, middle: 0.2282),
             child: Stack(
               children: <Widget>[
-                Pinned.fromPins(
-                  Pin(start: 0.0, end: 0.0),
-                  Pin(size: 42.0, start: 0.0),
-                  child: Stack(
-                    children: <Widget>[
-                      Stack(
-                        children: <Widget>[
-                          Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xe3a0f4fe),
-                              borderRadius: BorderRadius.circular(6.0),
-                              border: Border.all(
-                                  width: 1.0, color: const Color(0xe3000000)),
-                            ),
+                Stack(
+                  children: <Widget>[
+                    Stack(
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xe3a0f4fe),
+                            borderRadius: BorderRadius.circular(6.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xe3000000)),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Transform.translate(
+                  offset: Offset(71.0, 7.0),
+                  child: SizedBox(
+                    width: 272.0,
+                    child: Text(
+                      'PRIVACIDAD',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
                       ),
-                    ],
+                      textAlign: TextAlign.center,
+                      softWrap: false,
+                    ),
                   ),
                 ),
+                Stack(
+                  children: <Widget>[
+                    Stack(
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xe3a0f4fe),
+                            borderRadius: BorderRadius.circular(6.0),
+                            border: Border.all(
+                                width: 1.0, color: const Color(0xe3000000)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Transform.translate(
+                  offset: Offset(71.0, 7.0),
+                  child: SizedBox(
+                    width: 272.0,
+                    child: Text(
+                      'PRIVACIDAD',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                      softWrap: false,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Pinned.fromPins(
+            Pin(start: 0.0, end: 0.0),
+            Pin(size: 347.0, middle: 0.4661),
+            child: Stack(
+              children: <Widget>[
                 Container(
                   decoration: BoxDecoration(
                     color: const Color(0xe3a0f4fe),
-                    borderRadius: BorderRadius.circular(20.0),
+                    borderRadius: BorderRadius.circular(9.0),
                     border:
                         Border.all(width: 1.0, color: const Color(0xe3000000)),
                   ),
-                  margin: EdgeInsets.fromLTRB(14.0, 66.0, 13.0, 0.0),
                 ),
                 Pinned.fromPins(
-                  Pin(start: 14.0, end: 13.6),
-                  Pin(size: 75.5, start: 66.0),
-                  child: SvgPicture.string(
-                    _svg_x68tk,
-                    allowDrawingOutsideViewBox: true,
-                    fit: BoxFit.fill,
+                  Pin(start: 8.0, end: 8.0),
+                  Pin(size: 90.0, start: 8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xe3a0f4fe),
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                          width: 1.0, color: const Color(0xe3000000)),
+                    ),
                   ),
                 ),
                 Transform.translate(
-                  offset: Offset(132.0, 79.5),
+                  offset: Offset(132.5, 19.5),
                   child: Text(
                     'Datos de Perfil',
                     style: TextStyle(
@@ -232,29 +288,36 @@ class PRIVACIDAD extends StatelessWidget {
                   ),
                 ),
                 Transform.translate(
-                  offset: Offset(24.0, 113.5),
-                  child: Text(
-                    'Información personal del usuario',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
+                  offset: Offset(24.0, 53.5),
+                  child: SizedBox(
+                    width: 364.0,
+                    child: Text(
+                      'Información personal del usuario',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                      softWrap: false,
                     ),
-                    softWrap: false,
                   ),
                 ),
                 Pinned.fromPins(
-                  Pin(start: 14.0, end: 13.6),
-                  Pin(size: 102.7, middle: 0.2898),
-                  child: SvgPicture.string(
-                    _svg_nn2fn,
-                    allowDrawingOutsideViewBox: true,
-                    fit: BoxFit.fill,
+                  Pin(start: 8.0, end: 8.0),
+                  Pin(size: 112.0, middle: 0.4511),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xe3a0f4fe),
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                          width: 1.0, color: const Color(0xe3000000)),
+                    ),
                   ),
                 ),
                 Transform.translate(
-                  offset: Offset(157.5, 156.0),
+                  offset: Offset(165.5, 115.0),
                   child: Text(
                     'Anuncios',
                     style: TextStyle(
@@ -267,29 +330,36 @@ class PRIVACIDAD extends StatelessWidget {
                   ),
                 ),
                 Transform.translate(
-                  offset: Offset(21.0, 184.0),
-                  child: Text(
-                    'Gestionar anuncios para mostrar en el\ndispositivo',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
+                  offset: Offset(10.5, 149.0),
+                  child: SizedBox(
+                    width: 391.0,
+                    child: Text(
+                      'Gestionar anuncios para mostrar en el\ndispositivo',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                      softWrap: false,
                     ),
-                    softWrap: false,
                   ),
                 ),
                 Pinned.fromPins(
-                  Pin(start: 14.0, end: 13.6),
-                  Pin(size: 95.7, middle: 0.4997),
-                  child: SvgPicture.string(
-                    _svg_ngd42,
-                    allowDrawingOutsideViewBox: true,
-                    fit: BoxFit.fill,
+                  Pin(start: 8.0, end: 8.0),
+                  Pin(size: 112.0, end: 9.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xe3a0f4fe),
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                          width: 1.0, color: const Color(0xe3000000)),
+                    ),
                   ),
                 ),
                 Transform.translate(
-                  offset: Offset(164.5, 259.8),
+                  offset: Offset(159.5, 237.0),
                   child: Text(
                     'Permisos',
                     style: TextStyle(
@@ -302,29 +372,20 @@ class PRIVACIDAD extends StatelessWidget {
                   ),
                 ),
                 Transform.translate(
-                  offset: Offset(24.0, 287.8),
-                  child: Text(
-                    'Controla el acceso a los datos de la\naplicacione',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
+                  offset: Offset(13.5, 271.0),
+                  child: SizedBox(
+                    width: 375.0,
+                    child: Text(
+                      'Controla el acceso a los datos de la\naplicacione',
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                      softWrap: false,
                     ),
-                    softWrap: false,
-                  ),
-                ),
-                Transform.translate(
-                  offset: Offset(151.0, 7.0),
-                  child: Text(
-                    'PRIVACIDAD',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
                   ),
                 ),
               ],
@@ -338,9 +399,3 @@ class PRIVACIDAD extends StatelessWidget {
 
 const String _svg_i3j02g =
     '<svg viewBox="-7.5 128.0 50.0 1.0" ><path transform="translate(-55.49, 74.01)" d="M 48.65689086914062 53.9924201965332 C 48.2294921875 53.9924201965332 47.98928833007812 53.9924201965332 47.98928833007812 53.9924201965332 C 47.98928833007812 53.9924201965332 48.2294921875 53.9924201965332 48.65689086914062 53.9924201965332 L 62.29214477539062 53.99241638183594 C 63.1807861328125 53.99241638183594 64.62149047851562 53.99241638183594 65.51007080078125 53.99241638183594 C 66.39871215820312 53.99241638183594 66.39871215820312 53.99241638183594 65.51007080078125 53.99241638183594 L 55.75177001953125 53.9924201965332 L 95.71670532226562 53.9924201965332 C 96.97183227539062 53.9924201965332 97.98928833007812 53.9924201965332 97.98928833007812 53.9924201965332 C 97.98928833007812 53.9924201965332 96.97183227539062 53.9924201965332 95.71670532226562 53.9924201965332 L 55.75177001953125 53.9924201965332 L 65.51007080078125 53.99242401123047 C 66.39871215820312 53.99242401123047 66.39871215820312 53.99242401123047 65.51007080078125 53.99242401123047 C 64.62149047851562 53.99242401123047 63.1807861328125 53.99242401123047 62.29220581054688 53.99242401123047 L 48.65689086914062 53.9924201965332 Z" fill="#fafafa" stroke="none" stroke-width="12" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
-const String _svg_x68tk =
-    '<svg viewBox="14.0 260.0 384.4 75.5" ><path transform="translate(14.0, 260.0)" d="M 21.23768615722656 0 L 363.1644287109375 0 C 374.8936462402344 0 384.402099609375 3.149661064147949 384.402099609375 21.681884765625 L 384.402099609375 54.19091796875 C 384.402099609375 72.72314453125 374.8936462402344 75.5 363.1644287109375 75.5 L 21.23768615722656 75.5 C 9.508435249328613 75.5 0 72.72314453125 0 54.19091796875 L 0 17.61083984375 C 0 -0.9213838577270508 9.508435249328613 0 21.23768615722656 0 Z" fill="#4ec8dd" stroke="none" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
-const String _svg_nn2fn =
-    '<svg viewBox="14.0 335.5 384.4 102.7" ><path transform="translate(14.0, 335.57)" d="M 21.23768424987793 0.005021080374717712 L 363.1643981933594 0.005021080374717712 C 374.8936462402344 0.005021080374717712 384.402099609375 -2.572370529174805 384.402099609375 22.6098690032959 L 384.402099609375 79.59455108642578 C 384.402099609375 104.7768020629883 374.8936462402344 102.5970840454102 363.1643981933594 102.5970840454102 L 21.23768424987793 102.5970840454102 C 9.508434295654297 102.5970840454102 0 104.7768020629883 0 79.59455108642578 L 0 22.6098690032959 C 0 -2.572370529174805 9.508434295654297 0.005021080374717712 21.23768424987793 0.005021080374717712 Z" fill="#4ec8dd" stroke="none" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
-const String _svg_ngd42 =
-    '<svg viewBox="14.0 441.5 384.4 95.7" ><path transform="translate(14.0, 441.5)" d="M 21.23768615722656 0 L 363.1644287109375 0 C 374.8936462402344 0 384.402099609375 -0.1682529449462891 384.402099609375 23.3148193359375 L 384.402099609375 74.3643798828125 C 384.402099609375 97.84745788574219 374.8936462402344 95.669677734375 363.1644287109375 95.669677734375 L 21.23768615722656 95.669677734375 C 9.508435249328613 95.669677734375 0 97.84745788574219 0 74.3643798828125 L 0 23.3148193359375 C 0 -0.1682529449462891 9.508435249328613 0 21.23768615722656 0 Z" fill="#4ec8dd" stroke="none" stroke-width="1" stroke-miterlimit="4" stroke-linecap="round" /></svg>';

@@ -329,7 +329,7 @@ class CompradeProductos extends StatelessWidget {
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   image: DecorationImage(
-                                                    image: const AssetImage('assets/images/fancy.jpg'),
+                                                    image: const AssetImage('assets/images/shampoo.jpg'),
                                                     fit: BoxFit.fill,
                                                   ),
                                                   borderRadius:

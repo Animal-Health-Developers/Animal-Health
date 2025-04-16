@@ -21,11 +21,11 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Align(
             alignment: Alignment(-0.248, -0.57),
@@ -36,29 +36,6 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
                 _svg_grwtv,
                 allowDrawingOutsideViewBox: true,
               ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage(''),
-                  fit: BoxFit.fill,
-                ),
-                borderRadius: BorderRadius.circular(44.0),
-                border: Border.all(width: 1.0, color: const Color(0xff070707)),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 50.0, start: -7.5),
-            Pin(size: 1.0, start: 128.0),
-            child: SvgPicture.string(
-              _svg_i3j02g,
-              allowDrawingOutsideViewBox: true,
-              fit: BoxFit.fill,
             ),
           ),
           Pinned.fromPins(
@@ -76,7 +53,7 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -96,7 +73,7 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -118,7 +95,7 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -140,7 +117,7 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
                     fit: BoxFit.fill,
                   ),
                   borderRadius: BorderRadius.circular(10.0),
@@ -161,7 +138,7 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
                   child: Stack(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -419.0),
+                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                         child: SingleChildScrollView(
                           primary: false,
                           child: Wrap(
@@ -518,7 +495,7 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -540,7 +517,7 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -562,7 +539,7 @@ class Elejirmetododepagoparacomprar extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/carrito.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -583,5 +560,3 @@ const String _svg_r2cav6 =
     '<svg viewBox="11.0 629.0 390.0 110.0" ><path transform="translate(11.0, 629.0)" d="M 15 0 C 15 0 217.0964660644531 0 307.0964660644531 0 C 397.0964660644531 0 375 0 375 0 C 383.2842712402344 0 390 6.715728759765625 390 15 L 390 95 C 390 103.2842712402344 383.2842712402344 110 375 110 L 15 110 C 6.715728759765625 110 0 103.2842712402344 0 95 L 0 15 C 0 6.715728759765625 6.715728759765625 0 15 0 Z" fill="#a0f4fe" fill-opacity="0.89" stroke="#000000" stroke-width="1" stroke-opacity="0.89" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
 const String _svg_grwtv =
     '<svg viewBox="154.6 191.5 1.0 1.0" ><path transform="translate(4.0, -139.0)" d="M 150.5888214111328 330.5046081542969" fill="none" stroke="#4ec8dd" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
-const String _svg_i3j02g =
-    '<svg viewBox="-7.5 128.0 50.0 1.0" ><path transform="translate(-55.49, 74.01)" d="M 48.65689086914062 53.9924201965332 C 48.2294921875 53.9924201965332 47.98928833007812 53.9924201965332 47.98928833007812 53.9924201965332 C 47.98928833007812 53.9924201965332 48.2294921875 53.9924201965332 48.65689086914062 53.9924201965332 L 62.29214477539062 53.99241638183594 C 63.1807861328125 53.99241638183594 64.62149047851562 53.99241638183594 65.51007080078125 53.99241638183594 C 66.39871215820312 53.99241638183594 66.39871215820312 53.99241638183594 65.51007080078125 53.99241638183594 L 55.75177001953125 53.9924201965332 L 95.71670532226562 53.9924201965332 C 96.97183227539062 53.9924201965332 97.98928833007812 53.9924201965332 97.98928833007812 53.9924201965332 C 97.98928833007812 53.9924201965332 96.97183227539062 53.9924201965332 95.71670532226562 53.9924201965332 L 55.75177001953125 53.9924201965332 L 65.51007080078125 53.99242401123047 C 66.39871215820312 53.99242401123047 66.39871215820312 53.99242401123047 65.51007080078125 53.99242401123047 C 64.62149047851562 53.99242401123047 63.1807861328125 53.99242401123047 62.29220581054688 53.99242401123047 L 48.65689086914062 53.9924201965332 Z" fill="#fafafa" stroke="none" stroke-width="12" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
