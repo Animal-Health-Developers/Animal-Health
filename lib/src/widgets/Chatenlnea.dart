@@ -21,11 +21,11 @@ class Chatenlnea extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(start: 4.0, end: 4.0),
@@ -33,7 +33,7 @@ class Chatenlnea extends StatelessWidget {
             child: Stack(
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 63.0),
+                  padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                   child: SizedBox.expand(
                       child: SvgPicture.string(
                     _svg_h3fdaz,
@@ -69,7 +69,7 @@ class Chatenlnea extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: const AssetImage(''),
+                        image: const AssetImage('assets/images/dogbot.png'),
                         fit: BoxFit.fill,
                       ),
                     ),
@@ -161,7 +161,7 @@ class Chatenlnea extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: const AssetImage(''),
+                        image: const AssetImage('assets/images/emoji.png'),
                         fit: BoxFit.fill,
                       ),
                     ),
