@@ -23,11 +23,11 @@ class CrearVacuna extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Align(
             alignment: Alignment.bottomCenter,
@@ -42,7 +42,7 @@ class CrearVacuna extends StatelessWidget {
                   child: Stack(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -100.0),
+                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                         child: SingleChildScrollView(
                           primary: false,
                           child: Wrap(
@@ -305,14 +305,14 @@ class CrearVacuna extends StatelessWidget {
                                                     ease: Curves.easeOut,
                                                     duration: 0.3,
                                                     pageBuilder: () =>
-                                                        CarnetdeVacunacin(key: Key('CarnetdeVacunacin'),),
+                                                        CarnetdeVacunacin(key: Key('CarnetdeVacunacin'),),//ICONO AGREGAR VACUNA
                                                   ),
                                                 ],
                                                 child: Container(
                                                   decoration: BoxDecoration(
                                                     image: DecorationImage(
                                                       image:
-                                                          const AssetImage(''),
+                                                          const AssetImage('assets/images/agregarvacuna.png'),
                                                       fit: BoxFit.fill,
                                                     ),
                                                   ),
@@ -367,7 +367,7 @@ class CrearVacuna extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -387,7 +387,7 @@ class CrearVacuna extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -409,7 +409,7 @@ class CrearVacuna extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -424,7 +424,7 @@ class CrearVacuna extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
+                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),//FOTO DE PERFIL DE ANIMALES
                 ),
               ],
               child: Container(
@@ -432,7 +432,7 @@ class CrearVacuna extends StatelessWidget {
                 height: 90.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/kitty.jpg'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(25.0),
@@ -455,7 +455,7 @@ class CrearVacuna extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/funciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -477,7 +477,7 @@ class CrearVacuna extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -499,7 +499,7 @@ class CrearVacuna extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),

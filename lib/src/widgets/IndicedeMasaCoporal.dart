@@ -23,11 +23,11 @@ class IndicedeMasaCoporal extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Align(
             alignment: Alignment(-0.267, -0.494),
@@ -55,7 +55,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -84,7 +84,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -106,7 +106,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -129,7 +129,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                 height: 90.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/kitty.jpg'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(25.0),
@@ -150,7 +150,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/funciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -173,7 +173,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                       child: Stack(
                         children: <Widget>[
                           Padding(
-                            padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -705.0),
+                            padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                             child: SingleChildScrollView(
                               primary: false,
                               child: Wrap(
@@ -288,7 +288,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/peso.png'),
                                                 fit: BoxFit.fill,
                                               ),
                                             ),
@@ -300,7 +300,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/ancho.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                             ),
@@ -312,7 +312,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                                           child: Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: const AssetImage(''),
+                                                image: const AssetImage('assets/images/largo.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                             ),
@@ -492,7 +492,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -514,7 +514,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
