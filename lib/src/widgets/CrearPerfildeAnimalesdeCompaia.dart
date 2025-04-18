@@ -20,11 +20,11 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/BackGround.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: -58.0, vertical: 0.0),
+            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Align(
             alignment: Alignment(-0.267, -0.494),
@@ -52,7 +52,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
@@ -81,20 +81,6 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 0.0, end: 12.0),
-            Pin(size: 0.0, middle: 0.7063),
-            child: Text(
-              '',
-              style: TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: const Color(0xff000000),
-                fontWeight: FontWeight.w700,
-              ),
-              softWrap: false,
-            ),
-          ),
-          Pinned.fromPins(
             Pin(size: 52.9, start: 9.1),
             Pin(size: 50.0, start: 49.0),
             child: PageLink(
@@ -104,7 +90,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -126,7 +112,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/help.png'),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -140,7 +126,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
               height: 90.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: const AssetImage(''),
+                  image: const AssetImage('assets/images/kitty.jpg'),
                   fit: BoxFit.cover,
                 ),
                 borderRadius: BorderRadius.circular(25.0),
@@ -162,7 +148,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/settings.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -184,7 +170,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -204,7 +190,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
                   child: Stack(
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, -61.0),
+                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                         child: SingleChildScrollView(
                           primary: false,
                           child: Wrap(
@@ -447,7 +433,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/edad.png'),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -459,7 +445,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/especie.png'),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -471,7 +457,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/raza.png'),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -483,7 +469,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/peso.png'),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -495,7 +481,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/ancho.png'),
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -507,7 +493,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/largo.png'),
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -519,7 +505,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
                                       child: Container(
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
-                                            image: const AssetImage(''),
+                                            image: const AssetImage('assets/images/nombreanimal.png'),
                                             fit: BoxFit.fill,
                                           ),
                                         ),
@@ -570,7 +556,7 @@ class CrearPerfildeAnimalesdeCompaia extends StatelessWidget {
                                         child: Container(
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: const AssetImage(''),
+                                              image: const AssetImage('assets/images/editarperfilanimal.png'),
                                               fit: BoxFit.fill,
                                             ),
                                           ),
