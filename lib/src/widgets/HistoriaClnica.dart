@@ -10,7 +10,7 @@ import './ListadeAnimales.dart';
 import 'dart:ui' as ui;
 import './VisualizaciondeHistoriaClnica.dart';
 import './CarnetdeVacunacin.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 
 class HistoriaClnica extends StatelessWidget {
   const HistoriaClnica({

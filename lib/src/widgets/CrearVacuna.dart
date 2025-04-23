@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
-import './PerfilPublico.dart';
 import './Ayuda.dart';
 import './Settings.dart';
 import './ListadeAnimales.dart';

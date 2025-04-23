@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'animal-health-d4d0d.firebasestorage.app',
     measurementId: 'G-K82Z4G22V0',
   );
+
 }

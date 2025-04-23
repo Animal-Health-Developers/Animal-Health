@@ -1,3 +1,4 @@
+import 'package:animal_health/src/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import './Home.dart';
@@ -375,7 +376,7 @@ class Settings extends StatelessWidget {
                         transition: LinkTransition.Fade,
                         ease: Curves.easeOut,
                         duration: 0.3,
-                        pageBuilder: () => AnimalHealth(key: Key('AnimalHealth'),),
+                        pageBuilder: () => AnimalHealth(key: Key('AnimalHealth'), authService: AuthService(),),
                       ),
                     ],
                     child: Container(

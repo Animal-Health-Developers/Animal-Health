@@ -1,22 +1,108 @@
-import 'package:flutter/material.dart';
-import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'package:adobe_xd/pinned.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
+import './Home.dart';
 import './CrearCuenta.dart';
-import './Ayuda.dart';
+import './AyudaOutSession.dart';
 import './Settingsoutsesion.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-class AnimalHealth extends StatelessWidget {
+class AnimalHealth extends StatefulWidget {
+  final AuthService authService;
+
   const AnimalHealth({
     required Key key,
+    required this.authService,
   }) : super(key: key);
+
+  @override
+  _AnimalHealthState createState() => _AnimalHealthState();
+}
+
+class _AnimalHealthState extends State<AnimalHealth> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signInWithEmailAndPassword() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      setState(() => _errorMessage = 'Por favor complete todos los campos');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final user = await widget.authService.iniciarSesion(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      if (user != null) {
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null && !currentUser.emailVerified) {
+          await widget.authService.verificarCorreoElectronico();
+          setState(() {
+            _errorMessage = 'Verifique su correo electrónico. Se envió un nuevo correo de verificación.';
+          });
+          return;
+        }
+
+        // Navegar a Home después de login exitoso
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => Home(key: Key('Home')),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            transitionDuration: Duration(milliseconds: 300),
+          ),
+        );
+        }
+        } on FirebaseAuthException catch (e) {
+          setState(() => _errorMessage = _getErrorMessage(e.code));
+        } catch (e) {
+      setState(() => _errorMessage = 'Error al iniciar sesión');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _getErrorMessage(String code) {
+    switch (code) {
+      case 'invalid-email': return 'Email inválido';
+      case 'user-disabled': return 'Usuario deshabilitado';
+      case 'user-not-found': return 'Usuario no encontrado';
+      case 'wrong-password': return 'Contraseña incorrecta';
+      case 'too-many-requests': return 'Demasiados intentos. Espere.';
+      default: return 'Error: $code';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
+          // Fondo
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
@@ -24,13 +110,13 @@ class AnimalHealth extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
-          Align(
-            alignment: Alignment(0.004, -0.567),
+
+          // Logo
+          Pinned.fromPins(
+            Pin(size: 177.0, middle: 0.5),
+            Pin(size: 175.0, start: 100.0),
             child: Container(
-              width: 177.0,
-              height: 175.0,
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image: const AssetImage('assets/images/logo.png'),
@@ -41,62 +127,47 @@ class AnimalHealth extends StatelessWidget {
               ),
             ),
           ),
-          Align(
-            alignment: Alignment(0.0, 0.454),
-            child: SizedBox(
-              width: 242.0,
-              height: 49.0,
-              child: Stack(
-                children: <Widget>[
-                  PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => Home(key: Key('Home'),),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
+
+          // Campo Email
+          Pinned.fromPins(
+            Pin(start: 43.0, end: 43.0),
+            Pin(size: 45.0, middle: 0.5),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xffffffff),
+                borderRadius: BorderRadius.circular(12.0),
+                border: Border.all(width: 1.0, color: const Color(0xff000000)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 45.0,
+                    height: 45.0,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/@.png'),
+                        fit: BoxFit.fill,
                       ),
                     ),
                   ),
-                  Align(
-                    alignment: Alignment(0.19, 0.0),
-                    child: SizedBox(
-                      width: 134.0,
-                      height: 28.0,
-                      child: PageLink(
-                        links: [
-                          PageLinkInfo(
-                            transition: LinkTransition.Fade,
-                            ease: Curves.easeOut,
-                            duration: 0.3,
-                            pageBuilder: () => Home(key: Key('Home'),),
-                          ),
-                        ],
-                        child: Text(
-                          'Iniciar Sesion',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 20,
-                            color: const Color(0xff000000),
-                            fontWeight: FontWeight.w700,
-                          ),
-                          softWrap: false,
+                  Expanded(
+                    child: TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        hintText: 'Email o Nombre de Usuario',
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 20,
+                          color: const Color(0xff000000),
+                          fontWeight: FontWeight.w700,
                         ),
+                      ),
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 20,
+                        color: const Color(0xff000000),
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -104,94 +175,172 @@ class AnimalHealth extends StatelessWidget {
               ),
             ),
           ),
+
+          // Campo Contraseña
           Pinned.fromPins(
-            Pin(size: 25.2, end: 55.6),
-            Pin(size: 20.8, middle: 0.593),
-            child: Stack(
-              children: <Widget>[
-                SizedBox.expand(
-                    child: SvgPicture.string(
-                  _svg_mg6z50,
-                  allowDrawingOutsideViewBox: true,
-                  fit: BoxFit.fill,
-                )),
-                Pinned.fromPins(
-                  Pin(size: 12.0, middle: 0.5),
-                  Pin(start: 4.4, end: 4.4),
-                  child: Container(
+            Pin(start: 49.0, end: 48.0),
+            Pin(size: 45.0, middle: 0.58),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xffffffff),
+                borderRadius: BorderRadius.circular(12.0),
+                border: Border.all(width: 1.0, color: const Color(0xff000000)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 45.0,
+                    height: 45.0,
                     decoration: BoxDecoration(
-                      color: const Color(0xff535553),
-                      borderRadius:
-                          BorderRadius.all(Radius.elliptical(9999.0, 9999.0)),
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/password.png'),
+                        fit: BoxFit.fill,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 249.5, middle: 0.496),
-            Pin(size: 75.0, end: 76.2),
-            child: Stack(
-              children: <Widget>[
-                Pinned.fromPins(
-                  Pin(start: 0.0, end: 4.5),
-                  Pin(size: 26.0, end: 0.0),
-                  child: SingleChildScrollView(
-                    primary: false,
-                    child: Text(
-                      '¿No tienes una cuenta?',
+                  Expanded(
+                    child: TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        hintText: 'Contraseña',
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 20,
+                          color: const Color(0xff000000),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       style: TextStyle(
                         fontFamily: 'Comic Sans MS',
                         fontSize: 20,
                         color: const Color(0xff000000),
                         fontWeight: FontWeight.w700,
                       ),
-                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Botón Iniciar Sesión
+          Pinned.fromPins(
+            Pin(size: 242.0, middle: 0.5),
+            Pin(size: 49.0, middle: 0.68),
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : GestureDetector(
+              onTap: _signInWithEmailAndPassword,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xff4ec8dd),
+                  borderRadius: BorderRadius.circular(15.0),
+                  border: Border.all(
+                      width: 1.0,
+                      color: const Color(0xff000000)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xff080808),
+                      blurRadius: 3,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'Iniciar Sesion',
+                    style: TextStyle(
+                      fontFamily: 'Comic Sans MS',
+                      fontSize: 20,
+                      color: const Color(0xff000000),
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                Pinned.fromPins(
-                  Pin(start: 7.5, end: 0.0),
-                  Pin(size: 49.0, start: 0.0),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => CrearCuenta(key: Key('CrearCuenta'),),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
+              ),
+            ),
+          ),
+
+          // Mensaje de error
+          if (_errorMessage != null)
+            Pinned.fromPins(
+              Pin(start: 50.0, end: 50.0),
+              Pin(size: 30.0, middle: 0.63),
+              child: Center(
+                child: Text(
+                  _errorMessage!,
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 16,
+                    color: Colors.red,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                Pinned.fromPins(
-                  Pin(size: 110.0, middle: 0.5269),
-                  Pin(size: 28.0, start: 10.5),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => CrearCuenta(key: Key('CrearCuenta'),),
+              ),
+            ),
+
+          // Texto "¿No tienes una cuenta?"
+          Pinned.fromPins(
+            Pin(start: 50.0, end: 50.0),
+            Pin(size: 26.0, middle: 0.75),
+            child: Center(
+              child: Text(
+                '¿No tienes una cuenta?',
+                style: TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 20,
+                  color: const Color(0xff000000),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+
+          // Botón Registrarse
+          Pinned.fromPins(
+            Pin(size: 249.5, middle: 0.5),
+            Pin(size: 49.0, middle: 0.8),
+            child: PageLink(
+              links: [
+                PageLinkInfo(
+                  transition: LinkTransition.Fade,
+                  ease: Curves.easeOut,
+                  duration: 0.3,
+                  pageBuilder: () => CrearCuenta(
+                    key: Key('CrearCuenta'),
+                    authService: widget.authService,
+                  ),
+                ),
+              ],
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => CrearCuenta(
+                        key: Key('CrearCuenta'),
+                        authService: widget.authService,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xff4ec8dd),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(
+                        width: 1.0,
+                        color: const Color(0xff000000)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xff080808),
+                        blurRadius: 3,
+                        offset: Offset(0, 3),
                       ),
                     ],
+                  ),
+                  child: Center(
                     child: Text(
                       'Registrarse',
                       style: TextStyle(
@@ -200,14 +349,14 @@ class AnimalHealth extends StatelessWidget {
                         color: const Color(0xff000000),
                         fontWeight: FontWeight.w700,
                       ),
-                      textAlign: TextAlign.center,
-                      softWrap: false,
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
+
+          // Botones de Ayuda y Configuración
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
@@ -217,119 +366,25 @@ class AnimalHealth extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
+                  pageBuilder: () => AyudaOutSession(key: Key('AyudaOutSession'),),
                 ),
               ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => AyudaOutSession(key: Key('AyudaOutSession'))),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: const AssetImage('assets/images/help.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 43.0, end: 43.0),
-            Pin(size: 45.0, middle: 0.5089),
-            child: Stack(
-              children: <Widget>[
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xffffffff),
-                    borderRadius: BorderRadius.circular(12.0),
-                    border:
-                        Border.all(width: 1.0, color: const Color(0xff000000)),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 265.0, end: 11.0),
-                  Pin(size: 28.0, middle: 0.5288),
-                  child: Text(
-                    'Email o Nombre de Usuario',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 45.0, start: 1.0),
-                  Pin(start: 2.0, end: 1.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: const AssetImage('assets/images/@.png'),
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 49.0, end: 48.0),
-            Pin(size: 73.0, middle: 0.6154),
-            child: Stack(
-              children: <Widget>[
-                Pinned.fromPins(
-                  Pin(start: 0.0, end: 0.0),
-                  Pin(size: 45.0, start: 0.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xffffffff),
-                      borderRadius: BorderRadius.circular(12.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xff000000)),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 106.0, middle: 0.4976),
-                  Pin(size: 28.0, start: 8.5),
-                  child: Text(
-                    'Contraseña',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 220.0, start: 1.0),
-                  Pin(size: 28.0, end: 0.0),
-                  child: Text(
-                    '¿Olvido la contraseña?',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 39.2, start: 3.9),
-                  Pin(size: 40.0, start: 2.5),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: const AssetImage('assets/images/password.png'),
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
           Pinned.fromPins(
@@ -344,11 +399,19 @@ class AnimalHealth extends StatelessWidget {
                   pageBuilder: () => Settingsoutsesion(key: Key('Settingsoutsesion'),),
                 ),
               ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => Settingsoutsesion(key: Key('Settingsoutsesion'))),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: const AssetImage('assets/images/settingsbutton.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -359,6 +422,3 @@ class AnimalHealth extends StatelessWidget {
     );
   }
 }
-
-const String _svg_mg6z50 =
-    '<svg viewBox="0.0 0.0 25.2 20.8" ><path transform="translate(-2.02, -11.0)" d="M 26.8043270111084 19.87293434143066 L 26.8043270111084 19.87293434143066 C 25.60179328918457 17.79458808898926 21.13524436950684 11 14.60720825195312 11 C 8.079174041748047 11 3.612624168395996 17.79458808898926 2.410091400146484 19.87293434143066 C 1.892152786254883 20.75639152526855 1.892152786254883 22.02705764770508 2.410091400146484 22.91051292419434 C 3.612624168395996 24.98885917663574 8.079174041748047 31.783447265625 14.60720825195312 31.783447265625 C 21.13524436950684 31.783447265625 25.60179328918457 24.98885917663574 26.8043270111084 22.91051292419434 C 27.322265625 22.02705574035645 27.322265625 20.75639152526855 26.8043270111084 19.87293434143066 Z M 14.60720825195312 28.58599472045898 C 9.568023681640625 28.58599472045898 5.845899105072021 23.62994003295898 4.471575736999512 21.3917236328125 C 5.845898628234863 19.15350723266602 9.568023681640625 14.19745445251465 14.60720825195312 14.19745445251465 C 19.64639472961426 14.19745445251465 23.3685188293457 19.15350723266602 24.74284172058105 21.3917236328125 C 23.3685188293457 23.62994003295898 19.64639472961426 28.58599472045898 14.60720825195312 28.58599472045898 Z" fill="#535553" stroke="none" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';

@@ -1,169 +1,240 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/user.dart' as usermodel; //Usamos un Alias para evitar conflictos con metodos y clases.
+import 'package:firebase_core/firebase_core.dart';
+import '../models/user.dart' as usermodel;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Registro con correo electrónico, nombre de usuario y contraseña
-  Future<usermodel.User?> registrarUsuario(
-      String email,
-      String userName,
-      String password,
-      String confirmPassword,
-      String nombre,
-      String numcontact,
-      String direccion,
-      String rol,
-      Timestamp fechanacimiento,
-      String bio) async {
-    // Validación de contraseñas
-    if (password != confirmPassword) {
-      print('La contraseña y la confirmación no coinciden.');
-      return null;
-    }
-    if (password.length < 8) {
-      print('La contraseña debe tener al menos 8 caracteres.');
-      return null;
-    }
+  // Tipos de errores personalizados
+  static const String emailAlreadyInUse = 'email-already-in-use';
+  static const String invalidEmail = 'invalid-email';
+  static const String weakPassword = 'weak-password';
+  static const String userDisabled = 'user-disabled';
+  static const String userNotFound = 'user-not-found';
+  static const String wrongPassword = 'wrong-password';
+  static const String emailNotVerified = 'email-not-verified';
+
+  // En tu auth_service.dart
+  Future<usermodel.User?> registrarUsuario({
+    required String email,
+    required String userName,
+    required String password,
+    required String confirmPassword,
+  }) async {
     try {
-      UserCredential userCredential =
-      await _auth.createUserWithEmailAndPassword(
+      // Validaciones mejoradas
+      if (email.isEmpty || !email.contains('@')) {
+        throw FirebaseAuthException(
+          code: invalidEmail,
+          message: 'Por favor ingresa un correo electrónico válido',
+        );
+      }
+
+      if (userName.isEmpty || userName.length < 3) {
+        throw FirebaseAuthException(
+          code: 'invalid-username',
+          message: 'El nombre de usuario debe tener al menos 3 caracteres',
+        );
+      }
+
+      if (password != confirmPassword) {
+        throw FirebaseAuthException(
+          code: 'passwords-mismatch',
+          message: 'Las contraseñas no coinciden',
+        );
+      }
+
+      if (password.length < 8) {
+        throw FirebaseAuthException(
+          code: weakPassword,
+          message: 'La contraseña debe tener al menos 8 caracteres',
+        );
+      }
+
+      // Verificar si el email ya está en uso
+      final methods = await _auth.fetchSignInMethodsForEmail(email);
+      if (methods.isNotEmpty) {
+        throw FirebaseAuthException(
+          code: emailAlreadyInUse,
+          message: 'El correo electrónico ya está registrado',
+        );
+      }
+
+      // Crear usuario en Firebase Auth
+      final UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      final User? user = userCredential.user;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'user-creation-failed',
+          message: 'No se pudo crear el usuario',
+        );
+      }
+
+      // Actualizar displayName
+      await user.updateProfile(displayName: userName);
+      await user.reload();
+
+      // Crear documento en Firestore (¡SIN la contraseña!)
+      final usuario = usermodel.User(
+        uid: user.uid,
+        email: email,
+        userName: userName,
+        password: password,
+        emailVerified: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await _firestore.collection('users').doc(user.uid).set(usuario.toJson());
+
+      // Enviar verificación de email
+      await user.sendEmailVerification();
+
+      return usuario;
+    } on FirebaseAuthException catch (e) {
+      // Limpiar si hay error
+      if (_auth.currentUser != null) {
+        await _auth.currentUser?.delete();
+      }
+      throw e; // Re-lanzar la excepción
+    } catch (e) {
+      // Limpiar si hay error desconocido
+      if (_auth.currentUser != null) {
+        await _auth.currentUser?.delete();
+      }
+      throw FirebaseAuthException(
+        code: 'registration-failed',
+        message: 'Error durante el registro: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<usermodel.User?> iniciarSesion(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      // Actualizar el nombre para mostrar (nickname)
-      await userCredential.user?.updateProfile(displayName: userName);
-      // Crear un objeto User con los datos del formulario
-      final usuario = usermodel.User(
-        nombre: nombre,
-        email: email,
-        password: password, //  encriptar la contraseña antes de guardarla
-        userName: userName,
-        numcontact: numcontact,
-        direccion: direccion,
-        rol: rol,
-        profilePicture: null,
-        fechanacimiento: fechanacimiento,
-        bio: bio,
-      );
-      // Guardar datos adicionales del usuario en Cloud Firestore
-      await _firestore
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set(usuario.toJson());
-      return usuario; // Retornar el objeto userModel.User
-    } on FirebaseAuthException catch (e) {
-      // Usa el alias en on-catch
-      // Manejo de errores de Firebase Authentication
-      if (e.code == 'weak-password') {
-        print('La contraseña proporcionada es demasiado débil.');
-      } else if (e.code == 'email-already-in-use') {
-        print('Ya existe una cuenta con este correo electrónico.');
-      } else {
-        print('Error de autenticación: ${e.code}');
+
+      final User? user = userCredential.user;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: userNotFound,
+          message: 'No se encontró el usuario',
+        );
       }
-      return null;
+
+      // Verificar si el email está verificado
+      if (!user.emailVerified) {
+        await verificarCorreoElectronico();
+        throw FirebaseAuthException(
+          code: emailNotVerified,
+          message: 'Por favor verifica tu correo electrónico primero',
+        );
+      }
+
+      // Obtener datos del usuario desde Firestore
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+
+      if (!userDoc.exists || userDoc.data() == null) {
+        throw FirebaseAuthException(
+          code: 'user-data-missing',
+          message: 'Datos de usuario no encontrados',
+        );
+      }
+
+      // Actualizar última fecha de login
+      await _firestore.collection('users').doc(user.uid).update({
+        'lastLogin': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      final userData = userDoc.data() as Map<String, dynamic>? ?? {};
+      return usermodel.User.fromJson(userData);
+
+    } on FirebaseAuthException catch (e) {
+      throw e;
+    } on FirebaseException catch (e) {
+      throw FirebaseAuthException(
+        code: 'firestore-error',
+        message: 'Error al acceder a los datos: ${e.message ?? 'Error desconocido'}',
+      );
     } catch (e) {
-      // Manejo de otros errores
-      print('Error: $e');
-      return null;
+      throw FirebaseAuthException(
+        code: 'login-error',
+        message: 'Error durante el inicio de sesión',
+      );
     }
   }
 
   Future<void> verificarCorreoElectronico() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = _auth.currentUser;
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
-        print(
-            'Se ha enviado un correo electrónico de verificación a ${user.email}');
-      } else {
-        print(
-            'El usuario ya ha verificado su correo electrónico o no ha iniciado sesión.');
-      }
-    } catch (e) {
-      print('Error al enviar el correo electrónico de verificación: $e');
-    }
-  }
 
-  // Inicio de sesión con correo electrónico y contraseña
-  Future<usermodel.User?> iniciarSesion(String email, String password) async {
-    try {
-      UserCredential userCredential =
-      await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      // Obtener el documento del usuario de Firestore
-      DocumentSnapshot userDoc = await _firestore
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .get();
-      // Asegúrate de que userDoc.data() no sea nulo antes de acceder a sus campos
-      if (userDoc.exists && userDoc.data() != null) {
-        try {
-          // Obtener los datos del usuario como un mapa
-          Map<String, dynamic> userData =
-          userDoc.data() as Map<String, dynamic>;
-          // Convertir 'fechanacimiento' de DateTime a Timestamp
-          if (userData['fechanacimiento'] is DateTime) {
-            userData['fechanacimiento'] =
-                Timestamp.fromDate(userData['fechanacimiento'] as DateTime);
-          }
-          // Crear el objeto User con el Timestamp
-          usermodel.User usuario = usermodel.User.fromJson(userData);
-          return usuario;
-        } catch (e) {
-          print('Error al convertir los datos del usuario: $e');
-          return null;
-        }
+        await _firestore.collection('users').doc(user.uid).update({
+          'updatedAt': FieldValue.serverTimestamp(),
+          'lastVerificationSent': FieldValue.serverTimestamp(),
+        });
       }
     } on FirebaseAuthException catch (e) {
-      // Manejo de errores de Firebase Authentication
-      if (e.code == 'user-not-found') {
-        print('No se encontró ningún usuario con ese correo electrónico.');
-      } else if (e.code == 'wrong-password') {
-        print('Contraseña incorrecta proporcionada para ese usuario.');
-      } else {
-        print('Error de autenticación: ${e.code}');
-      }
-      return null;
+      throw e;
     } catch (e) {
-      // Manejo de otros errores
-      print('Error: $e');
-      return null;
+      throw FirebaseAuthException(
+        code: 'verification-error',
+        message: 'Error al enviar correo de verificación',
+      );
     }
-    return null;
   }
 
-  // Cerrar sesión
   Future<void> cerrarSesion() async {
     await _auth.signOut();
   }
-  // getter que retorna un Stream de objetos firebaseauth.User
+
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-  // Obtener el usuario actual con todos sus datos desde Firestore
-  Future<usermodel.User?> getAppUser(String uid) async {
-    if (uid.isNotEmpty) {
-      try {
-        final DocumentSnapshot userDoc =
-        await _firestore.collection('users').doc(uid).get();
-        if (userDoc.exists && userDoc.data() != null) {
-          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-          if (userData['fechanacimiento'] is DateTime) {
-            userData['fechanacimiento'] =
-                Timestamp.fromDate(userData['fechanacimiento'] as DateTime);
-          }
-          usermodel.User usuario = usermodel.User.fromJson(userData);
-          return usuario;
-        }
-      } catch (e) {
-        print('Error al obtener datos del usuario de Firestore: $e');
-        return null;
-      }
+
+  Future<usermodel.User?> getCurrentUser() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    try {
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      if (!userDoc.exists || userDoc.data() == null) return null;
+
+      final userData = userDoc.data() as Map<String, dynamic>? ?? {};
+      return usermodel.User.fromJson(userData);
+    } catch (e) {
+      throw FirebaseAuthException(
+        code: 'user-data-error',
+        message: 'Error al obtener datos del usuario',
+      );
     }
-    return null;
+  }
+
+  Future<bool> checkEmailVerification() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.reload();
+      return user.emailVerified;
+    }
+    return false;
+  }
+
+  Future<void> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw e;
+    } catch (e) {
+      throw FirebaseAuthException(
+        code: 'reset-password-error',
+        message: 'Error al enviar correo de restablecimiento',
+      );
+    }
   }
 }
