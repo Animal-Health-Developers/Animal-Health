@@ -5,7 +5,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
     // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
-
+    apply plugin: 'com.google.gms.google-services'
 }
 dependencies {
     // Import the Firebase BoM

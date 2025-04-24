@@ -1,4 +1,5 @@
 import 'package:adobe_xd/page_link.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:adobe_xd/pinned.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,13 +8,18 @@ import './Home.dart';
 import './CrearCuenta.dart';
 import './AyudaOutSession.dart';
 import './Settingsoutsesion.dart';
+import '/firebase_options.dart';
 
 class AnimalHealth extends StatefulWidget {
   final AuthService authService;
+  final VoidCallback onLoginSuccess;
+  final VoidCallback? onRegisterPressed;
 
   const AnimalHealth({
     required Key key,
     required this.authService,
+    required this.onLoginSuccess,
+    this.onRegisterPressed,
   }) : super(key: key);
 
   @override
@@ -34,17 +40,22 @@ class _AnimalHealthState extends State<AnimalHealth> {
   }
 
   Future<void> _signInWithEmailAndPassword() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      setState(() => _errorMessage = 'Por favor complete todos los campos');
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
     try {
+      // Verifica que Firebase esté inicializado
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      }
+
+      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+        setState(() => _errorMessage = 'Por favor complete todos los campos');
+        return;
+      }
+
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
       final user = await widget.authService.iniciarSesion(
         _emailController.text.trim(),
         _passwordController.text.trim(),
@@ -62,22 +73,21 @@ class _AnimalHealthState extends State<AnimalHealth> {
 
         // Navegar a Home después de login exitoso
         Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => Home(key: Key('Home')),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
-            },
-            transitionDuration: Duration(milliseconds: 300),
+          MaterialPageRoute(
+            builder: (context) => Home(key: Key('Home')),
           ),
         );
-        }
-        } on FirebaseAuthException catch (e) {
-          setState(() => _errorMessage = _getErrorMessage(e.code));
-        } catch (e) {
-      setState(() => _errorMessage = 'Error al iniciar sesión');
+      }
+    } on FirebaseException catch (e) {
+      setState(() => _errorMessage = _getErrorMessage(e.code));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.message}')),
+      );
+    } catch (e) {
+      setState(() => _errorMessage = 'Error de configuración: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error de configuración: $e')),
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -224,7 +234,6 @@ class _AnimalHealthState extends State<AnimalHealth> {
               ),
             ),
           ),
-
           // Botón Iniciar Sesión
           Pinned.fromPins(
             Pin(size: 242.0, middle: 0.5),
@@ -232,7 +241,19 @@ class _AnimalHealthState extends State<AnimalHealth> {
             child: _isLoading
                 ? Center(child: CircularProgressIndicator())
                 : GestureDetector(
-              onTap: _signInWithEmailAndPassword,
+              onTap: () async {
+                await _signInWithEmailAndPassword();
+
+                // Verificar si el usuario está logueado después de intentar iniciar sesión
+                if (FirebaseAuth.instance.currentUser != null &&
+                    FirebaseAuth.instance.currentUser!.emailVerified) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => Home(key: Key('Home')),
+                    ),
+                  );
+                }
+              },
               child: Container(
                 decoration: BoxDecoration(
                   color: const Color(0xff4ec8dd),
@@ -262,7 +283,6 @@ class _AnimalHealthState extends State<AnimalHealth> {
               ),
             ),
           ),
-
           // Mensaje de error
           if (_errorMessage != null)
             Pinned.fromPins(
@@ -311,16 +331,18 @@ class _AnimalHealthState extends State<AnimalHealth> {
                   pageBuilder: () => CrearCuenta(
                     key: Key('CrearCuenta'),
                     authService: widget.authService,
+                    onRegistrationSuccess: widget.onLoginSuccess,
                   ),
                 ),
               ],
               child: GestureDetector(
-                onTap: () {
+                onTap: widget.onRegisterPressed ?? () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => CrearCuenta(
                         key: Key('CrearCuenta'),
                         authService: widget.authService,
+                        onRegistrationSuccess: widget.onLoginSuccess,
                       ),
                     ),
                   );

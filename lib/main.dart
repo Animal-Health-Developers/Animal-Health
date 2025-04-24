@@ -37,7 +37,7 @@ class _MyAppState extends State<MyApp> {
           } else if (snapshot.hasData) {
             return HomePage();
           } else {
-            return AnimalHealth(key: Key('AnimalHealth'), authService: widget.authService,);
+            return AnimalHealth(key: Key('AnimalHealth'), authService: widget.authService, onLoginSuccess: () {  },);
           }
         },
       ),

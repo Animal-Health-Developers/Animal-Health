@@ -8,9 +8,13 @@ import './Settingsoutsesion.dart';
 
 class CrearCuenta extends StatefulWidget {
   final AuthService authService;
+  final VoidCallback onRegistrationSuccess;
 
-  const CrearCuenta({required Key key, required this.authService})
-    : super(key: key);
+  const CrearCuenta({
+    required Key key,
+    required this.authService,
+    required this.onRegistrationSuccess,
+  }) : super(key: key);
 
   @override
   _CrearCuentaState createState() => _CrearCuentaState();
@@ -34,6 +38,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
+
   Future<void> _registerUser() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -41,10 +46,12 @@ class _CrearCuentaState extends State<CrearCuenta> {
       setState(() => _errorMessage = 'Las contraseñas no coinciden');
       return;
     }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
+
     try {
       final user = await widget.authService.registrarUsuario(
         email: _emailController.text.trim(),
@@ -52,6 +59,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
         password: _passwordController.text.trim(),
         confirmPassword: _confirmPasswordController.text.trim(),
       );
+
       if (user != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -59,7 +67,9 @@ class _CrearCuentaState extends State<CrearCuenta> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pop(); // Regresa a la pantalla anterior
+
+        // Navega a AnimalHealth usando el callback
+        widget.onRegistrationSuccess();
       }
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = _getErrorMessage(e.code));
@@ -73,14 +83,14 @@ class _CrearCuentaState extends State<CrearCuenta> {
       setState(() => _errorMessage = 'Error durante el registro');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error durante el registro'),
-          backgroundColor: Colors.red,
+            content: Text('Error durante el registro'),
+            backgroundColor: Colors.red,
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+    if (mounted) {
+    setState(() => _isLoading = false);
+    }
     }
   }
 
@@ -166,9 +176,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(
-                  'assets/images/Animal Health Fondo de Pantalla.png',
-                ),
+                image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -205,11 +213,11 @@ class _CrearCuentaState extends State<CrearCuenta> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => AnimalHealth(
-                        key: Key('AnimalHealth'),
-                        authService: widget.authService,
-                      ),
+                  pageBuilder: () => AnimalHealth(
+                    key: Key('AnimalHealth'),
+                    authService: widget.authService,
+                    onLoginSuccess: () {},
+                  ),
                 ),
               ],
               child: Container(
@@ -261,8 +269,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => Settingsoutsesion(key: Key('Settingsoutsesion')),
+                  pageBuilder: () => Settingsoutsesion(key: Key('Settingsoutsesion')),
                 ),
               ],
               child: Container(
@@ -349,10 +356,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
                     // Mensaje de error
                     if (_errorMessage != null)
                       Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 50,
-                          vertical: 10,
-                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
                         child: Text(
                           _errorMessage!,
                           style: TextStyle(
@@ -369,47 +373,29 @@ class _CrearCuentaState extends State<CrearCuenta> {
                       width: 242,
                       height: 49,
                       margin: EdgeInsets.only(top: 20),
-                      child:
-                          _isLoading
-                              ? Center(child: CircularProgressIndicator())
-                              : PageLink(
-                                links: [
-                                  PageLinkInfo(
-                                    transition: LinkTransition.Fade,
-                                    ease: Curves.easeOut,
-                                    duration: 0.3,
-                                    pageBuilder:
-                                        () => AnimalHealth(
-                                          key: Key('AnimalHealth'),
-                                          authService: widget.authService,
-                                        ),
-                                  ),
-                                ],
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xff4ec8dd),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                      side: BorderSide(
-                                        width: 1,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    shadowColor: Color(0xff080808),
-                                    elevation: 3,
-                                  ),
-                                  onPressed: _registerUser,
-                                  child: Text(
-                                    'Registrarse',
-                                    style: TextStyle(
-                                      fontFamily: 'Comic Sans MS',
-                                      fontSize: 20,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                      child: _isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xff4ec8dd),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            side: BorderSide(width: 1, color: Colors.black),
+                          ),
+                          shadowColor: Color(0xff080808),
+                          elevation: 3,
+                        ),
+                        onPressed: _registerUser,
+                        child: Text(
+                          'Registrarse',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 20,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
