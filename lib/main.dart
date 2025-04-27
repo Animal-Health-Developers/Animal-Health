@@ -8,6 +8,7 @@ import 'src/models/products.dart';
 import 'src/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebaseauth;
 import 'src/widgets/AnimalHealth.dart';
+import 'src/widgets/Home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,11 +34,25 @@ class _MyAppState extends State<MyApp> {
         stream: widget.authService.authStateChanges,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            return HomePage();
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasData && snapshot.data != null) {
+            // Cambiado para redirigir al widget Home
+            return Home(key: Key('Home'));
           } else {
-            return AnimalHealth(key: Key('AnimalHealth'), authService: widget.authService, onLoginSuccess: () {  },);
+            return AnimalHealth(
+              key: Key('AnimalHealth'),
+              authService: widget.authService,
+              onLoginSuccess: () {
+                // Esta función se llamará cuando el login sea exitoso
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => Home(key: Key('Home')),
+                  ),
+                );
+              },
+            );
           }
         },
       ),
@@ -45,25 +60,13 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Bienvenido a la app!'),
-      ),
-    );
-  }
-}
+// Eliminé la clase HomePage ya que ahora usamos el widget Home importado
 
 Future<void> crearProducto(Product product) async {
   try {
     final firebaseUser = firebaseauth.FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
-      final userId = firebaseUser.uid; // Obtener el UID del usuario actual
-      // Guardar el producto en la subcolección 'products' del usuario
+      final userId = firebaseUser.uid;
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
@@ -72,11 +75,9 @@ Future<void> crearProducto(Product product) async {
       print('Producto creado exitosamente para el usuario $userId');
     } else {
       print('Error: Usuario no autenticado');
-      // Maneja el error (por ejemplo, muestra un mensaje al usuario)
     }
   } catch (e) {
     print('Error al crear el producto: $e');
-    // Maneja el error
   }
 }
 
