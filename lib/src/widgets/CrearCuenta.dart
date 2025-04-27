@@ -62,14 +62,25 @@ class _CrearCuentaState extends State<CrearCuenta> {
 
       if (user != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Registro exitoso! Verifica tu correo electrónico'),
             backgroundColor: Colors.green,
           ),
         );
 
-        // Navega a AnimalHealth usando el callback
-        widget.onRegistrationSuccess();
+        // Esperar 2 segundos para que el usuario vea el mensaje
+        await Future.delayed(const Duration(seconds: 2));
+
+        // Navegar a AnimalHealth
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => AnimalHealth(
+              key: const Key('AnimalHealth'),
+              authService: widget.authService,
+              onLoginSuccess: widget.onRegistrationSuccess,
+            ),
+          ),
+        );
       }
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = _getErrorMessage(e.code));
@@ -82,15 +93,15 @@ class _CrearCuentaState extends State<CrearCuenta> {
     } catch (e) {
       setState(() => _errorMessage = 'Error durante el registro');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Error durante el registro'),
-            backgroundColor: Colors.red,
+        const SnackBar(
+          content: Text('Error durante el registro'),
+          backgroundColor: Colors.red,
         ),
       );
     } finally {
-    if (mounted) {
-    setState(() => _isLoading = false);
-    }
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -120,7 +131,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
   }) {
     return Container(
       height: 45,
-      margin: EdgeInsets.symmetric(horizontal: 43, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 43, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -145,14 +156,14 @@ class _CrearCuentaState extends State<CrearCuenta> {
               decoration: InputDecoration(
                 hintText: hintText,
                 border: InputBorder.none,
-                hintStyle: TextStyle(
+                hintStyle: const TextStyle(
                   fontFamily: 'Comic Sans MS',
                   fontSize: 20,
                   color: Colors.black,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Comic Sans MS',
                 fontSize: 20,
                 color: Colors.black,
@@ -169,12 +180,12 @@ class _CrearCuentaState extends State<CrearCuenta> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xff4ec8dd),
+      backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: [
           // Fondo
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
@@ -192,7 +203,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
                 width: 177,
                 height: 175,
                 decoration: BoxDecoration(
-                  image: DecorationImage(
+                  image: const DecorationImage(
                     image: AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
@@ -214,16 +225,16 @@ class _CrearCuentaState extends State<CrearCuenta> {
                   ease: Curves.easeOut,
                   duration: 0.3,
                   pageBuilder: () => AnimalHealth(
-                    key: Key('AnimalHealth'),
+                    key: const Key('AnimalHealth'),
                     authService: widget.authService,
-                    onLoginSuccess: () {},
+                    onLoginSuccess: widget.onRegistrationSuccess,
                   ),
                 ),
               ],
               child: Container(
                 width: 52.9,
                 height: 50,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   image: DecorationImage(
                     image: AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
@@ -243,13 +254,13 @@ class _CrearCuentaState extends State<CrearCuenta> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => AyudaOutSession(key: Key('AyudaOutSession')),
+                  pageBuilder: () => AyudaOutSession(key: const Key('AyudaOutSession')),
                 ),
               ],
               child: Container(
                 width: 40.5,
                 height: 50,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   image: DecorationImage(
                     image: AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
@@ -269,13 +280,13 @@ class _CrearCuentaState extends State<CrearCuenta> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settingsoutsesion(key: Key('Settingsoutsesion')),
+                  pageBuilder: () => Settingsoutsesion(key: const Key('Settingsoutsesion')),
                 ),
               ],
               child: Container(
                 width: 47.2,
                 height: 50,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   image: DecorationImage(
                     image: AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
@@ -292,7 +303,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
             right: 0,
             bottom: 0,
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.only(bottom: 20),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -303,10 +314,12 @@ class _CrearCuentaState extends State<CrearCuenta> {
                       controller: _emailController,
                       imageAsset: 'assets/images/@.png',
                       validator: (value) {
-                        if (value == null || value.isEmpty)
+                        if (value == null || value.isEmpty) {
                           return 'Ingrese su correo';
-                        if (!value.contains('@'))
+                        }
+                        if (!value.contains('@')) {
                           return 'Ingrese un correo válido';
+                        }
                         return null;
                       },
                     ),
@@ -317,9 +330,12 @@ class _CrearCuentaState extends State<CrearCuenta> {
                       controller: _usernameController,
                       imageAsset: 'assets/images/username.png',
                       validator: (value) {
-                        if (value == null || value.isEmpty)
+                        if (value == null || value.isEmpty) {
                           return 'Ingrese un nombre de usuario';
-                        if (value.length < 4) return 'Mínimo 4 caracteres';
+                        }
+                        if (value.length < 4) {
+                          return 'Mínimo 4 caracteres';
+                        }
                         return null;
                       },
                     ),
@@ -331,9 +347,12 @@ class _CrearCuentaState extends State<CrearCuenta> {
                       imageAsset: 'assets/images/password.png',
                       obscureText: true,
                       validator: (value) {
-                        if (value == null || value.isEmpty)
+                        if (value == null || value.isEmpty) {
                           return 'Ingrese una contraseña';
-                        if (value.length < 8) return 'Mínimo 8 caracteres';
+                        }
+                        if (value.length < 8) {
+                          return 'Mínimo 8 caracteres';
+                        }
                         return null;
                       },
                     ),
@@ -345,10 +364,12 @@ class _CrearCuentaState extends State<CrearCuenta> {
                       imageAsset: 'assets/images/password.png',
                       obscureText: true,
                       validator: (value) {
-                        if (value == null || value.isEmpty)
+                        if (value == null || value.isEmpty) {
                           return 'Confirme su contraseña';
-                        if (value != _passwordController.text)
+                        }
+                        if (value != _passwordController.text) {
                           return 'Las contraseñas no coinciden';
+                        }
                         return null;
                       },
                     ),
@@ -356,10 +377,10 @@ class _CrearCuentaState extends State<CrearCuenta> {
                     // Mensaje de error
                     if (_errorMessage != null)
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
                         child: Text(
                           _errorMessage!,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'Comic Sans MS',
                             fontSize: 16,
                             color: Colors.red,
@@ -372,21 +393,21 @@ class _CrearCuentaState extends State<CrearCuenta> {
                     Container(
                       width: 242,
                       height: 49,
-                      margin: EdgeInsets.only(top: 20),
+                      margin: const EdgeInsets.only(top: 20),
                       child: _isLoading
-                          ? Center(child: CircularProgressIndicator())
+                          ? const Center(child: CircularProgressIndicator())
                           : ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xff4ec8dd),
+                          backgroundColor: const Color(0xff4ec8dd),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
-                            side: BorderSide(width: 1, color: Colors.black),
+                            side: const BorderSide(width: 1, color: Colors.black),
                           ),
-                          shadowColor: Color(0xff080808),
+                          shadowColor: const Color(0xff080808),
                           elevation: 3,
                         ),
                         onPressed: _registerUser,
-                        child: Text(
+                        child: const Text(
                           'Registrarse',
                           style: TextStyle(
                             fontFamily: 'Comic Sans MS',

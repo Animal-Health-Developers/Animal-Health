@@ -164,7 +164,7 @@ class _AnimalHealthState extends State<AnimalHealth> {
                     child: TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
-                        hintText: 'Email o Nombre de Usuario',
+                        hintText: 'Email',
                         border: InputBorder.none,
                         hintStyle: TextStyle(
                           fontFamily: 'Comic Sans MS',
