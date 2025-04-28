@@ -88,7 +88,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       ).showSnackBar(SnackBar(content: Text('Error al seleccionar video: $e')));
     }
   }
-
   Future<void> _guardarPublicacionEnFirestore(String imageUrl) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -135,37 +134,61 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       );
       return;
     }
+
     setState(() => _isUploading = true);
+
     try {
+      // Verificar que la imagen sea válida antes de subir
+      if (_selectedFile != null) {
+        final bytes = await _selectedFile!.readAsBytes();
+        await decodeImageFromList(bytes); // Valida que sea una imagen decodificable
+      } else if (_selectedImageBytes != null) {
+        await decodeImageFromList(_selectedImageBytes!); // Valida que sea una imagen decodificable
+      }
+
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final extension = _selectedFile != null
           ? path.extension(_selectedFile!.path).toLowerCase()
-          : '.jpg';
+          : '.jpg'; '.jpeg'; '.png'; '.mp4'; '.gif';'.avi';
 
       // Validar extensión del archivo
-      if (!['.jpg', '.jpeg', '.png', '.gif'].contains(extension)) {
-        throw 'Formato de archivo no soportado';
+      if (!['.jpg', '.jpeg', '.png', '.mp4', '.gif', '.avi'].contains(extension)) {
+        throw 'Formato de imagen no soportado. Usa JPG, JPEG o PNG';
       }
+
       final storageRef = FirebaseStorage.instance.ref();
       final fileRef = storageRef.child('publicaciones/$timestamp$extension');
-      // Mostrar progreso de carga
+
+      // Configurar metadatos para asegurar el tipo de contenido
+      final metadata = SettableMetadata(
+        contentType: extension == '.png'
+            ? 'image/png'
+            : 'image/jpeg',
+      );
+
+      // Subir el archivo con metadatos
       final uploadTask = kIsWeb && _selectedImageBytes != null
-          ? fileRef.putData(_selectedImageBytes!)
+          ? fileRef.putData(_selectedImageBytes!, metadata)
           : _selectedFile != null
-          ? fileRef.putFile(_selectedFile!)
+          ? fileRef.putFile(_selectedFile!, metadata)
           : throw 'No hay archivo seleccionado';
-      // Esperar a que complete la carga
+
+      // Mostrar progreso
       final snapshot = await uploadTask.whenComplete(() {});
+
       // Obtener URL de descarga
       _downloadUrl = await snapshot.ref.getDownloadURL();
+
       // Guardar en Firestore
       await _guardarPublicacionEnFirestore(_downloadUrl!);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Publicación creada exitosamente!'),
           backgroundColor: Colors.green,
         ),
       );
+
       // Resetear el formulario
       setState(() {
         _selectedFile = null;
@@ -173,6 +196,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
         _captionController.clear();
         _isUploading = false;
       });
+
       // Redirigir al home
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => Home(key: const Key('Home'))),
@@ -181,7 +205,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       setState(() => _isUploading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error al subir archivo: $e'),
+          content: Text('Error al subir imagen: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );

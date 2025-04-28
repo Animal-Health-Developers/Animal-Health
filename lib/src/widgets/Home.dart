@@ -28,6 +28,7 @@ class Home extends StatelessWidget {
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
+          // Fondo de pantalla
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -35,7 +36,6 @@ class Home extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
 
           // Logo
@@ -338,40 +338,36 @@ class Home extends StatelessWidget {
             ),
           ),
 
-          // Lista de publicaciones
-          Align(
-            alignment: const Alignment(0.0, 3.0),
-            child: SizedBox(
-              width: 413.0,
-              height: 595.0,
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('publicaciones')
-                    .orderBy('fecha', descending: true)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+          // Lista de publicaciones (POSICIÓN AJUSTADA)
+          Pinned.fromPins(
+            Pin(start: 16.0, end: 16.0),
+            Pin(start: 280.0, end: 16.0), // Ajusta estos valores según necesites
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('publicaciones')
+                  .orderBy('fecha', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text('No hay publicaciones aún'));
-                  }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('No hay publicaciones aún'));
+                }
 
-                  return ListView.builder(
-                    primary: false,
-                    itemCount: snapshot.data!.docs.length,
-                    itemBuilder: (context, index) {
-                      var publicacion = snapshot.data!.docs[index];
-                      return _buildPublicacionItem(publicacion, context);
-                    },
-                  );
-                },
-              ),
+                return ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    var publicacion = snapshot.data!.docs[index];
+                    return _buildPublicacionItem(publicacion, context);
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -381,10 +377,10 @@ class Home extends StatelessWidget {
 
   Widget _buildPublicacionItem(DocumentSnapshot publicacion, BuildContext context) {
     final imageUrl = publicacion['imagenUrl'] as String?;
-    final hasValidImage = imageUrl != null && imageUrl.isNotEmpty;
+    final hasValidImage = imageUrl != null && imageUrl.isNotEmpty && imageUrl.startsWith('http');
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
       decoration: BoxDecoration(
         color: const Color(0xe3a0f4fe),
         borderRadius: BorderRadius.circular(9.0),
@@ -451,7 +447,7 @@ class Home extends StatelessWidget {
             ),
           ),
 
-          // Contenido/imagen - MODIFICADO
+          // Contenido/imagen
           Container(
             height: 400,
             width: double.infinity,
@@ -463,19 +459,22 @@ class Home extends StatelessWidget {
                 ? ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: CachedNetworkImage(
-                imageUrl: imageUrl,
+                imageUrl: imageUrl!,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Center(
-                  child: CircularProgressIndicator(),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(const Color(0xff4ec8dd)),
+                  ),
                 ),
-                errorWidget: (context, url, error) => Center(
-                  child: Icon(Icons.error, color: Colors.red, size: 50),
-                ),
+                errorWidget: (context, url, error) => _buildImageErrorWidget(),
+                httpHeaders: const {
+                  'Cache-Control': 'max-age=3600',
+                },
+                memCacheHeight: 800,
+                memCacheWidth: 800,
               ),
             )
-                : Center(
-              child: Icon(Icons.image_not_supported, size: 50),
-            ),
+                : _buildNoImageWidget(),
           ),
 
           // Caption
@@ -491,7 +490,7 @@ class Home extends StatelessWidget {
             ),
           ),
 
-          // Botones (like, comentario, compartir, guardar)
+          // Botones (like, comentario, compartir, guardar) - TAMAÑO AUMENTADO A 40
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
@@ -502,8 +501,8 @@ class Home extends StatelessWidget {
                   children: [
                     Image.asset(
                       'assets/images/like.png',
-                      width: 24,
-                      height: 24,
+                      width: 40, // Tamaño aumentado
+                      height: 40, // Tamaño aumentado
                     ),
                     const SizedBox(width: 5),
                     Text(
@@ -530,8 +529,8 @@ class Home extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/images/comments.png',
-                        width: 24,
-                        height: 24,
+                        width: 40, // Tamaño aumentado
+                        height: 40, // Tamaño aumentado
                       ),
                       const SizedBox(width: 5),
                       Text(
@@ -559,8 +558,8 @@ class Home extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/images/share.png',
-                        width: 24,
-                        height: 24,
+                        width: 40, // Tamaño aumentado
+                        height: 40, // Tamaño aumentado
                       ),
                       const SizedBox(width: 5),
                       const Text(
@@ -581,8 +580,8 @@ class Home extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/images/save.png',
-                        width: 24,
-                        height: 24,
+                        width: 40, // Tamaño aumentado
+                        height: 40, // Tamaño aumentado
                       ),
                       const SizedBox(width: 5),
                       const Text(
@@ -600,6 +599,42 @@ class Home extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildImageErrorWidget() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.error_outline, color: Colors.red, size: 50),
+        const SizedBox(height: 10),
+        const Text(
+          'Error al cargar la imagen',
+          style: TextStyle(
+            fontFamily: 'Comic Sans MS',
+            fontSize: 16,
+            color: Colors.red,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNoImageWidget() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+        const SizedBox(height: 10),
+        const Text(
+          'Imagen no disponible',
+          style: TextStyle(
+            fontFamily: 'Comic Sans MS',
+            fontSize: 16,
+            color: Colors.grey,
+          ),
+        ),
+      ],
     );
   }
 
