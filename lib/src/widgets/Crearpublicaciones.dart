@@ -20,6 +20,7 @@ import 'Emergencias.dart';
 import 'Comunidad.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:video_player/video_player.dart';
 
 class Crearpublicaciones extends StatefulWidget {
   const Crearpublicaciones({required Key key}) : super(key: key);
@@ -34,7 +35,16 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
   Uint8List? _selectedImageBytes;
   String? _downloadUrl;
   bool _isUploading = false;
+  String? _fileExtension;
   final TextEditingController _captionController = TextEditingController();
+  VideoPlayerController? _videoController;
+
+  @override
+  void dispose() {
+    _captionController.dispose();
+    _videoController?.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage() async {
     try {
@@ -49,11 +59,17 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
           setState(() {
             _selectedImageBytes = bytes;
             _selectedFile = null;
+            _fileExtension = path.extension(image.name).toLowerCase();
+            _videoController?.dispose();
+            _videoController = null;
           });
         } else {
           setState(() {
             _selectedFile = File(image.path);
             _selectedImageBytes = null;
+            _fileExtension = path.extension(image.path).toLowerCase();
+            _videoController?.dispose();
+            _videoController = null;
           });
         }
       }
@@ -74,21 +90,44 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
           setState(() {
             _selectedImageBytes = bytes;
             _selectedFile = null;
+            _fileExtension = path.extension(video.name).toLowerCase();
+            _initializeVideoController(bytes, isWeb: true);
           });
         } else {
           setState(() {
             _selectedFile = File(video.path);
             _selectedImageBytes = null;
+            _fileExtension = path.extension(video.path).toLowerCase();
+            _initializeVideoController(_selectedFile!.path);
           });
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al seleccionar video: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al seleccionar video: $e')),
+      );
     }
   }
-  Future<void> _guardarPublicacionEnFirestore(String imageUrl) async {
+
+  Future<void> _initializeVideoController(dynamic source, {bool isWeb = false}) async {
+    _videoController?.dispose();
+
+    final controller = isWeb
+        ? VideoPlayerController.networkUrl(Uri.parse(await _getWebVideoUrl(source)))
+        : VideoPlayerController.file(File(source));
+
+    await controller.initialize();
+    setState(() {
+      _videoController = controller;
+    });
+  }
+
+  Future<String> _getWebVideoUrl(Uint8List bytes) async {
+    // Implementación para web - necesitarías subir el video temporalmente o usar Blob
+    return 'https://example.com/temp-video.mp4'; // Esto es un placeholder
+  }
+
+  Future<void> _guardarPublicacionEnFirestore(String mediaUrl) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
@@ -98,7 +137,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
         return;
       }
 
-      // Obtener datos adicionales del usuario
       final userDoc = await FirebaseFirestore.instance
           .collection('usuarios')
           .doc(user.uid)
@@ -107,11 +145,13 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       await FirebaseFirestore.instance.collection('publicaciones').add({
         'usuarioId': user.uid,
         'usuarioNombre': user.displayName ?? 'Usuario Anónimo',
-        'usuarioFoto': userDoc.data()?['fotoPerfil'] ?? 'assets/images/perfilusuario.jpeg',
-        'imagenUrl': imageUrl,
+        'usuarioFoto': userDoc.data()?['fotoPerfil'] ?? '',
+        'imagenUrl': mediaUrl,
+        'esVideo': _fileExtension == '.mp4' || _fileExtension == '.avi', // Asegúrate de incluir esto
         'caption': _captionController.text,
         'fecha': Timestamp.now(),
         'likes': 0,
+        "likedBy": [], // array de userIDs
         'comentarios': 0,
         'compartir': 0,
         'tipoPublicacion': 'Público',
@@ -123,7 +163,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       rethrow;
     }
   }
-  //Subir Archivo
+
   Future<void> _uploadFile() async {
     if ((_selectedFile == null && _selectedImageBytes == null) ||
         _captionController.text.isEmpty) {
@@ -138,45 +178,36 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
     setState(() => _isUploading = true);
 
     try {
-      // Verificar que la imagen sea válida antes de subir
-      if (_selectedFile != null) {
-        final bytes = await _selectedFile!.readAsBytes();
-        await decodeImageFromList(bytes); // Valida que sea una imagen decodificable
-      } else if (_selectedImageBytes != null) {
-        await decodeImageFromList(_selectedImageBytes!); // Valida que sea una imagen decodificable
-      }
-
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final extension = _selectedFile != null
-          ? path.extension(_selectedFile!.path).toLowerCase()
-          : '.jpg'; '.jpeg'; '.png'; '.mp4'; '.gif';'.avi';
+      final extension = _fileExtension ??
+          (_selectedFile != null
+              ? path.extension(_selectedFile!.path).toLowerCase()
+              : '.jpg');
 
       // Validar extensión del archivo
       if (!['.jpg', '.jpeg', '.png', '.mp4', '.gif', '.avi'].contains(extension)) {
-        throw 'Formato de imagen no soportado. Usa JPG, JPEG o PNG';
+        throw 'Formato no soportado. Usa JPG, JPEG, PNG, MP4 o GIF';
       }
 
       final storageRef = FirebaseStorage.instance.ref();
       final fileRef = storageRef.child('publicaciones/$timestamp$extension');
 
-      // Configurar metadatos para asegurar el tipo de contenido
+      // Configurar metadatos según el tipo de archivo
       final metadata = SettableMetadata(
-        contentType: extension == '.png'
-            ? 'image/png'
-            : 'image/jpeg',
+        contentType: extension == '.png' ? 'image/png' :
+        extension == '.jpg' || extension == '.jpeg' ? 'image/jpeg' :
+        extension == '.mp4' ? 'video/mp4' :
+        extension == '.gif' ? 'image/gif' : 'application/octet-stream',
       );
 
-      // Subir el archivo con metadatos
+      // Subir el archivo
       final uploadTask = kIsWeb && _selectedImageBytes != null
           ? fileRef.putData(_selectedImageBytes!, metadata)
           : _selectedFile != null
           ? fileRef.putFile(_selectedFile!, metadata)
           : throw 'No hay archivo seleccionado';
 
-      // Mostrar progreso
       final snapshot = await uploadTask.whenComplete(() {});
-
-      // Obtener URL de descarga
       _downloadUrl = await snapshot.ref.getDownloadURL();
 
       // Guardar en Firestore
@@ -189,15 +220,16 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
         ),
       );
 
-      // Resetear el formulario
+      // Resetear el estado
       setState(() {
         _selectedFile = null;
         _selectedImageBytes = null;
         _captionController.clear();
         _isUploading = false;
+        _videoController?.dispose();
+        _videoController = null;
       });
 
-      // Redirigir al home
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => Home(key: const Key('Home'))),
       );
@@ -205,13 +237,13 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       setState(() => _isUploading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error al subir imagen: ${e.toString()}'),
+          content: Text('Error al subir archivo: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
-  //Cuadro de dialogo que pide al usuario elegir fotos o videos.
+
   void _showMediaSelectionDialog() {
     showDialog(
       context: context,
@@ -253,10 +285,50 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
     );
   }
 
-  @override
-  void dispose() {
-    _captionController.dispose();
-    super.dispose();
+  Widget _buildMediaPreview() {
+    if (_videoController != null && _videoController!.value.isInitialized) {
+      return AspectRatio(
+        aspectRatio: _videoController!.value.aspectRatio,
+        child: VideoPlayer(_videoController!),
+      );
+    } else if (_selectedFile != null || _selectedImageBytes != null) {
+      return kIsWeb
+          ? Image.memory(_selectedImageBytes!, fit: BoxFit.cover)
+          : Image.file(_selectedFile!, fit: BoxFit.cover);
+    } else {
+      return GestureDetector(
+        onTap: _showMediaSelectionDialog,
+        child: Container(
+          color: Colors.white.withOpacity(0.3),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 100.0,
+                  height: 100.0,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/subirfotovideo.png'),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Agregar fotos/videos',
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 17,
+                    color: Color(0xff000000),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -265,16 +337,14 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
+          // Fondo de pantalla
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(
-                  'assets/images/Animal Health Fondo de Pantalla.png',
-                ),
+                image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
 
           // Logo y botones superiores
@@ -329,6 +399,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
+
           // Barra de búsqueda
           Pinned.fromPins(
             Pin(size: 307.0, end: 33.0),
@@ -385,8 +456,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => PerfilPublico(key: const Key('PerfilPublico')),
+                  pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')),
                 ),
               ],
               child: Container(
@@ -411,8 +481,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => Configuraciones(key: const Key('Settings')),
+                  pageBuilder: () => Configuraciones(key: const Key('Settings')),
                 ),
               ],
               child: Container(
@@ -436,8 +505,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => ListadeAnimales(key: const Key('ListadeAnimales')),
+                  pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimales')),
                 ),
               ],
               child: Container(
@@ -460,10 +528,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => CompradeProductos(
-                        key: const Key('CompradeProductos'),
-                      ),
+                  pageBuilder: () => CompradeProductos(key: const Key('CompradeProductos')),
                 ),
               ],
               child: Container(
@@ -508,10 +573,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => CuidadosyRecomendaciones(
-                        key: const Key('CuidadosyRecomendaciones'),
-                      ),
+                  pageBuilder: () => CuidadosyRecomendaciones(key: const Key('CuidadosyRecomendaciones')),
                 ),
               ],
               child: Container(
@@ -519,9 +581,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                 height: 60.0,
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(
-                      'assets/images/cuidadosrecomendaciones.png',
-                    ),
+                    image: AssetImage('assets/images/cuidadosrecomendaciones.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -597,7 +657,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
             ),
           ),
 
-          // Área principal de creación de publicación - MODIFICADA
+          // Área principal de creación de publicación
           Pinned.fromPins(
             Pin(start: 16.0, end: 15.0),
             Pin(size: 550.0, end: 99.0),
@@ -628,9 +688,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                             height: 40.0,
                             decoration: BoxDecoration(
                               image: const DecorationImage(
-                                image: AssetImage(
-                                  'assets/images/perfilusuario.jpeg',
-                                ),
+                                image: AssetImage('assets/images/perfilusuario.jpeg'),
                                 fit: BoxFit.cover,
                               ),
                               borderRadius: BorderRadius.circular(20.0),
@@ -655,8 +713,8 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                                 children: [
                                   Image.asset(
                                     'assets/images/publico.png',
-                                    width: 35, // Cambiado a 35x35
-                                    height: 35, // Cambiado a 35x35
+                                    width: 35,
+                                    height: 35,
                                   ),
                                   const SizedBox(width: 5),
                                   const Text(
@@ -698,61 +756,15 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                       ),
                     ),
 
-                    // Área de previsualización de imagen/video - AHORA CUADRADA
+                    // Área de previsualización de imagen/video
                     Pinned.fromPins(
                       Pin(start: 15.0, end: 15.0),
-                      Pin(size: 280.0, middle: 0.55), // Más alta
+                      Pin(size: 280.0, middle: 0.55),
                       child: AspectRatio(
-                        aspectRatio: 1, // Hace que sea cuadrada
+                        aspectRatio: 1,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(15.0),
-                          child:
-                              _selectedFile != null ||
-                                      _selectedImageBytes != null
-                                  ? kIsWeb
-                                      ? Image.memory(
-                                        _selectedImageBytes!,
-                                        fit: BoxFit.cover,
-                                      )
-                                      : Image.file(
-                                        _selectedFile!,
-                                        fit: BoxFit.cover,
-                                      )
-                                  : GestureDetector(
-                                    onTap: _showMediaSelectionDialog,
-                                    child: Container(
-                                      color: Colors.white.withOpacity(0.3),
-                                      child: Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                              width: 100.0,
-                                              height: 100.0,
-                                              decoration: const BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: AssetImage(
-                                                    'assets/images/subirfotovideo.png',
-                                                  ),
-                                                  fit: BoxFit.contain,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            const Text(
-                                              'Agregar fotos/videos',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 17,
-                                                color: Color(0xff000000),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                          child: _buildMediaPreview(),
                         ),
                       ),
                     ),
@@ -770,9 +782,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                             height: 50.0,
                             decoration: const BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage(
-                                  'assets/images/ubicacion.png',
-                                ),
+                                image: AssetImage('assets/images/ubicacion.png'),
                                 fit: BoxFit.fill,
                               ),
                             ),
@@ -816,25 +826,24 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                             borderRadius: BorderRadius.circular(15.0),
                             side: const BorderSide(
                               width: 1.0,
-                              color: Color(0xff000000),
+                              color: const Color(0xff000000),
                             ),
                           ),
                           elevation: 3,
                           shadowColor: const Color(0xff000000),
                         ),
                         onPressed: _isUploading ? null : _uploadFile,
-                        child:
-                            _isUploading
-                                ? const CircularProgressIndicator()
-                                : const Text(
-                                  'publicar',
-                                  style: TextStyle(
-                                    fontFamily: 'Comic Sans MS',
-                                    fontSize: 20,
-                                    color: Color(0xff000000),
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                        child: _isUploading
+                            ? const CircularProgressIndicator()
+                            : const Text(
+                          'publicar',
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 20,
+                            color: Color(0xff000000),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
                   ],

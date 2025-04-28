@@ -16,6 +16,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:video_player/video_player.dart';
+import 'package:flutter/scheduler.dart';
 
 class Home extends StatelessWidget {
   const Home({
@@ -338,10 +340,10 @@ class Home extends StatelessWidget {
             ),
           ),
 
-          // Lista de publicaciones (POSICIÓN AJUSTADA)
+          // Lista de publicaciones
           Pinned.fromPins(
             Pin(start: 16.0, end: 16.0),
-            Pin(start: 280.0, end: 16.0), // Ajusta estos valores según necesites
+            Pin(start: 280.0, end: 16.0),
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('publicaciones')
@@ -376,8 +378,14 @@ class Home extends StatelessWidget {
   }
 
   Widget _buildPublicacionItem(DocumentSnapshot publicacion, BuildContext context) {
-    final imageUrl = publicacion['imagenUrl'] as String?;
-    final hasValidImage = imageUrl != null && imageUrl.isNotEmpty && imageUrl.startsWith('http');
+    final mediaUrl = publicacion['imagenUrl'] as String?;
+    final isVideo = (publicacion['esVideo'] as bool?) ?? false;
+    final hasValidMedia = mediaUrl != null && mediaUrl.isNotEmpty && mediaUrl.startsWith('http');
+
+    // Obtener el ID del usuario actual
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    final likes = publicacion['likes'] as int? ?? 0;
+    final likedBy = List<String>.from(publicacion['likedBy'] ?? []);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
@@ -405,7 +413,9 @@ class Home extends StatelessWidget {
                   ],
                   child: CircleAvatar(
                     radius: 20,
-                    backgroundImage: AssetImage(publicacion['usuarioFoto'] ?? 'assets/images/perfilusuario.jpeg'),
+                    backgroundImage: publicacion['usuarioFoto'] != null && publicacion['usuarioFoto'].toString().isNotEmpty
+                        ? NetworkImage(publicacion['usuarioFoto'])
+                        : const AssetImage('assets/images/perfilusuario.jpeg') as ImageProvider,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -447,35 +457,34 @@ class Home extends StatelessWidget {
             ),
           ),
 
-          // Contenido/imagen
-          Container(
-            height: 400,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: hasValidImage
-                ? ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: CachedNetworkImage(
-                imageUrl: imageUrl!,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(const Color(0xff4ec8dd)),
+          // Contenido multimedia - Ahora con tamaño proporcional
+          if (hasValidMedia)
+            AspectRatio(
+              aspectRatio: 1, // Relación 1:1 (cuadrado)
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: isVideo
+                    ? _VideoPlayerWidget(videoUrl: mediaUrl!)
+                    : ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: CachedNetworkImage(
+                    imageUrl: mediaUrl!,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(const Color(0xff4ec8dd)),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => _buildImageErrorWidget(),
                   ),
                 ),
-                errorWidget: (context, url, error) => _buildImageErrorWidget(),
-                httpHeaders: const {
-                  'Cache-Control': 'max-age=3600',
-                },
-                memCacheHeight: 800,
-                memCacheWidth: 800,
               ),
             )
-                : _buildNoImageWidget(),
-          ),
+          else
+            _buildNoImageWidget(),
 
           // Caption
           Padding(
@@ -489,30 +498,32 @@ class Home extends StatelessWidget {
               ),
             ),
           ),
-
-          // Botones (like, comentario, compartir, guardar) - TAMAÑO AUMENTADO A 40
+          // Botones (like, comentario, compartir, guardar)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // Like
-                Row(
-                  children: [
-                    Image.asset(
-                      'assets/images/like.png',
-                      width: 40, // Tamaño aumentado
-                      height: 40, // Tamaño aumentado
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      publicacion['likes'].toString(),
-                      style: const TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 16,
+                // Botón de Like simplificado
+                GestureDetector(
+                  onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, context),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/images/like.png',
+                        width: 40,
+                        height: 40,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 5),
+                      Text(
+                        likes.toString(),
+                        style: const TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
                 // Comentario
@@ -529,12 +540,12 @@ class Home extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/images/comments.png',
-                        width: 40, // Tamaño aumentado
-                        height: 40, // Tamaño aumentado
+                        width: 40,
+                        height: 40,
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        publicacion['comentarios'].toString(),
+                        (publicacion['comentarios'] as int? ?? 0).toString(),
                         style: const TextStyle(
                           fontFamily: 'Comic Sans MS',
                           fontSize: 16,
@@ -558,8 +569,8 @@ class Home extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/images/share.png',
-                        width: 40, // Tamaño aumentado
-                        height: 40, // Tamaño aumentado
+                        width: 40,
+                        height: 40,
                       ),
                       const SizedBox(width: 5),
                       const Text(
@@ -580,8 +591,8 @@ class Home extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/images/save.png',
-                        width: 40, // Tamaño aumentado
-                        height: 40, // Tamaño aumentado
+                        width: 40,
+                        height: 40,
                       ),
                       const SizedBox(width: 5),
                       const Text(
@@ -609,7 +620,7 @@ class Home extends StatelessWidget {
         const Icon(Icons.error_outline, color: Colors.red, size: 50),
         const SizedBox(height: 10),
         const Text(
-          'Error al cargar la imagen',
+          'Error al cargar el contenido',
           style: TextStyle(
             fontFamily: 'Comic Sans MS',
             fontSize: 16,
@@ -627,7 +638,7 @@ class Home extends StatelessWidget {
         const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
         const SizedBox(height: 10),
         const Text(
-          'Imagen no disponible',
+          'Contenido no disponible',
           style: TextStyle(
             fontFamily: 'Comic Sans MS',
             fontSize: 16,
@@ -636,6 +647,39 @@ class Home extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _toggleLike(String postId, String? userId, List<String> likedBy, BuildContext context) async {
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debes iniciar sesión para dar like')),
+      );
+      return;
+    }
+
+    try {
+      final postRef = FirebaseFirestore.instance.collection('publicaciones').doc(postId);
+      final isLiked = likedBy.contains(userId);
+
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final postSnapshot = await transaction.get(postRef);
+        if (!postSnapshot.exists) return;
+
+        final currentLikedBy = List<String>.from(postSnapshot['likedBy'] ?? []);
+        final newLikedBy = isLiked
+            ? currentLikedBy.where((id) => id != userId).toList()
+            : [...currentLikedBy, userId];
+
+        transaction.update(postRef, {
+          'likes': newLikedBy.length,
+          'likedBy': newLikedBy,
+        });
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al actualizar like: $e')),
+      );
+    }
   }
 
   Future<void> _guardarPublicacion(String publicacionId, BuildContext context) async {
@@ -672,5 +716,72 @@ class Home extends StatelessWidget {
         ),
       );
     }
+  }
+}
+
+class _VideoPlayerWidget extends StatefulWidget {
+  final String videoUrl;
+
+  const _VideoPlayerWidget({required this.videoUrl});
+
+  @override
+  __VideoPlayerWidgetState createState() => __VideoPlayerWidgetState();
+}
+
+class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+  late VideoPlayerController _controller;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.network(widget.videoUrl)
+      ..initialize().then((_) {
+        if (mounted) {
+          setState(() {
+            _isInitialized = true;
+          });
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        if (_isInitialized)
+          AspectRatio(
+            aspectRatio: _controller.value.aspectRatio,
+            child: VideoPlayer(_controller),
+          )
+        else
+          const Center(child: CircularProgressIndicator()),
+
+        Center(
+          child: IconButton(
+            icon: Icon(
+              _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+              color: Colors.white,
+              size: 50,
+            ),
+            onPressed: () {
+              setState(() {
+                if (_controller.value.isPlaying) {
+                  _controller.pause();
+                } else {
+                  _controller.play();
+                }
+              });
+            },
+          ),
+        ),
+      ],
+    );
   }
 }
