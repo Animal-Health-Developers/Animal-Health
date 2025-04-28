@@ -6,7 +6,7 @@ import './Ayuda.dart';
 import './chatconamigos.dart';
 import 'dart:ui' as ui;
 import './PerfilPublico.dart';
-import './Settings.dart';
+import './Configuracion.dart';
 import './ListadeAnimales.dart';
 
 class Chats extends StatelessWidget {
@@ -572,7 +572,7 @@ class Chats extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
                 ),
               ],
               child: Container(

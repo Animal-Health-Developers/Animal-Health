@@ -10,7 +10,7 @@ import './CarnetdeVacunacin.dart';
 import './Tratamientomedico.dart';
 import './HistoriaClnica.dart';
 import './IndicedeMasaCoporal.dart';
-import './Settings.dart';
+import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -558,7 +558,7 @@ class FuncionesdelaApp extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
                 ),
               ],
               child: Container(

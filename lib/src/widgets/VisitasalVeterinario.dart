@@ -5,7 +5,7 @@ import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
 import './EditarPerfildeAnimalesdeCompaia.dart';
 import './FuncionesdelaApp.dart';
-import './Settings.dart';
+import './Configuracion.dart';
 import './ListadeAnimales.dart';
 
 
@@ -317,7 +317,7 @@ class VisitasalVeterinario extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
                 ),
               ],
               child: Container(

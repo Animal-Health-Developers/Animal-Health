@@ -7,7 +7,7 @@ import './PerfilPublico.dart';
 import './AmigosenLInea.dart';
 import './Contactos.dart';
 import 'dart:ui' as ui;
-import './Settings.dart';
+import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import './CompradeProductos.dart';
 import './CuidadosyRecomendaciones.dart';
@@ -1054,7 +1054,7 @@ class Comunidad extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
                 ),
               ],
               child: Container(

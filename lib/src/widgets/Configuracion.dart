@@ -14,8 +14,8 @@ import './AnimalHealth.dart';
 import './Suscripcion.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class Settings extends StatelessWidget {
-  const Settings({
+class Configuraciones extends StatelessWidget {
+  const Configuraciones({
     required Key key,
   }) : super(key: key);
   @override

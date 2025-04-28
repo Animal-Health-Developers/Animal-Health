@@ -4,7 +4,7 @@ import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
 import './PerfilPublico.dart';
 import './Ayuda.dart';
-import './Settings.dart';
+import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -312,7 +312,7 @@ class ManualdeUso extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
                 ),
               ],
               child: Container(

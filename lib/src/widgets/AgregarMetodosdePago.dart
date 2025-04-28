@@ -7,7 +7,7 @@ import './PerfilPublico.dart';
 import './EditaroActulizarMetododepago.dart';
 import './MetododePago.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import './Settings.dart';
+import './Configuracion.dart';
 import './ListadeAnimales.dart';
 
 class AgregarMetodosdePago extends StatelessWidget {
@@ -533,7 +533,7 @@ class AgregarMetodosdePago extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
                 ),
               ],
               child: Container(

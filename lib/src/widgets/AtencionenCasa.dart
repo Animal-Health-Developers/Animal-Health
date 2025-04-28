@@ -4,7 +4,7 @@ import './PerfilPublico.dart';
 import 'package:adobe_xd/page_link.dart';
 import './Home.dart';
 import './Ayuda.dart';
-import './Settings.dart';
+import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import './CompradeProductos.dart';
 import './CuidadosyRecomendaciones.dart';
@@ -152,7 +152,7 @@ class AtencionenCasa extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
                 ),
               ],
               child: Container(

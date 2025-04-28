@@ -7,7 +7,7 @@ import './EditarPerfildeAnimalesdeCompaia.dart';
 import './FuncionesdelaApp.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
-import './Settings.dart';
+import './Configuracion.dart';
 import './ListadeAnimales.dart';
 
 class IndicedeMasaCoporal extends StatelessWidget {
@@ -486,7 +486,7 @@ class IndicedeMasaCoporal extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Settings(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
                 ),
               ],
               child: Container(
