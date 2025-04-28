@@ -13,7 +13,9 @@ import './Crearpublicaciones.dart';
 import './DetallesdeFotooVideo.dart';
 import './CompartirPublicacion.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class Home extends StatelessWidget {
   const Home({
@@ -154,7 +156,7 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('Configiraciones')),
+                  pageBuilder: () => Configuraciones(key: const Key('Configuraciones')),
                 ),
               ],
               child: Container(
@@ -348,8 +350,16 @@ class Home extends StatelessWidget {
                     .orderBy('fecha', descending: true)
                     .snapshots(),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('No hay publicaciones aún'));
                   }
 
                   return ListView.builder(
@@ -370,6 +380,9 @@ class Home extends StatelessWidget {
   }
 
   Widget _buildPublicacionItem(DocumentSnapshot publicacion, BuildContext context) {
+    final imageUrl = publicacion['imagenUrl'] as String?;
+    final hasValidImage = imageUrl != null && imageUrl.isNotEmpty;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       decoration: BoxDecoration(
@@ -438,15 +451,30 @@ class Home extends StatelessWidget {
             ),
           ),
 
-          // Contenido/imagen
+          // Contenido/imagen - MODIFICADO
           Container(
-            height: 300, // Mismo alto que en Crearpublicaciones
+            height: 400,
             width: double.infinity,
             decoration: BoxDecoration(
-              image: DecorationImage(
-                image: NetworkImage(publicacion['imagenUrl']),
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: hasValidImage
+                ? ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
                 fit: BoxFit.cover,
+                placeholder: (context, url) => Center(
+                  child: CircularProgressIndicator(),
+                ),
+                errorWidget: (context, url, error) => Center(
+                  child: Icon(Icons.error, color: Colors.red, size: 50),
+                ),
               ),
+            )
+                : Center(
+              child: Icon(Icons.image_not_supported, size: 50),
             ),
           ),
 
@@ -463,7 +491,7 @@ class Home extends StatelessWidget {
             ),
           ),
 
-          // Botones (like, comentario, compartir)
+          // Botones (like, comentario, compartir, guardar)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
@@ -545,11 +573,69 @@ class Home extends StatelessWidget {
                     ],
                   ),
                 ),
+
+                // Botón de Guardar
+                GestureDetector(
+                  onTap: () => _guardarPublicacion(publicacion.id, context),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/images/save.png',
+                        width: 24,
+                        height: 24,
+                      ),
+                      const SizedBox(width: 5),
+                      const Text(
+                        'Guardar',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _guardarPublicacion(String publicacionId, BuildContext context) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Debes iniciar sesión para guardar publicaciones')),
+        );
+        return;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .collection('guardados')
+          .doc(publicacionId)
+          .set({
+        'publicacionId': publicacionId,
+        'fechaGuardado': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Publicación guardada correctamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al guardar: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

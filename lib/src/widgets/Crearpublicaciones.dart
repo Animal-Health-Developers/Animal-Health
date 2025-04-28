@@ -92,25 +92,39 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
   Future<void> _guardarPublicacionEnFirestore(String imageUrl) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuario no autenticado')),
+        );
+        return;
+      }
+
+      // Obtener datos adicionales del usuario
+      final userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .get();
 
       await FirebaseFirestore.instance.collection('publicaciones').add({
         'usuarioId': user.uid,
-        'usuarioNombre': user.displayName,
-        'usuarioFoto': 'assets/images/perfilusuario.jpeg',
+        'usuarioNombre': user.displayName ?? 'Usuario Anónimo',
+        'usuarioFoto': userDoc.data()?['fotoPerfil'] ?? 'assets/images/perfilusuario.jpeg',
         'imagenUrl': imageUrl,
         'caption': _captionController.text,
         'fecha': Timestamp.now(),
         'likes': 0,
         'comentarios': 0,
-        'compartir':0,
+        'compartir': 0,
         'tipoPublicacion': 'Público',
       });
     } catch (e) {
-      print('Error al guardar publicación: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar publicación: $e')),
+      );
+      rethrow;
     }
   }
-
+  //Subir Archivo
   Future<void> _uploadFile() async {
     if ((_selectedFile == null && _selectedImageBytes == null) ||
         _captionController.text.isEmpty) {
@@ -121,58 +135,59 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       );
       return;
     }
-
-    setState(() {
-      _isUploading = true;
-    });
-
+    setState(() => _isUploading = true);
     try {
-      final storageRef = FirebaseStorage.instance.ref();
-      final fileRef = storageRef.child(
-        'publicaciones/${DateTime.now().millisecondsSinceEpoch}${_selectedFile != null ? path.extension(_selectedFile!.path) : '.jpg'}',
-      );
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = _selectedFile != null
+          ? path.extension(_selectedFile!.path).toLowerCase()
+          : '.jpg';
 
-      if (kIsWeb && _selectedImageBytes != null) {
-        await fileRef.putData(_selectedImageBytes!);
-      } else if (_selectedFile != null) {
-        await fileRef.putFile(_selectedFile!);
+      // Validar extensión del archivo
+      if (!['.jpg', '.jpeg', '.png', '.gif'].contains(extension)) {
+        throw 'Formato de archivo no soportado';
       }
-
-      _downloadUrl = await fileRef.getDownloadURL();
+      final storageRef = FirebaseStorage.instance.ref();
+      final fileRef = storageRef.child('publicaciones/$timestamp$extension');
+      // Mostrar progreso de carga
+      final uploadTask = kIsWeb && _selectedImageBytes != null
+          ? fileRef.putData(_selectedImageBytes!)
+          : _selectedFile != null
+          ? fileRef.putFile(_selectedFile!)
+          : throw 'No hay archivo seleccionado';
+      // Esperar a que complete la carga
+      final snapshot = await uploadTask.whenComplete(() {});
+      // Obtener URL de descarga
+      _downloadUrl = await snapshot.ref.getDownloadURL();
+      // Guardar en Firestore
       await _guardarPublicacionEnFirestore(_downloadUrl!);
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Publicación creada exitosamente!'),
           backgroundColor: Colors.green,
         ),
       );
-
+      // Resetear el formulario
       setState(() {
         _selectedFile = null;
         _selectedImageBytes = null;
         _captionController.clear();
+        _isUploading = false;
       });
-
+      // Redirigir al home
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => Home(key: const Key('Home'))),
       );
     } catch (e) {
+      setState(() => _isUploading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al subir archivo: $e'),
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-      }
     }
   }
-
+  //Cuadro de dialogo que pide al usuario elegir fotos o videos.
   void _showMediaSelectionDialog() {
     showDialog(
       context: context,
