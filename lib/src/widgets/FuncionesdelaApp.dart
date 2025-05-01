@@ -3,7 +3,7 @@ import 'package:adobe_xd/pinned.dart';
 import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
-import './EditarPerfildeAnimalesdeCompaia.dart';
+import './EditarPerfildeAnimal.dart';
 import './VisitasalVeterinario.dart';
 import 'dart:ui' as ui;
 import './CarnetdeVacunacin.dart';
@@ -125,7 +125,7 @@ class FuncionesdelaApp extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),
+                  pageBuilder: () => EditarPerfildeAnimal(key: Key('EditarPerfildeAnimalesdeCompaia'), animalId: '',),
                 ),
               ],
               child: Container(

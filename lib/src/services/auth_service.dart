@@ -1,11 +1,14 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../models/user.dart' as usermodel;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // Tipos de errores personalizados
   static const String emailAlreadyInUse = 'email-already-in-use';
@@ -16,7 +19,6 @@ class AuthService {
   static const String wrongPassword = 'wrong-password';
   static const String emailNotVerified = 'email-not-verified';
 
-  // En tu auth_service.dart
   Future<usermodel.User?> registrarUsuario({
     required String email,
     required String userName,
@@ -78,7 +80,7 @@ class AuthService {
       await user.updateProfile(displayName: userName);
       await user.reload();
 
-      // Crear documento en Firestore (¡SIN la contraseña!)
+      // Crear documento en Firestore
       final usuario = usermodel.User(
         uid: user.uid,
         email: email,
@@ -87,6 +89,10 @@ class AuthService {
         emailVerified: false,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        fechaNacimiento: null,
+        documento: null,
+        contacto: null,
+        profilePhotoUrl: null,
       );
 
       await _firestore.collection('users').doc(user.uid).set(usuario.toJson());
@@ -100,7 +106,7 @@ class AuthService {
       if (_auth.currentUser != null) {
         await _auth.currentUser?.delete();
       }
-      throw e; // Re-lanzar la excepción
+      throw e;
     } catch (e) {
       // Limpiar si hay error desconocido
       if (_auth.currentUser != null) {
@@ -140,7 +146,7 @@ class AuthService {
       // Obtener datos del usuario desde Firestore
       DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
 
-      if (!userDoc.exists || userDoc.data() == null) {
+      if (!userDoc.exists) {
         throw FirebaseAuthException(
           code: 'user-data-missing',
           message: 'Datos de usuario no encontrados',
@@ -153,20 +159,13 @@ class AuthService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      final userData = userDoc.data() as Map<String, dynamic>? ?? {};
-      return usermodel.User.fromJson(userData);
-
+      return usermodel.User.fromJson(userDoc.data() as Map<String, dynamic>);
     } on FirebaseAuthException catch (e) {
       throw e;
-    } on FirebaseException catch (e) {
-      throw FirebaseAuthException(
-        code: 'firestore-error',
-        message: 'Error al acceder a los datos: ${e.message ?? 'Error desconocido'}',
-      );
     } catch (e) {
       throw FirebaseAuthException(
         code: 'login-error',
-        message: 'Error durante el inicio de sesión',
+        message: 'Error durante el inicio de sesión: ${e.toString()}',
       );
     }
   }
@@ -176,14 +175,11 @@ class AuthService {
       final user = _auth.currentUser;
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
-
         await _firestore.collection('users').doc(user.uid).update({
           'updatedAt': FieldValue.serverTimestamp(),
           'lastVerificationSent': FieldValue.serverTimestamp(),
         });
       }
-    } on FirebaseAuthException catch (e) {
-      throw e;
     } catch (e) {
       throw FirebaseAuthException(
         code: 'verification-error',
@@ -199,15 +195,24 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   Future<usermodel.User?> getCurrentUser() async {
-    final user = _auth.currentUser;
-    if (user == null) return null;
-
     try {
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
-      if (!userDoc.exists || userDoc.data() == null) return null;
+      final user = _auth.currentUser;
+      if (user == null) return null;
 
-      final userData = userDoc.data() as Map<String, dynamic>? ?? {};
-      return usermodel.User.fromJson(userData);
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        throw FirebaseAuthException(
+          code: 'user-data-missing',
+          message: 'Datos de usuario no encontrados',
+        );
+      }
+
+      return usermodel.User.fromJson(userDoc.data() as Map<String, dynamic>);
+    } on FirebaseException catch (e) {
+      throw FirebaseAuthException(
+        code: 'firestore-error',
+        message: 'Error al obtener datos: ${e.message}',
+      );
     } catch (e) {
       throw FirebaseAuthException(
         code: 'user-data-error',
@@ -228,12 +233,143 @@ class AuthService {
   Future<void> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
-      throw e;
     } catch (e) {
       throw FirebaseAuthException(
         code: 'reset-password-error',
         message: 'Error al enviar correo de restablecimiento',
+      );
+    }
+  }
+
+  Future<bool> actualizarUsuario({
+    required String email,
+    required String userName,
+    required String fechaNacimiento,
+    required String documento,
+    required String contacto,
+    required String password,
+    File? profilePhoto,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'user-not-authenticated',
+          message: 'Usuario no autenticado',
+        );
+      }
+
+      // Subir foto de perfil si se proporcionó
+      String? photoUrl;
+      if (profilePhoto != null) {
+        final ref = _storage.ref().child('profile_photos/${user.uid}.jpg');
+        await ref.putFile(profilePhoto);
+        photoUrl = await ref.getDownloadURL();
+      }
+
+      // Preparar datos de actualización
+      final updateData = <String, dynamic>{
+        'userName': userName,
+        'fechaNacimiento': fechaNacimiento,
+        'documento': documento,
+        'contacto': contacto,
+        'updatedAt': FieldValue.serverTimestamp(),
+        if (photoUrl != null) 'profilePhotoUrl': photoUrl,
+      };
+
+      // Actualizar email si es diferente
+      if (email != user.email) {
+        try {
+          await user.updateEmail(email);
+          await user.sendEmailVerification();
+          updateData['email'] = email;
+          updateData['emailVerified'] = false;
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'requires-recent-login') {
+            throw FirebaseAuthException(
+              code: 'requires-recent-login',
+              message: 'Por favor, reautentícate para cambiar tu email',
+            );
+          }
+          rethrow;
+        }
+      }
+
+      // Actualizar contraseña si se proporcionó
+      if (password.isNotEmpty) {
+        try {
+          await user.updatePassword(password);
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'requires-recent-login') {
+            throw FirebaseAuthException(
+              code: 'requires-recent-login',
+              message: 'Por favor, reautentícate para cambiar tu contraseña',
+            );
+          }
+          rethrow;
+        }
+      }
+
+      // Actualizar en Firestore
+      await _firestore.collection('users').doc(user.uid).update(updateData);
+
+      return true;
+    } on FirebaseAuthException catch (e) {
+      print('Error en actualizarUsuario (Auth): ${e.code} - ${e.message}');
+      rethrow;
+    } on FirebaseException catch (e) {
+      print('Error en actualizarUsuario (Firestore): ${e.code} - ${e.message}');
+      throw FirebaseAuthException(
+        code: 'firestore-error',
+        message: 'Error al actualizar datos: ${e.message}',
+      );
+    } catch (e) {
+      print('Error desconocido en actualizarUsuario: $e');
+      throw FirebaseAuthException(
+        code: 'update-error',
+        message: 'Error al actualizar usuario',
+      );
+    }
+  }
+
+  Future<void> reautenticarUsuario(String email, String password) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'user-not-authenticated',
+          message: 'Usuario no autenticado',
+        );
+      }
+
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      print('Error en reautenticarUsuario: ${e.code} - ${e.message}');
+      rethrow;
+    } catch (e) {
+      print('Error desconocido en reautenticarUsuario: $e');
+      throw FirebaseAuthException(
+        code: 'reauth-error',
+        message: 'Error durante la reautenticación',
+      );
+    }
+  }
+
+  Future<String?> uploadProfilePhoto(File imageFile, String userId) async {
+    try {
+      final ref = _storage.ref().child('profile_photos/$userId.jpg');
+      await ref.putFile(imageFile);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      print('Error al subir foto de perfil: $e');
+      throw FirebaseAuthException(
+        code: 'upload-photo-error',
+        message: 'Error al subir la foto de perfil',
       );
     }
   }

@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+
 part 'user.g.dart';
 
 @JsonSerializable(explicitToJson: true)
@@ -6,10 +7,15 @@ class User {
   final String uid;
   final String email;
   final String userName;
+  @JsonKey(includeToJson: false) // No incluir en el JSON al enviar a Firestore
   final String password;
   final bool emailVerified;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? profilePhotoUrl;
+  final String? fechaNacimiento; // Nuevo campo
+  final String? documento;       // Nuevo campo
+  final String? contacto;        // Nuevo campo
 
   User({
     required this.uid,
@@ -19,25 +25,41 @@ class User {
     required this.emailVerified,
     required this.createdAt,
     required this.updatedAt,
+    this.profilePhotoUrl,
+    this.fechaNacimiento,
+    this.documento,
+    this.contacto,
   });
 
-  Map<String, dynamic> toJson() => {
-    'uid': uid,
-    'email': email,
-    'userName': userName,
-    'password': password,
-    'emailVerified': emailVerified,
-    'createdAt': createdAt.toIso8601String(),
-    'updatedAt': updatedAt.toIso8601String(),
-  };
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
-  factory User.fromJson(Map<String, dynamic> json) => User(
-    uid: json['uid'],
-    email: json['email'],
-    userName: json['userName'],
-    emailVerified: json['emailVerified'],
-    createdAt: DateTime.parse(json['createdAt']),
-    updatedAt: DateTime.parse(json['updatedAt']),
-    password: '',
-  );
+  Map<String, dynamic> toJson() => _$UserToJson(this);
+
+  User copyWith({
+    String? uid,
+    String? email,
+    String? userName,
+    String? password,
+    bool? emailVerified,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? profilePhotoUrl,
+    String? fechaNacimiento,
+    String? documento,
+    String? contacto,
+  }) {
+    return User(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      userName: userName ?? this.userName,
+      password: password ?? this.password,
+      emailVerified: emailVerified ?? this.emailVerified,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
+      fechaNacimiento: fechaNacimiento ?? this.fechaNacimiento,
+      documento: documento ?? this.documento,
+      contacto: contacto ?? this.contacto,
+    );
+  }
 }

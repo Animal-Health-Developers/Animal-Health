@@ -7,7 +7,7 @@ import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import './CarnetdeVacunacin.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import './EditarPerfildeAnimalesdeCompaia.dart';
+import './EditarPerfildeAnimal.dart';
 import './FuncionesdelaApp.dart';
 
 class CrearVacuna extends StatelessWidget {
@@ -423,7 +423,7 @@ class CrearVacuna extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => EditarPerfildeAnimalesdeCompaia(key: Key('EditarPerfildeAnimalesdeCompaia'),),//FOTO DE PERFIL DE ANIMALES
+                  pageBuilder: () => EditarPerfildeAnimal(key: Key('EditarPerfildeAnimalesdeCompaia'), animalId: '',),//FOTO DE PERFIL DE ANIMALES
                 ),
               ],
               child: Container(

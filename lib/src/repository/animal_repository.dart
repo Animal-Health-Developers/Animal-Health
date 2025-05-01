@@ -10,13 +10,13 @@ class AnimalRepository {
         final userId = firebaseUser.uid; // Obtener el UID del usuario actual
         // Guardar el animal en la subcolección 'animales' del usuario
         await FirebaseFirestore.instance.collection('users').doc(userId).collection('animals').add(animal.toJson());
-        print('Animal creado exitosamente para el usuario $userId');
+        print('Perfil de peludito creado exitosamente para el usuario $userId');
       } else {
         print('Error: Usuario no autenticado');
         // Maneja el error (por ejemplo, muestra un mensaje al usuario)
       }
     } catch (e) {
-      print('Error al crear el animal: $e');
+      print('Error al crear el perfil del peludito: $e');
       // Maneja el error
     }
   }
@@ -33,7 +33,7 @@ class AnimalRepository {
         return null; // Animal no encontrado
       }
       } catch (e) {
-        print('Error al leer el animal: $e');
+        print('Error al acceder al perfil del peludito: $e');
       // Maneja el error
       return null;
       }
@@ -44,7 +44,7 @@ class AnimalRepository {
     try {
       await animalRef.update(animal.toJson());
     } catch (e) {
-      print('Error al actualizar el animal: $e');
+      print('Error al actualizar el perfil de su hijo Peludito: $e');
       // Maneja el error
     }
   }
@@ -53,7 +53,7 @@ class AnimalRepository {
     try {
       await animalRef.delete();
     } catch (e) {
-      print('Error al eliminar el animal: $e');
+      print('Error al eliminar el perfil de su Peludito: $e');
       // Maneja el error
     }
   }

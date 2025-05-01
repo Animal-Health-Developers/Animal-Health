@@ -14,10 +14,8 @@ import './DetallesdeFotooVideo.dart';
 import './CompartirPublicacion.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
-import 'package:flutter/scheduler.dart';
 
 class Home extends StatelessWidget {
   const Home({
@@ -343,7 +341,7 @@ class Home extends StatelessWidget {
           // Lista de publicaciones
           Pinned.fromPins(
             Pin(start: 16.0, end: 16.0),
-            Pin(start: 280.0, end: 16.0),
+            Pin(start: 240.0, end: 16.0),
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('publicaciones')
@@ -467,11 +465,11 @@ class Home extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: isVideo
-                    ? _VideoPlayerWidget(videoUrl: mediaUrl!)
+                    ? _VideoPlayerWidget(videoUrl: mediaUrl)
                     : ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
                   child: CachedNetworkImage(
-                    imageUrl: mediaUrl!,
+                    imageUrl: mediaUrl,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Center(
                       child: CircularProgressIndicator(

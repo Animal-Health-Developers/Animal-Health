@@ -235,7 +235,7 @@ class Configuraciones extends StatelessWidget {
                         transition: LinkTransition.Fade,
                         ease: Curves.easeOut,
                         duration: 0.3,
-                        pageBuilder: () => EditarinfodeUsuario(key: Key('EditarinfodeUsuario'),),
+                        pageBuilder: () => EditarinfodeUsuario(key: Key('EditarinfodeUsuario'), authService: AuthService(), onUpdateSuccess: () {  },),
                       ),
                     ],
                     child: Container(

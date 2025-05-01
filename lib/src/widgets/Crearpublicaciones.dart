@@ -18,7 +18,6 @@ import 'CompradeProductos.dart';
 import 'CuidadosyRecomendaciones.dart';
 import 'Emergencias.dart';
 import 'Comunidad.dart';
-import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:video_player/video_player.dart';
 

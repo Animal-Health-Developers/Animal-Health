@@ -323,6 +323,7 @@ class Emergencias extends StatelessWidget {
               ),
             ),
           ),
+          //BOTONES DE EMERGENCIAS
           Pinned.fromPins(
             Pin(start: 20.0, end: 16.0),
             Pin(size: 431.0, middle: 0.679),
