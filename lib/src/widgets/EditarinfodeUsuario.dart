@@ -1,9 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:firebase_auth/firebase_auth.dart';
 import './Home.dart';
 import './Ayuda.dart';
 import './Configuracion.dart';
@@ -64,50 +64,24 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
   }
 
   Future<void> _loadUserData() async {
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final user = await widget.authService.getCurrentUser();
-      if (user == null) {
-        throw FirebaseAuthException(
-          code: 'user-not-found',
-          message: 'Usuario no autenticado',
-        );
+      if (user != null) {
+        setState(() {
+          _currentUser = user;
+          _emailController.text = user.email ?? '';
+          _usernameController.text = user.userName ?? '';
+          _fechaNacimientoController.text = user.fechaNacimiento ?? '';
+          _documentoController.text = user.documento ?? '';
+          _contactoController.text = user.contacto ?? '';
+          _profilePhotoUrl = user.profilePhotoUrl;
+        });
       }
-
-      setState(() {
-        _currentUser = user;
-        _emailController.text = user.email ?? '';
-        _usernameController.text = user.userName ?? '';
-        _fechaNacimientoController.text = user.fechaNacimiento ?? '';
-        _documentoController.text = user.documento ?? '';
-        _contactoController.text = user.contacto ?? '';
-        _profilePhotoUrl = user.profilePhotoUrl;
-      });
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = _getErrorMessage(e.code);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${_getErrorMessage(e.code)}'),
-          backgroundColor: Colors.red,
-        ),
-      );
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Error al cargar datos del usuario';
-      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error al cargar datos: ${e.toString()}')),
       );
     } finally {
       if (mounted) {
@@ -126,10 +100,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al seleccionar imagen: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error al seleccionar imagen: ${e.toString()}')),
       );
     }
   }
@@ -177,10 +148,10 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
         ),
       );
     } catch (e) {
-      setState(() => _errorMessage = 'Error durante la actualización');
+      setState(() => _errorMessage = 'Error durante la actualización: ${e.toString()}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString()}'),
+          content: Text('Error durante la actualización: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -201,14 +172,8 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
         return 'Requiere autenticación reciente';
       case 'weak-password':
         return 'Contraseña demasiado débil';
-      case 'user-not-found':
-        return 'Usuario no encontrado';
-      case 'user-data-missing':
-        return 'Datos de usuario no encontrados';
-      case 'firestore-error':
-        return 'Error al acceder a la base de datos';
       default:
-        return 'Error desconocido';
+        return 'Error durante la actualización';
     }
   }
 
