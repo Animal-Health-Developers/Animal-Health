@@ -24,6 +24,7 @@ class AuthService {
     required String userName,
     required String password,
     required String confirmPassword,
+    DateTime? fechaNacimiento,
   }) async {
     try {
       // Validaciones mejoradas
@@ -89,7 +90,7 @@ class AuthService {
         emailVerified: false,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        fechaNacimiento: null,
+        fechaNacimiento: fechaNacimiento,
         documento: null,
         contacto: null,
         profilePhotoUrl: null,
@@ -199,26 +200,65 @@ class AuthService {
       final user = _auth.currentUser;
       if (user == null) return null;
 
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      // Obtener datos del usuario con reintentos
+      DocumentSnapshot userDoc = await _getUserDataWithRetry(user.uid);
+
       if (!userDoc.exists) {
-        throw FirebaseAuthException(
-          code: 'user-data-missing',
-          message: 'Datos de usuario no encontrados',
+        // Si no existe el documento, crearlo con datos básicos
+        final newUser = usermodel.User(
+          uid: user.uid,
+          email: user.email ?? '',
+          userName: user.displayName ?? '',
+          password: '',
+          emailVerified: user.emailVerified,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          fechaNacimiento: null,
+          documento: null,
+          contacto: null,
+          profilePhotoUrl: user.photoURL,
         );
+
+        await _firestore.collection('users').doc(user.uid).set(newUser.toJson());
+        return newUser;
       }
 
       return usermodel.User.fromJson(userDoc.data() as Map<String, dynamic>);
     } on FirebaseException catch (e) {
+      print('Error en getCurrentUser: ${e.code} - ${e.message}');
       throw FirebaseAuthException(
         code: 'firestore-error',
         message: 'Error al obtener datos: ${e.message}',
       );
     } catch (e) {
+      print('Error desconocido en getCurrentUser: $e');
       throw FirebaseAuthException(
         code: 'user-data-error',
         message: 'Error al obtener datos del usuario',
       );
     }
+  }
+
+  Future<DocumentSnapshot> _getUserDataWithRetry(String uid, {int retries = 3}) async {
+    int attempt = 0;
+    FirebaseException? lastError;
+
+    while (attempt < retries) {
+      try {
+        return await _firestore.collection('users').doc(uid).get();
+      } on FirebaseException catch (e) {
+        lastError = e;
+        attempt++;
+        if (attempt < retries) {
+          await Future.delayed(Duration(seconds: 1));
+        }
+      }
+    }
+
+    throw lastError ?? FirebaseException(
+      plugin: 'firestore',
+      message: 'Error al obtener datos del usuario después de $retries intentos',
+    );
   }
 
   Future<bool> checkEmailVerification() async {
@@ -244,7 +284,7 @@ class AuthService {
   Future<bool> actualizarUsuario({
     required String email,
     required String userName,
-    required String fechaNacimiento,
+    required DateTime? fechaNacimiento,
     required String documento,
     required String contacto,
     required String password,
@@ -262,9 +302,7 @@ class AuthService {
       // Subir foto de perfil si se proporcionó
       String? photoUrl;
       if (profilePhoto != null) {
-        final ref = _storage.ref().child('profile_photos/${user.uid}.jpg');
-        await ref.putFile(profilePhoto);
-        photoUrl = await ref.getDownloadURL();
+        photoUrl = await uploadProfilePhoto(profilePhoto, user.uid);
       }
 
       // Preparar datos de actualización
@@ -310,8 +348,8 @@ class AuthService {
         }
       }
 
-      // Actualizar en Firestore
-      await _firestore.collection('users').doc(user.uid).update(updateData);
+      // Actualizar en Firestore con manejo de reintentos
+      await _updateUserDataWithRetry(user.uid, updateData);
 
       return true;
     } on FirebaseAuthException catch (e) {
@@ -330,6 +368,29 @@ class AuthService {
         message: 'Error al actualizar usuario',
       );
     }
+  }
+
+  Future<void> _updateUserDataWithRetry(String uid, Map<String, dynamic> data, {int retries = 3}) async {
+    int attempt = 0;
+    FirebaseException? lastError;
+
+    while (attempt < retries) {
+      try {
+        await _firestore.collection('users').doc(uid).update(data);
+        return;
+      } on FirebaseException catch (e) {
+        lastError = e;
+        attempt++;
+        if (attempt < retries) {
+          await Future.delayed(Duration(seconds: 1));
+        }
+      }
+    }
+
+    throw lastError ?? FirebaseException(
+      plugin: 'firestore',
+      message: 'Error al actualizar datos del usuario después de $retries intentos',
+    );
   }
 
   Future<void> reautenticarUsuario(String email, String password) async {

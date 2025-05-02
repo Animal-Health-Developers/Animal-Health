@@ -13,9 +13,9 @@ class User {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String? profilePhotoUrl;
-  final String? fechaNacimiento; // Nuevo campo
-  final String? documento;       // Nuevo campo
-  final String? contacto;        // Nuevo campo
+  final DateTime? fechaNacimiento; // Cambiado a DateTime
+  final String? documento;
+  final String? contacto;
 
   User({
     required this.uid,
@@ -44,7 +44,7 @@ class User {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? profilePhotoUrl,
-    String? fechaNacimiento,
+    DateTime? fechaNacimiento,
     String? documento,
     String? contacto,
   }) {

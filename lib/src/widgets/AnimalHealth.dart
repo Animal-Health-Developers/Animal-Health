@@ -138,243 +138,224 @@ class _AnimalHealthState extends State<AnimalHealth> {
             ),
           ),
 
-          // Campo Email
-          Pinned.fromPins(
-            Pin(start: 43.0, end: 43.0),
-            Pin(size: 45.0, middle: 0.5),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xffffffff),
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(width: 1.0, color: const Color(0xff000000)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 45.0,
-                    height: 45.0,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: const AssetImage('assets/images/@.png'),
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        hintText: 'Email',
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 20,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
+          // Formulario
+          Positioned(
+            top: 300,
+            left: 30,
+            right: 30,
+            child: Column(
+              children: [
+                // Campo Email
+                Container(
+                  height: 60,
+                  child: Stack(
+                    children: [
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingrese su email';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Ingrese un email válido';
+                          }
+                          return null;
+                        },
                       ),
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 20,
-                        color: const Color(0xff000000),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Campo Contraseña
-          Pinned.fromPins(
-            Pin(start: 49.0, end: 48.0),
-            Pin(size: 45.0, middle: 0.58),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xffffffff),
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(width: 1.0, color: const Color(0xff000000)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 45.0,
-                    height: 45.0,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: const AssetImage('assets/images/password.png'),
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        hintText: 'Contraseña',
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 20,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
+                      Positioned(
+                        left: 5,
+                        top: 0,
+                        bottom: 10,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            width: 37.4,
+                            height: 40.0,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: const AssetImage('assets/images/@.png'),
+                                fit: BoxFit.fill,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 20,
-                        color: const Color(0xff000000),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Botón Iniciar Sesión
-          Pinned.fromPins(
-            Pin(size: 242.0, middle: 0.5),
-            Pin(size: 49.0, middle: 0.68),
-            child: _isLoading
-                ? Center(child: CircularProgressIndicator())
-                : GestureDetector(
-              onTap: () async {
-                await _signInWithEmailAndPassword();
-
-                // Verificar si el usuario está logueado después de intentar iniciar sesión
-                if (FirebaseAuth.instance.currentUser != null &&
-                    FirebaseAuth.instance.currentUser!.emailVerified) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => Home(key: Key('Home')),
-                    ),
-                  );
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xff4ec8dd),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(
-                      width: 1.0,
-                      color: const Color(0xff000000)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xff080808),
-                      blurRadius: 3,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    'Iniciar Sesion',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Mensaje de error
-          if (_errorMessage != null)
-            Pinned.fromPins(
-              Pin(start: 50.0, end: 50.0),
-              Pin(size: 30.0, middle: 0.63),
-              child: Center(
-                child: Text(
-                  _errorMessage!,
-                  style: TextStyle(
-                    fontFamily: 'Comic Sans MS',
-                    fontSize: 16,
-                    color: Colors.red,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-
-          // Texto "¿No tienes una cuenta?"
-          Pinned.fromPins(
-            Pin(start: 50.0, end: 50.0),
-            Pin(size: 26.0, middle: 0.75),
-            child: Center(
-              child: Text(
-                '¿No tienes una cuenta?',
-                style: TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: const Color(0xff000000),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-
-          // Botón Registrarse
-          Pinned.fromPins(
-            Pin(size: 249.5, middle: 0.5),
-            Pin(size: 49.0, middle: 0.8),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CrearCuenta(
-                    key: Key('CrearCuenta'),
-                    authService: widget.authService,
-                    onRegistrationSuccess: widget.onLoginSuccess,
-                  ),
-                ),
-              ],
-              child: GestureDetector(
-                onTap: widget.onRegisterPressed ?? () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => CrearCuenta(
-                        key: Key('CrearCuenta'),
-                        authService: widget.authService,
-                        onRegistrationSuccess: widget.onLoginSuccess,
-                      ),
-                    ),
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xff4ec8dd),
-                    borderRadius: BorderRadius.circular(15.0),
-                    border: Border.all(
-                        width: 1.0,
-                        color: const Color(0xff000000)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xff080808),
-                        blurRadius: 3,
-                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
-                  child: Center(
+                ),
+                SizedBox(height: 20),
+
+                // Campo Contraseña
+                Container(
+                  height: 60,
+                  child: Stack(
+                    children: [
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: 'Contraseña',
+                          border: OutlineInputBorder(),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingrese su contraseña';
+                          }
+                          return null;
+                        },
+                      ),
+                      Positioned(
+                        left: 5,
+                        top: 0,
+                        bottom: 10,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            width: 37.4,
+                            height: 40.0,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: const AssetImage('assets/images/password.png'),
+                                fit: BoxFit.fill,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+
+                // Mensaje de error
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
-                      'Registrarse',
+                      _errorMessage!,
+                      style: TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 16,
+                        color: Colors.red,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                SizedBox(height: 20),
+
+                // Botón Iniciar Sesión
+                Container(
+                  width: 242,
+                  height: 49,
+                  child: _isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xff4ec8dd),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        side: const BorderSide(width: 1, color: Colors.black),
+                      ),
+                      shadowColor: const Color(0xff080808),
+                      elevation: 3,
+                    ),
+                    onPressed: () async {
+                      await _signInWithEmailAndPassword();
+                      if (FirebaseAuth.instance.currentUser != null &&
+                          FirebaseAuth.instance.currentUser!.emailVerified) {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) => Home(key: Key('Home')),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text(
+                      'Iniciar Sesión',
                       style: TextStyle(
                         fontFamily: 'Comic Sans MS',
                         fontSize: 20,
-                        color: const Color(0xff000000),
+                        color: Colors.black,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                 ),
-              ),
+                SizedBox(height: 20),
+
+                // Texto "¿No tienes una cuenta?"
+                const Text(
+                  '¿No tienes una cuenta?',
+                  style: TextStyle(
+                    fontFamily: 'Comic Sans MS',
+                    fontSize: 20,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: 10),
+
+                // Botón Registrarse
+                Container(
+                  width: 242,
+                  height: 49,
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => CrearCuenta(
+                          key: Key('CrearCuenta'),
+                          authService: widget.authService,
+                          onRegistrationSuccess: widget.onLoginSuccess,
+                        ),
+                      ),
+                    ],
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff4ec8dd),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          side: const BorderSide(width: 1, color: Colors.black),
+                        ),
+                        shadowColor: const Color(0xff080808),
+                        elevation: 3,
+                      ),
+                      onPressed: widget.onRegisterPressed ?? () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => CrearCuenta(
+                              key: Key('CrearCuenta'),
+                              authService: widget.authService,
+                              onRegistrationSuccess: widget.onLoginSuccess,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Registrarse',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 

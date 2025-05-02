@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import './Home.dart';
@@ -41,6 +42,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
   String? _errorMessage;
   String? _profilePhotoUrl;
   user_model.User? _currentUser;
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -67,28 +69,70 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
 
   Future<void> _loadUserData() async {
     setState(() => _isLoading = true);
+    print('Iniciando carga de datos del usuario...');
 
     try {
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      print('Usuario Firebase: ${firebaseUser?.email}');
+
+      if (firebaseUser == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
       final user = await widget.authService.getCurrentUser();
+
       if (user != null) {
         setState(() {
           _currentUser = user;
-          _emailController.text = user.email ?? '';
+          _emailController.text = firebaseUser.email ?? user.email ?? '';
           _usernameController.text = user.userName ?? '';
-          _fechaNacimientoController.text = user.fechaNacimiento ?? '';
+
+          // Manejar la fecha de nacimiento como DateTime
+          if (user.fechaNacimiento != null) {
+            _selectedDate = user.fechaNacimiento;
+            _fechaNacimientoController.text = DateFormat('dd/MM/yyyy').format(user.fechaNacimiento!);
+          }
+
           _documentoController.text = user.documento ?? '';
           _contactoController.text = user.contacto ?? '';
           _profilePhotoUrl = user.profilePhotoUrl;
+          print('Datos cargados: Email: ${_emailController.text}, Username: ${_usernameController.text}');
+        });
+      } else {
+        setState(() {
+          _emailController.text = firebaseUser.email ?? '';
         });
       }
     } catch (e) {
+      print('Error al cargar datos: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al cargar datos: ${e.toString()}')),
       );
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        setState(() {
+          _emailController.text = firebaseUser.email ?? '';
+        });
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _fechaNacimientoController.text = DateFormat('dd/MM/yyyy').format(picked);
+      });
     }
   }
 
@@ -125,7 +169,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
       final userUpdated = await widget.authService.actualizarUsuario(
         email: _emailController.text.trim(),
         userName: _usernameController.text.trim(),
-        fechaNacimiento: _fechaNacimientoController.text.trim(),
+        fechaNacimiento: _selectedDate, // Ahora enviamos el DateTime directamente
         documento: _documentoController.text.trim(),
         contacto: _contactoController.text.trim(),
         password: _passwordController.text.trim(),
@@ -187,6 +231,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
     bool obscureText = false,
     bool readOnly = false,
     TextInputType? keyboardType,
+    VoidCallback? onTap,
   }) {
     return Container(
       height: 60,
@@ -198,6 +243,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
             obscureText: obscureText,
             readOnly: readOnly,
             keyboardType: keyboardType,
+            onTap: onTap,
             decoration: InputDecoration(
               labelText: labelText,
               border: OutlineInputBorder(),
@@ -222,11 +268,11 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
               child: Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(imageAsset),
-                    fit: BoxFit.fill,
-                  ),
+                child: Image.asset(
+                  imageAsset,
+                  width: 40,
+                  height: 40,
+                  errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
                 ),
               ),
             ),
@@ -444,7 +490,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                       },
                     ),
 
-                    // Fecha de Nacimiento
+                    // Fecha de Nacimiento (ahora con selector de fecha)
                     _buildTextField(
                       labelText: 'Fecha de Nacimiento',
                       controller: _fechaNacimientoController,
@@ -455,6 +501,8 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                         }
                         return null;
                       },
+                      readOnly: true,
+                      onTap: () => _selectDate(context),
                     ),
 
                     // Documento

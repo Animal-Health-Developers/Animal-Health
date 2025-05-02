@@ -15,7 +15,10 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
   profilePhotoUrl: json['profilePhotoUrl'] as String?,
-  fechaNacimiento: json['fechaNacimiento'] as String?,
+  fechaNacimiento:
+      json['fechaNacimiento'] == null
+          ? null
+          : DateTime.parse(json['fechaNacimiento'] as String),
   documento: json['documento'] as String?,
   contacto: json['contacto'] as String?,
 );
@@ -28,7 +31,7 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
   'profilePhotoUrl': instance.profilePhotoUrl,
-  'fechaNacimiento': instance.fechaNacimiento,
+  'fechaNacimiento': instance.fechaNacimiento?.toIso8601String(),
   'documento': instance.documento,
   'contacto': instance.contacto,
 };

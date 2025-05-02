@@ -122,61 +122,6 @@ class _CrearCuentaState extends State<CrearCuenta> {
     }
   }
 
-  Widget _buildTextField({
-    required String hintText,
-    required TextEditingController controller,
-    required String imageAsset,
-    required String? Function(String?) validator,
-    bool obscureText = false,
-  }) {
-    return Container(
-      height: 45,
-      margin: const EdgeInsets.symmetric(horizontal: 43, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(width: 1, color: Colors.black),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(imageAsset),
-                fit: BoxFit.fill,
-              ),
-            ),
-          ),
-          Expanded(
-            child: TextFormField(
-              controller: controller,
-              obscureText: obscureText,
-              decoration: InputDecoration(
-                hintText: hintText,
-                border: InputBorder.none,
-                hintStyle: const TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: const TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: Colors.black,
-                fontWeight: FontWeight.w700,
-              ),
-              validator: validator,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -299,85 +244,208 @@ class _CrearCuentaState extends State<CrearCuenta> {
           // Formulario
           Positioned(
             top: 250,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            left: 30,
+            right: 30,
+            bottom: 27,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 20),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     // Campo Email
-                    _buildTextField(
-                      hintText: 'Correo Electrónico',
-                      controller: _emailController,
-                      imageAsset: 'assets/images/@.png',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Ingrese su correo';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Ingrese un correo válido';
-                        }
-                        return null;
-                      },
+                    Container(
+                      height: 60,
+                      child: Stack(
+                        children: [
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              labelText: 'Correo Electrónico',
+                              border: OutlineInputBorder(),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Ingrese su correo';
+                              }
+                              if (!value.contains('@')) {
+                                return 'Ingrese un correo válido';
+                              }
+                              return null;
+                            },
+                          ),
+                          Positioned(
+                            left: 5,
+                            top: 0,
+                            bottom: 10,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                width: 37.4,
+                                height: 40.0,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: const AssetImage('assets/images/@.png'),
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    SizedBox(height: 20),
 
                     // Campo Nombre de Usuario
-                    _buildTextField(
-                      hintText: 'Nombre de Usuario',
-                      controller: _usernameController,
-                      imageAsset: 'assets/images/username.png',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Ingrese un nombre de usuario';
-                        }
-                        if (value.length < 4) {
-                          return 'Mínimo 4 caracteres';
-                        }
-                        return null;
-                      },
+                    Container(
+                      height: 60,
+                      child: Stack(
+                        children: [
+                          TextFormField(
+                            controller: _usernameController,
+                            decoration: InputDecoration(
+                              labelText: 'Nombre de Usuario',
+                              border: OutlineInputBorder(),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Ingrese un nombre de usuario';
+                              }
+                              if (value.length < 4) {
+                                return 'Mínimo 4 caracteres';
+                              }
+                              return null;
+                            },
+                          ),
+                          Positioned(
+                            left: 5,
+                            top: 0,
+                            bottom: 10,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                width: 37.4,
+                                height: 40.0,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: const AssetImage('assets/images/username.png'),
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    SizedBox(height: 20),
 
                     // Campo Contraseña
-                    _buildTextField(
-                      hintText: 'Contraseña',
-                      controller: _passwordController,
-                      imageAsset: 'assets/images/password.png',
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Ingrese una contraseña';
-                        }
-                        if (value.length < 8) {
-                          return 'Mínimo 8 caracteres';
-                        }
-                        return null;
-                      },
+                    Container(
+                      height: 60,
+                      child: Stack(
+                        children: [
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'Contraseña',
+                              border: OutlineInputBorder(),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Ingrese una contraseña';
+                              }
+                              if (value.length < 8) {
+                                return 'Mínimo 8 caracteres';
+                              }
+                              return null;
+                            },
+                          ),
+                          Positioned(
+                            left: 5,
+                            top: 0,
+                            bottom: 10,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                width: 37.4,
+                                height: 40.0,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: const AssetImage('assets/images/password.png'),
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    SizedBox(height: 20),
 
                     // Campo Confirmar Contraseña
-                    _buildTextField(
-                      hintText: 'Confirmar Contraseña',
-                      controller: _confirmPasswordController,
-                      imageAsset: 'assets/images/password.png',
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Confirme su contraseña';
-                        }
-                        if (value != _passwordController.text) {
-                          return 'Las contraseñas no coinciden';
-                        }
-                        return null;
-                      },
+                    Container(
+                      height: 60,
+                      child: Stack(
+                        children: [
+                          TextFormField(
+                            controller: _confirmPasswordController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'Confirmar Contraseña',
+                              border: OutlineInputBorder(),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Confirme su contraseña';
+                              }
+                              if (value != _passwordController.text) {
+                                return 'Las contraseñas no coinciden';
+                              }
+                              return null;
+                            },
+                          ),
+                          Positioned(
+                            left: 5,
+                            top: 0,
+                            bottom: 10,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                width: 37.4,
+                                height: 40.0,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: const AssetImage('assets/images/password.png'),
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    SizedBox(height: 20),
 
                     // Mensaje de error
                     if (_errorMessage != null)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                         child: Text(
                           _errorMessage!,
                           style: const TextStyle(
