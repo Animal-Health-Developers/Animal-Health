@@ -1,3 +1,4 @@
+import 'package:adobe_xd/pinned.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/page_link.dart';
@@ -36,6 +37,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
 
   File? _selectedImage;
   bool _isLoading = false;
+  bool _isUpdating = false;
   String? _errorMessage;
   String? _profilePhotoUrl;
   user_model.User? _currentUser;
@@ -115,7 +117,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
     }
 
     setState(() {
-      _isLoading = true;
+      _isUpdating = true;
       _errorMessage = null;
     });
 
@@ -157,7 +159,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
       );
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isUpdating = false);
       }
     }
   }
@@ -178,57 +180,55 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
   }
 
   Widget _buildTextField({
-    required String hintText,
+    required String labelText,
     required TextEditingController controller,
     required String imageAsset,
     required String? Function(String?) validator,
     bool obscureText = false,
     bool readOnly = false,
+    TextInputType? keyboardType,
   }) {
     return Container(
-      height: 45,
-      margin: const EdgeInsets.symmetric(horizontal: 43, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(width: 1, color: Colors.black),
-      ),
-      child: Row(
+      height: 60,
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Stack(
         children: [
-          if (imageAsset.isNotEmpty)
-            Container(
-              width: 45,
-              height: 45,
-              child: Image.asset(
-                imageAsset,
-                width: 45,
-                height: 45,
-                fit: BoxFit.fill,
-                errorBuilder: (context, error, stackTrace) => Container(),
-              ),
+          TextFormField(
+            controller: controller,
+            obscureText: obscureText,
+            readOnly: readOnly,
+            keyboardType: keyboardType,
+            decoration: InputDecoration(
+              labelText: labelText,
+              border: OutlineInputBorder(),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
             ),
-          Expanded(
-            child: TextFormField(
-              controller: controller,
-              obscureText: obscureText,
-              readOnly: readOnly,
-              decoration: InputDecoration(
-                hintText: hintText,
-                border: InputBorder.none,
-                hintStyle: const TextStyle(
-                  fontFamily: 'Comic Sans MS',
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.w700,
+            style: const TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 16,
+              color: Colors.black,
+              fontWeight: FontWeight.w700,
+            ),
+            validator: validator,
+          ),
+          Positioned(
+            left: 5,
+            top: 0,
+            bottom: 10,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(imageAsset),
+                    fit: BoxFit.fill,
+                  ),
                 ),
               ),
-              style: const TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 20,
-                color: Colors.black,
-                fontWeight: FontWeight.w700,
-              ),
-              validator: validator,
             ),
           ),
         ],
@@ -240,35 +240,35 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
     if (_selectedImage != null) {
       if (kIsWeb) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(50),
           child: Image.network(
             _selectedImage!.path,
-            width: 150,
-            height: 150,
+            width: 100,
+            height: 100,
             fit: BoxFit.cover,
           ),
         );
       } else {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(50),
           child: Image.file(
             _selectedImage!,
-            width: 150,
-            height: 150,
+            width: 100,
+            height: 100,
             fit: BoxFit.cover,
           ),
         );
       }
     } else if (_profilePhotoUrl != null && _profilePhotoUrl!.isNotEmpty) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(50),
         child: Image.network(
           _profilePhotoUrl!,
-          width: 150,
-          height: 150,
+          width: 100,
+          height: 100,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return const Icon(
+            return Icon(
               Icons.person,
               size: 50,
               color: Colors.black,
@@ -277,7 +277,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
         ),
       );
     } else {
-      return const Icon(
+      return Icon(
         Icons.add_a_photo,
         size: 50,
         color: Colors.black,
@@ -290,157 +290,147 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
-        children: [
+        children: <Widget>[
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
           ),
-
-          Positioned(
-            top: 60,
-            left: 0,
-            right: 0,
-            child: Center(
+          Pinned.fromPins(
+            Pin(size: 74.0, middle: 0.5),
+            Pin(size: 73.0, start: 42.0),
+            child: PageLink(
+              links: [
+                PageLinkInfo(
+                  transition: LinkTransition.Fade,
+                  ease: Curves.easeOut,
+                  duration: 0.3,
+                  pageBuilder: () => Home(key: Key('Home')),
+                ),
+              ],
               child: Container(
-                width: 74,
-                height: 73,
                 decoration: BoxDecoration(
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/logo.png'),
+                  image: DecorationImage(
+                    image: const AssetImage('assets/images/logo.png'),
                     fit: BoxFit.cover,
                   ),
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(width: 1, color: Colors.black),
+                  borderRadius: BorderRadius.circular(15.0),
+                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
                 ),
               ),
             ),
           ),
-
-          Positioned(
-            top: 49,
-            left: 9.1,
+          Pinned.fromPins(
+            Pin(size: 52.9, start: 9.1),
+            Pin(size: 50.0, start: 49.0),
             child: PageLink(
               links: [
                 PageLinkInfo(
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: const Key('Home')),
+                  pageBuilder: () => Home(key: Key('Home')),
                 ),
               ],
               child: Container(
-                width: 52.9,
-                height: 50,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('assets/images/back.png'),
+                    image: const AssetImage('assets/images/back.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
               ),
             ),
           ),
-
-          Positioned(
-            top: 49,
-            right: MediaQuery.of(context).size.width * 0.1672,
+          Pinned.fromPins(
+            Pin(size: 40.5, middle: 0.8328),
+            Pin(size: 50.0, start: 49.0),
             child: PageLink(
               links: [
                 PageLinkInfo(
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: const Key('Ayuda')),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda')),
                 ),
               ],
               child: Container(
-                width: 40.5,
-                height: 50,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('assets/images/help.png'),
+                    image: const AssetImage('assets/images/help.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
               ),
             ),
           ),
-
-          Positioned(
-            top: 49,
-            right: 7.6,
+          Pinned.fromPins(
+            Pin(size: 47.2, end: 7.6),
+            Pin(size: 50.0, start: 49.0),
             child: PageLink(
               links: [
                 PageLinkInfo(
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('Settings')),
+                  pageBuilder: () => Configuraciones(key: Key('Settings')),
                 ),
               ],
               child: Container(
-                width: 47.2,
-                height: 50,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('assets/images/settingsbutton.png'),
+                    image: const AssetImage('assets/images/settingsbutton.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
               ),
             ),
           ),
-
           Positioned(
-            top: 150,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(width: 1, color: Colors.black),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : _buildProfileImage(),
-                ),
-              ),
-            ),
-          ),
-
-          Positioned(
-            top: 320,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: 120,
+            left: 30,
+            right: 30,
+            bottom: 27,
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Form(
-                key: _formKey,
+                ? Center(child: CircularProgressIndicator())
+                : Form(
+              key: _formKey,
+              child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    // Foto de perfil
+                    GestureDetector(
+                      onTap: _isUpdating ? null : _pickImage,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.grey[200],
+                            child: _isUpdating
+                                ? CircularProgressIndicator()
+                                : _buildProfileImage(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 30),
+
+                    // Email (solo lectura)
                     _buildTextField(
-                      hintText: 'Correo Electrónico',
+                      labelText: 'Correo Electrónico',
                       controller: _emailController,
                       imageAsset: 'assets/images/@.png',
                       validator: (value) => null,
                       readOnly: true,
                     ),
 
+                    // Nombre de Usuario
                     _buildTextField(
-                      hintText: 'Nombre de Usuario',
+                      labelText: 'Nombre de Usuario',
                       controller: _usernameController,
                       imageAsset: 'assets/images/nombreusuario.png',
                       validator: (value) {
@@ -454,8 +444,9 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                       },
                     ),
 
+                    // Fecha de Nacimiento
                     _buildTextField(
-                      hintText: 'Fecha de Nacimiento',
+                      labelText: 'Fecha de Nacimiento',
                       controller: _fechaNacimientoController,
                       imageAsset: 'assets/images/fechanacimientopersona.png',
                       validator: (value) {
@@ -466,8 +457,9 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                       },
                     ),
 
+                    // Documento
                     _buildTextField(
-                      hintText: 'Número de Documento',
+                      labelText: 'Número de Documento',
                       controller: _documentoController,
                       imageAsset: 'assets/images/id.png',
                       validator: (value) {
@@ -476,10 +468,12 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                         }
                         return null;
                       },
+                      keyboardType: TextInputType.number,
                     ),
 
+                    // Contacto
                     _buildTextField(
-                      hintText: 'Número de Contacto',
+                      labelText: 'Número de Contacto',
                       controller: _contactoController,
                       imageAsset: 'assets/images/numerocontacto.png',
                       validator: (value) {
@@ -488,10 +482,12 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                         }
                         return null;
                       },
+                      keyboardType: TextInputType.phone,
                     ),
 
+                    // Nueva Contraseña
                     _buildTextField(
-                      hintText: 'Nueva Contraseña (opcional)',
+                      labelText: 'Nueva Contraseña (opcional)',
                       controller: _passwordController,
                       imageAsset: 'assets/images/password.png',
                       obscureText: true,
@@ -503,8 +499,9 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                       },
                     ),
 
+                    // Confirmar Contraseña
                     _buildTextField(
-                      hintText: 'Confirmar Contraseña',
+                      labelText: 'Confirmar Contraseña',
                       controller: _confirmPasswordController,
                       imageAsset: 'assets/images/password.png',
                       obscureText: true,
@@ -522,7 +519,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
 
                     if (_errorMessage != null)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                        padding: const EdgeInsets.only(bottom: 20),
                         child: Text(
                           _errorMessage!,
                           style: const TextStyle(
@@ -534,32 +531,45 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                         ),
                       ),
 
-                    Container(
-                      width: 242,
-                      height: 49,
-                      margin: const EdgeInsets.only(top: 20),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff4ec8dd),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            side: const BorderSide(width: 1, color: Colors.black),
+                    // Botón Guardar Cambios
+                    GestureDetector(
+                      onTap: _isUpdating ? null : _updateUser,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: 242,
+                            height: 49,
+                            decoration: BoxDecoration(
+                              color: const Color(0xff4ec8dd),
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(width: 1, color: Colors.black),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xff080808),
+                                  offset: Offset(0, 3),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Guardar Cambios',
+                                style: TextStyle(
+                                  fontFamily: 'Comic Sans MS',
+                                  fontSize: 20,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                           ),
-                          shadowColor: const Color(0xff080808),
-                          elevation: 3,
-                        ),
-                        onPressed: _updateUser,
-                        child: const Text(
-                          'Guardar Cambios',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 20,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                          if (_isUpdating)
+                            CircularProgressIndicator(),
+                        ],
                       ),
                     ),
+                    SizedBox(height: 30),
                   ],
                 ),
               ),
