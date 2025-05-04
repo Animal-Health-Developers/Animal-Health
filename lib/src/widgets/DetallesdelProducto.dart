@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
+import '../services/auth_service.dart';
 import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
@@ -125,7 +126,7 @@ class DetallesdelProducto extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

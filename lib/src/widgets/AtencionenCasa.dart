@@ -11,7 +11,7 @@ import './CuidadosyRecomendaciones.dart';
 import './Emergencias.dart';
 import './Comunidad.dart';
 import './Crearpublicaciones.dart';
-
+import '../services/auth_service.dart';
 class AtencionenCasa extends StatelessWidget {
   const AtencionenCasa({
     required Key key,
@@ -152,7 +152,7 @@ class AtencionenCasa extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

@@ -15,7 +15,7 @@ import './AmigosenLInea.dart';
 import './chatconamigos.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
-
+import '../services/auth_service.dart';
 class Contactos extends StatelessWidget {
   Contactos({
     required Key key,
@@ -156,7 +156,7 @@ class Contactos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

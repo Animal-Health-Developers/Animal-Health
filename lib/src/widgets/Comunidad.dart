@@ -13,7 +13,7 @@ import './CompradeProductos.dart';
 import './CuidadosyRecomendaciones.dart';
 import './Emergencias.dart';
 import './Crearpublicaciones.dart';
-
+import '../services/auth_service.dart';
 class Comunidad extends StatelessWidget {
   Comunidad({
     required Key key,
@@ -1054,7 +1054,7 @@ class Comunidad extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

@@ -10,7 +10,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:typed_data';
-
+import '../services/auth_service.dart';
 class CrearPerfildeAnimal extends StatefulWidget {
   const CrearPerfildeAnimal({
     Key? key,
@@ -261,7 +261,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

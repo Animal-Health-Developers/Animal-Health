@@ -7,7 +7,7 @@ import './Ayuda.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import '../services/auth_service.dart';
 class Chatenlnea extends StatelessWidget {
   Chatenlnea({
     required Key key,
@@ -140,7 +140,7 @@ class Chatenlnea extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

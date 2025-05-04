@@ -14,10 +14,39 @@ import './AnimalHealth.dart';
 import './Suscripcion.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class Configuraciones extends StatelessWidget {
-  const Configuraciones({
-    required Key key,
-  }) : super(key: key);
+class Configuraciones extends StatefulWidget {
+  const Configuraciones({required Key key, required this.authService})
+    : super(key: key);
+
+  final AuthService authService;
+
+  @override
+  _ConfiguracionesState createState() => _ConfiguracionesState();
+}
+
+class _ConfiguracionesState extends State<Configuraciones> {
+  bool _audioVisualAccessibility = false;
+
+  Future<void> _logout() async {
+    try {
+      await widget.authService.cerrarSesion();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder:
+              (context) => AnimalHealth(
+                key: Key('AnimalHealth'),
+                authService: widget.authService,
+                onLoginSuccess: () {},
+              ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cerrar sesión: ${e.toString()}')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +56,9 @@ class Configuraciones extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                image: const AssetImage(
+                  'assets/images/Animal Health Fondo de Pantalla.png',
+                ),
                 fit: BoxFit.cover,
               ),
             ),
@@ -65,7 +96,7 @@ class Configuraciones extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
+                  pageBuilder: () => Home(key: Key('Home')),
                 ),
               ],
               child: Container(
@@ -75,8 +106,10 @@ class Configuraciones extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
+                  border: Border.all(
+                    width: 1.0,
+                    color: const Color(0xff000000),
+                  ),
                 ),
               ),
             ),
@@ -85,9 +118,7 @@ class Configuraciones extends StatelessWidget {
             Pin(size: 52.9, start: 9.1),
             Pin(size: 50.0, start: 49.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(),
-              ],
+              links: [PageLinkInfo()],
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
@@ -107,7 +138,7 @@ class Configuraciones extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
+                  pageBuilder: () => Ayuda(key: Key('Ayuda')),
                 ),
               ],
               child: Container(
@@ -129,7 +160,7 @@ class Configuraciones extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
+                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico')),
                 ),
               ],
               child: Container(
@@ -164,7 +195,8 @@ class Configuraciones extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
+                  pageBuilder:
+                      () => ListadeAnimales(key: Key('ListadeAnimales')),
                 ),
               ],
               child: Container(
@@ -191,7 +223,7 @@ class Configuraciones extends StatelessWidget {
                         transition: LinkTransition.Fade,
                         ease: Curves.easeOut,
                         duration: 0.3,
-                        pageBuilder: () => PRIVACIDAD(key: Key('PRIVACIDAD'),),
+                        pageBuilder: () => PRIVACIDAD(key: Key('PRIVACIDAD')),
                       ),
                     ],
                     child: Container(
@@ -199,7 +231,9 @@ class Configuraciones extends StatelessWidget {
                         color: const Color(0xff4ec8dd),
                         borderRadius: BorderRadius.circular(15.0),
                         border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
+                          width: 1.0,
+                          color: const Color(0xff000000),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xff080808),
@@ -235,7 +269,12 @@ class Configuraciones extends StatelessWidget {
                         transition: LinkTransition.Fade,
                         ease: Curves.easeOut,
                         duration: 0.3,
-                        pageBuilder: () => EditarinfodeUsuario(key: Key('EditarinfodeUsuario'), authService: AuthService(), onUpdateSuccess: () {  },),
+                        pageBuilder:
+                            () => EditarinfodeUsuario(
+                              key: Key('EditarinfodeUsuario'),
+                              authService: widget.authService,
+                              onUpdateSuccess: () {},
+                            ),
                       ),
                     ],
                     child: Container(
@@ -243,7 +282,9 @@ class Configuraciones extends StatelessWidget {
                         color: const Color(0xff4ec8dd),
                         borderRadius: BorderRadius.circular(15.0),
                         border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
+                          width: 1.0,
+                          color: const Color(0xff000000),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xff080808),
@@ -282,7 +323,10 @@ class Configuraciones extends StatelessWidget {
                         transition: LinkTransition.Fade,
                         ease: Curves.easeOut,
                         duration: 0.3,
-                        pageBuilder: () => AgregarMetodosdePago(key: Key('AgregarMetodosdePago'),),
+                        pageBuilder:
+                            () => AgregarMetodosdePago(
+                              key: Key('AgregarMetodosdePago'),
+                            ),
                       ),
                     ],
                     child: Container(
@@ -290,7 +334,9 @@ class Configuraciones extends StatelessWidget {
                         color: const Color(0xff4ec8dd),
                         borderRadius: BorderRadius.circular(15.0),
                         border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
+                          width: 1.0,
+                          color: const Color(0xff000000),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xff080808),
@@ -329,7 +375,7 @@ class Configuraciones extends StatelessWidget {
                         transition: LinkTransition.Fade,
                         ease: Curves.easeOut,
                         duration: 0.3,
-                        pageBuilder: () => Idiomas(key: Key('Idiomas'),),
+                        pageBuilder: () => Idiomas(key: Key('Idiomas')),
                       ),
                     ],
                     child: Container(
@@ -337,7 +383,9 @@ class Configuraciones extends StatelessWidget {
                         color: const Color(0xff4ec8dd),
                         borderRadius: BorderRadius.circular(15.0),
                         border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
+                          width: 1.0,
+                          color: const Color(0xff000000),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xff080808),
@@ -370,21 +418,16 @@ class Configuraciones extends StatelessWidget {
                 Pinned.fromPins(
                   Pin(start: 27.0, end: 27.0),
                   Pin(size: 49.0, end: 0.0),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => AnimalHealth(key: Key('AnimalHealth'), authService: AuthService(), onLoginSuccess: () {  },),
-                      ),
-                    ],
+                  child: GestureDetector(
+                    onTap: _logout,
                     child: Container(
                       decoration: BoxDecoration(
                         color: const Color(0xff4ec8dd),
                         borderRadius: BorderRadius.circular(15.0),
                         border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
+                          width: 1.0,
+                          color: const Color(0xff000000),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xff080808),
@@ -420,7 +463,7 @@ class Configuraciones extends StatelessWidget {
                         transition: LinkTransition.Fade,
                         ease: Curves.easeOut,
                         duration: 0.3,
-                        pageBuilder: () => Suscripcion(key: Key('Suscripcion'),),
+                        pageBuilder: () => Suscripcion(key: Key('Suscripcion')),
                       ),
                     ],
                     child: Container(
@@ -428,7 +471,9 @@ class Configuraciones extends StatelessWidget {
                         color: const Color(0xff4ec8dd),
                         borderRadius: BorderRadius.circular(15.0),
                         border: Border.all(
-                            width: 1.0, color: const Color(0xff000000)),
+                          width: 1.0,
+                          color: const Color(0xff000000),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xff080808),
@@ -468,7 +513,9 @@ class Configuraciones extends StatelessWidget {
                           color: const Color(0xff4ec8dd),
                           borderRadius: BorderRadius.circular(15.0),
                           border: Border.all(
-                              width: 1.0, color: const Color(0xff000000)),
+                            width: 1.0,
+                            color: const Color(0xff000000),
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: const Color(0xff080808),
@@ -478,22 +525,42 @@ class Configuraciones extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Pinned.fromPins(
-                        Pin(size: 238.0, start: 12.0),
-                        Pin(size: 28.0, middle: 0.5),
-                        child: Text(
-                          'Discapacidad Audiovisual',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 20,
-                            color: const Color(0xff000000),
-                            fontWeight: FontWeight.w700,
+                      Positioned(
+                        left: 12.0,
+                        top: 10.0,
+                        child: SizedBox(
+                          width: 238.0,
+                          child: Text(
+                            'Discapacidad Audiovisual',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 20,
+                              color: const Color(0xff000000),
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                            softWrap: false,
                           ),
-                          textAlign: TextAlign.center,
-                          softWrap: false,
                         ),
                       ),
-                      Container(),
+                      Positioned(
+                        right: 10.0,
+                        top: 10.0,
+                        child: Switch(
+                          value: _audioVisualAccessibility,
+                          onChanged: (bool value) {
+                            setState(() {
+                              _audioVisualAccessibility = value;
+                              // Aquí puedes implementar la lógica para activar/desactivar
+                              // las funcionalidades de accesibilidad
+                              // Por ejemplo, podrías usar un Provider para manejar el estado global
+                              // de accesibilidad en la aplicación
+                            });
+                          },
+                          activeTrackColor: Colors.lightBlueAccent,
+                          activeColor: Colors.blue,
+                        ),
+                      ),
                     ],
                   ),
                 ),

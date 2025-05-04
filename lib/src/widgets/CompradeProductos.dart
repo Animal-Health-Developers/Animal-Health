@@ -10,7 +10,7 @@ import './Carritodecompras.dart';
 import './DetallesdelProducto.dart';
 import './ComprarAhora.dart';
 import './Home.dart';
-
+import '../services/auth_service.dart';
 class CompradeProductos extends StatelessWidget {
   const CompradeProductos({
     required Key key,
@@ -143,7 +143,7 @@ class CompradeProductos extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

@@ -9,7 +9,7 @@ import './CarnetdeVacunacin.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import './EditarPerfildeAnimal.dart';
 import './FuncionesdelaApp.dart';
-
+import '../services/auth_service.dart';
 class CrearVacuna extends StatelessWidget {
   CrearVacuna({
     required Key key,
@@ -470,7 +470,7 @@ class CrearVacuna extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

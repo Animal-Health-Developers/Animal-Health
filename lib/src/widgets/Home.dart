@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
+import '../services/auth_service.dart';
 import './Ayuda.dart';
 import 'package:adobe_xd/page_link.dart';
 import './PerfilPublico.dart';
@@ -156,7 +157,7 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('Configuraciones')),
+                  pageBuilder: () => Configuraciones(key: const Key('Configuraciones'), authService: AuthService(),),
                 ),
               ],
               child: Container(

@@ -14,7 +14,7 @@ import './Emergencias.dart';
 import './Comunidad.dart';
 import './Crearpublicaciones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import '../services/auth_service.dart';
 class Alergias extends StatelessWidget {
   const Alergias({
     required Key key,
@@ -394,7 +394,7 @@ class Alergias extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

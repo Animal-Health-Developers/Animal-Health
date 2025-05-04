@@ -20,7 +20,7 @@ import 'Emergencias.dart';
 import 'Comunidad.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:video_player/video_player.dart';
-
+import '../services/auth_service.dart';
 class Crearpublicaciones extends StatefulWidget {
   const Crearpublicaciones({required Key key}) : super(key: key);
 
@@ -480,7 +480,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('Settings')),
+                  pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(

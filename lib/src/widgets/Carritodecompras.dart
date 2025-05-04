@@ -9,7 +9,7 @@ import './Elejirmetododepagoparacomprar.dart';
 import './DirecciondeEnvio.dart';
 import './Pedidos.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import '../services/auth_service.dart';
 class Carritodecompras extends StatelessWidget {
   Carritodecompras({
     required Key key,
@@ -102,7 +102,7 @@ class Carritodecompras extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
                 ),
               ],
               child: Container(
