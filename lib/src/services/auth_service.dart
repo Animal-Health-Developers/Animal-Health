@@ -1,14 +1,16 @@
 import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/user.dart' as usermodel;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final ImagePicker _picker = ImagePicker();
 
   // Tipos de errores personalizados
   static const String emailAlreadyInUse = 'email-already-in-use';
@@ -25,6 +27,7 @@ class AuthService {
     required String password,
     required String confirmPassword,
     DateTime? fechaNacimiento,
+    dynamic profileImage, // Cambiado a dynamic para manejar web/móvil
   }) async {
     try {
       // Validaciones mejoradas
@@ -77,6 +80,12 @@ class AuthService {
         );
       }
 
+      // Subir foto de perfil si se proporcionó
+      String? photoUrl;
+      if (profileImage != null) {
+        photoUrl = await _uploadProfilePhoto(profileImage, user.uid);
+      }
+
       // Actualizar displayName
       await user.updateProfile(displayName: userName);
       await user.reload();
@@ -93,7 +102,7 @@ class AuthService {
         fechaNacimiento: fechaNacimiento,
         documento: null,
         contacto: null,
-        profilePhotoUrl: null,
+        profilePhotoUrl: photoUrl,
       );
 
       await _firestore.collection('users').doc(user.uid).set(usuario.toJson());
@@ -200,15 +209,13 @@ class AuthService {
       final user = _auth.currentUser;
       if (user == null) return null;
 
-      // Obtener datos del usuario con reintentos
       DocumentSnapshot userDoc = await _getUserDataWithRetry(user.uid);
 
       if (!userDoc.exists) {
-        // Si no existe el documento, crearlo con datos básicos
         final newUser = usermodel.User(
           uid: user.uid,
           email: user.email ?? '',
-          userName: user.displayName ?? '',
+          userName: user.displayName ?? 'Usuario sin nombre',
           password: '',
           emailVerified: user.emailVerified,
           createdAt: DateTime.now(),
@@ -218,12 +225,50 @@ class AuthService {
           contacto: null,
           profilePhotoUrl: user.photoURL,
         );
-
         await _firestore.collection('users').doc(user.uid).set(newUser.toJson());
         return newUser;
       }
 
-      return usermodel.User.fromJson(userDoc.data() as Map<String, dynamic>);
+      final userData = userDoc.data();
+      if (userData == null) {
+        throw FirebaseAuthException(
+          code: 'invalid-user-data',
+          message: 'Datos de usuario no encontrados',
+        );
+      }
+
+      final Map<String, dynamic> userJson = userData as Map<String, dynamic>;
+
+      // Función para parsear fechas de diferentes formatos
+      DateTime? _parseDate(dynamic date) {
+        if (date == null) return null;
+        if (date is Timestamp) return date.toDate();
+        if (date is DateTime) return date;
+        if (date is String) {
+          try {
+            return DateTime.parse(date);
+          } catch (e) {
+            print('Error al parsear fecha: $date');
+            return null;
+          }
+        }
+        return null;
+      }
+
+      return usermodel.User(
+        uid: userJson['uid'] as String? ?? user.uid,
+        email: userJson['email'] as String? ?? user.email ?? '',
+        userName: userJson['userName'] as String? ?? user.displayName ?? 'Usuario sin nombre',
+        password: userJson['password'] as String? ?? '',
+        emailVerified: userJson['emailVerified'] as bool? ?? user.emailVerified,
+        createdAt: _parseDate(userJson['createdAt']) ?? DateTime.now(),
+        updatedAt: _parseDate(userJson['updatedAt']) ?? DateTime.now(),
+        fechaNacimiento: _parseDate(userJson['fechaNacimiento']),
+        documento: userJson['documento'] as String?,
+        contacto: userJson['contacto'] as String?,
+        profilePhotoUrl: userJson['profilePhotoUrl'] as String? ?? user.photoURL,
+      );
+
     } on FirebaseException catch (e) {
       print('Error en getCurrentUser: ${e.code} - ${e.message}');
       throw FirebaseAuthException(
@@ -288,7 +333,7 @@ class AuthService {
     required String documento,
     required String contacto,
     required String password,
-    File? profilePhoto,
+    dynamic profilePhotoUrl, // Cambiado a dynamic para manejar web/móvil
   }) async {
     try {
       final user = _auth.currentUser;
@@ -299,20 +344,32 @@ class AuthService {
         );
       }
 
-      // Subir foto de perfil si se proporcionó
-      String? photoUrl;
-      if (profilePhoto != null) {
-        photoUrl = await uploadProfilePhoto(profilePhoto, user.uid);
+      String? nuevaFotoUrl;
+
+      // Subir nueva foto de perfil si se proporcionó
+      if (profilePhotoUrl != null) {
+        try {
+          print('Iniciando subida de foto de perfil...');
+          nuevaFotoUrl = await _uploadProfilePhoto(profilePhotoUrl, user.uid);
+          print('Foto de perfil subida correctamente. URL: $nuevaFotoUrl');
+        } catch (e) {
+          print('Error al subir foto de perfil: $e');
+          throw FirebaseAuthException(
+            code: 'photo-upload-failed',
+            message: 'Error al subir la foto de perfil: ${e.toString()}',
+          );
+        }
       }
 
       // Preparar datos de actualización
       final updateData = <String, dynamic>{
+        'email': email,
         'userName': userName,
-        'fechaNacimiento': fechaNacimiento,
+        'fechaNacimiento': fechaNacimiento != null ? Timestamp.fromDate(fechaNacimiento) : null,
         'documento': documento,
         'contacto': contacto,
         'updatedAt': FieldValue.serverTimestamp(),
-        if (photoUrl != null) 'profilePhotoUrl': photoUrl,
+        if (nuevaFotoUrl != null) 'profilePhotoUrl': nuevaFotoUrl,
       };
 
       // Actualizar email si es diferente
@@ -320,8 +377,6 @@ class AuthService {
         try {
           await user.updateEmail(email);
           await user.sendEmailVerification();
-          updateData['email'] = email;
-          updateData['emailVerified'] = false;
         } on FirebaseAuthException catch (e) {
           if (e.code == 'requires-recent-login') {
             throw FirebaseAuthException(
@@ -348,24 +403,20 @@ class AuthService {
         }
       }
 
-      // Actualizar en Firestore con manejo de reintentos
+      // Actualizar en Firestore
+      print('Actualizando datos en Firestore...');
       await _updateUserDataWithRetry(user.uid, updateData);
+      print('Datos actualizados correctamente en Firestore');
 
       return true;
     } on FirebaseAuthException catch (e) {
       print('Error en actualizarUsuario (Auth): ${e.code} - ${e.message}');
       rethrow;
-    } on FirebaseException catch (e) {
-      print('Error en actualizarUsuario (Firestore): ${e.code} - ${e.message}');
-      throw FirebaseAuthException(
-        code: 'firestore-error',
-        message: 'Error al actualizar datos: ${e.message}',
-      );
     } catch (e) {
       print('Error desconocido en actualizarUsuario: $e');
       throw FirebaseAuthException(
         code: 'update-error',
-        message: 'Error al actualizar usuario',
+        message: 'Error al actualizar usuario: ${e.toString()}',
       );
     }
   }
@@ -416,21 +467,66 @@ class AuthService {
       print('Error desconocido en reautenticarUsuario: $e');
       throw FirebaseAuthException(
         code: 'reauth-error',
-        message: 'Error durante la reautenticación',
+        message: 'Error durante la reautenticación: ${e.toString()}',
       );
     }
   }
 
-  Future<String?> uploadProfilePhoto(File imageFile, String userId) async {
+  Future<String> _uploadProfilePhoto(dynamic imageFile, String userId) async {
     try {
-      final ref = _storage.ref().child('profile_photos/$userId.jpg');
-      await ref.putFile(imageFile);
-      return await ref.getDownloadURL();
+      print('Subiendo foto de perfil para usuario $userId...');
+
+      // Crear referencia al archivo en Storage
+      final Reference ref = _storage.ref()
+          .child('profile_photos')
+          .child('$userId-${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      // Subir el archivo según la plataforma
+      if (kIsWeb) {
+        // Para web (XFile)
+        final bytes = await imageFile.readAsBytes();
+        final metadata = SettableMetadata(contentType: 'image/jpeg');
+        final UploadTask uploadTask = ref.putData(bytes, metadata);
+        final TaskSnapshot snapshot = await uploadTask;
+      } else {
+        // Para móvil (File)
+        final UploadTask uploadTask = ref.putFile(imageFile as File);
+        final TaskSnapshot snapshot = await uploadTask;
+      }
+
+      // Obtener URL de descarga
+      final String downloadUrl = await ref.getDownloadURL();
+      print('Foto subida correctamente. URL: $downloadUrl');
+
+      return downloadUrl;
     } catch (e) {
-      print('Error al subir foto de perfil: $e');
+      print('Error en _uploadProfilePhoto: $e');
       throw FirebaseAuthException(
         code: 'upload-photo-error',
-        message: 'Error al subir la foto de perfil',
+        message: 'Error al subir la foto de perfil: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<dynamic> pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (image == null) return null;
+
+      if (kIsWeb) {
+        return image; // Devolver XFile para web
+      } else {
+        return File(image.path); // Devolver File para móvil
+      }
+    } catch (e) {
+      print('Error al seleccionar imagen: $e');
+      throw FirebaseAuthException(
+        code: 'image-pick-error',
+        message: 'Error al seleccionar la imagen: ${e.toString()}',
       );
     }
   }

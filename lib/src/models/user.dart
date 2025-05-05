@@ -7,13 +7,12 @@ class User {
   final String uid;
   final String email;
   final String userName;
-  @JsonKey(includeToJson: false) // No incluir en el JSON al enviar a Firestore
   final String password;
   final bool emailVerified;
   final DateTime createdAt;
   final DateTime updatedAt;
   final String? profilePhotoUrl;
-  final DateTime? fechaNacimiento; // Cambiado a DateTime
+  final DateTime? fechaNacimiento;
   final String? documento;
   final String? contacto;
 
@@ -61,5 +60,9 @@ class User {
       documento: documento ?? this.documento,
       contacto: contacto ?? this.contacto,
     );
+  }
+
+  User updateProfilePhoto(String newPhotoUrl) {
+    return this.copyWith(profilePhotoUrl: newPhotoUrl);
   }
 }

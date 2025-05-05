@@ -27,6 +27,7 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
   'uid': instance.uid,
   'email': instance.email,
   'userName': instance.userName,
+  'password': instance.password,
   'emailVerified': instance.emailVerified,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),

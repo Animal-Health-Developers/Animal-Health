@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import '../services/auth_service.dart';
-import './Componente83.dart';
 import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
 import './PerfilPublico.dart';
@@ -112,19 +111,8 @@ class TratamientodeDatos extends StatelessWidget {
                     softWrap: false,
                   ),
                 ),
-                Align(
-                  alignment: Alignment(-0.437, 1.0),
-                  child: SizedBox(
-                    width: 53.0,
-                    height: 30.0,
-                    child: Componente83(key: Key('Componente83'),),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 53.0, end: 24.0),
-                  Pin(size: 30.0, end: 0.0),
-                  child: Componente83(key: Key('Componente83'),),
-                ),
+
+
                 Transform.translate(
                   offset: Offset(227.0, 513.0),
                   child: Text(

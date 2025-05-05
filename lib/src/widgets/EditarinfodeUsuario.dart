@@ -10,7 +10,6 @@ import './Home.dart';
 import './Ayuda.dart';
 import './Configuracion.dart';
 import '../services/auth_service.dart';
-import '../models/user.dart' as user_model;
 
 class EditarinfodeUsuario extends StatefulWidget {
   final AuthService authService;
@@ -36,12 +35,11 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  File? _selectedImage;
+  dynamic _selectedImage; // Cambiado a dynamic para manejar web/móvil
   bool _isLoading = false;
   bool _isUpdating = false;
   String? _errorMessage;
   String? _profilePhotoUrl;
-  user_model.User? _currentUser;
   DateTime? _selectedDate;
 
   @override
@@ -83,11 +81,9 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
 
       if (user != null) {
         setState(() {
-          _currentUser = user;
           _emailController.text = firebaseUser.email ?? user.email ?? '';
           _usernameController.text = user.userName ?? '';
 
-          // Manejar la fecha de nacimiento como DateTime
           if (user.fechaNacimiento != null) {
             _selectedDate = user.fechaNacimiento;
             _fechaNacimientoController.text = DateFormat('dd/MM/yyyy').format(user.fechaNacimiento!);
@@ -96,7 +92,11 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
           _documentoController.text = user.documento ?? '';
           _contactoController.text = user.contacto ?? '';
           _profilePhotoUrl = user.profilePhotoUrl;
+
           print('Datos cargados: Email: ${_emailController.text}, Username: ${_usernameController.text}');
+          if (_profilePhotoUrl != null) {
+            print('URL de foto de perfil: $_profilePhotoUrl');
+          }
         });
       } else {
         setState(() {
@@ -138,10 +138,11 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
 
   Future<void> _pickImage() async {
     try {
-      final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
+      final image = await widget.authService.pickImage();
+      if (image != null) {
         setState(() {
-          _selectedImage = File(pickedFile.path);
+          _selectedImage = image;
+          _profilePhotoUrl = null;
         });
       }
     } catch (e) {
@@ -166,26 +167,35 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
     });
 
     try {
+      print('Iniciando actualización de usuario...');
+      print('Tiene nueva imagen: ${_selectedImage != null}');
+
       final userUpdated = await widget.authService.actualizarUsuario(
         email: _emailController.text.trim(),
         userName: _usernameController.text.trim(),
-        fechaNacimiento: _selectedDate, // Ahora enviamos el DateTime directamente
+        fechaNacimiento: _selectedDate,
         documento: _documentoController.text.trim(),
         contacto: _contactoController.text.trim(),
         password: _passwordController.text.trim(),
-        profilePhoto: _selectedImage,
+        profilePhotoUrl: _selectedImage,
       );
 
       if (userUpdated) {
+        print('Usuario actualizado correctamente');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Información actualizada exitosamente'),
             backgroundColor: Colors.green,
           ),
         );
+        await _loadUserData();
         widget.onUpdateSuccess();
+      } else {
+        print('La actualización del usuario falló');
+        setState(() => _errorMessage = 'Error al actualizar los datos');
       }
     } on FirebaseAuthException catch (e) {
+      print('Error de FirebaseAuth: ${e.code} - ${e.message}');
       setState(() => _errorMessage = _getErrorMessage(e.code));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -194,6 +204,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
         ),
       );
     } catch (e) {
+      print('Error desconocido al actualizar usuario: $e');
       setState(() => _errorMessage = 'Error durante la actualización: ${e.toString()}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -218,6 +229,8 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
         return 'Requiere autenticación reciente';
       case 'weak-password':
         return 'Contraseña demasiado débil';
+      case 'photo-upload-failed':
+        return 'Error al subir la foto de perfil';
       default:
         return 'Error durante la actualización';
     }
@@ -269,7 +282,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                 width: 40,
                 height: 40,
                 child: Image.asset(
-                  imageAsset,
+                  'assets/images/$imageAsset',
                   width: 40,
                   height: 40,
                   errorBuilder: (context, error, stackTrace) => Icon(Icons.error),
@@ -283,52 +296,68 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
   }
 
   Widget _buildProfileImage() {
-    if (_selectedImage != null) {
-      if (kIsWeb) {
+    try {
+      if (_selectedImage != null) {
+        if (kIsWeb) {
+          // Para web (XFile)
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: Image.network(
+              _selectedImage.path,
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+            ),
+          );
+        } else {
+          // Para móvil (File)
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: Image.file(
+              _selectedImage,
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+            ),
+          );
+        }
+      } else if (_profilePhotoUrl != null && _profilePhotoUrl!.isNotEmpty) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(50),
           child: Image.network(
-            _selectedImage!.path,
+            _profilePhotoUrl!,
             width: 100,
             height: 100,
             fit: BoxFit.cover,
-          ),
-        );
-      } else {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(50),
-          child: Image.file(
-            _selectedImage!,
-            width: 100,
-            height: 100,
-            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                      : null,
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
           ),
         );
       }
-    } else if (_profilePhotoUrl != null && _profilePhotoUrl!.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(50),
-        child: Image.network(
-          _profilePhotoUrl!,
-          width: 100,
-          height: 100,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(
-              Icons.person,
-              size: 50,
-              color: Colors.black,
-            );
-          },
-        ),
-      );
-    } else {
-      return Icon(
-        Icons.add_a_photo,
-        size: 50,
-        color: Colors.black,
-      );
+      return _buildDefaultAvatar();
+    } catch (e) {
+      print('Error al cargar imagen de perfil: $e');
+      return _buildDefaultAvatar();
     }
+  }
+
+  Widget _buildDefaultAvatar() {
+    return Icon(
+      Icons.person,
+      size: 50,
+      color: Colors.black,
+    );
   }
 
   @override
@@ -422,7 +451,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
+                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService()),
                 ),
               ],
               child: Container(
@@ -447,7 +476,6 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    // Foto de perfil
                     GestureDetector(
                       onTap: _isUpdating ? null : _pickImage,
                       child: Stack(
@@ -460,25 +488,30 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                                 ? CircularProgressIndicator()
                                 : _buildProfileImage(),
                           ),
+                          if (!_isUpdating && (_selectedImage == null && _profilePhotoUrl == null))
+                            Icon(Icons.add_a_photo, size: 30, color: Colors.black),
                         ],
                       ),
                     ),
                     SizedBox(height: 30),
-
-                    // Email (solo lectura)
                     _buildTextField(
                       labelText: 'Correo Electrónico',
                       controller: _emailController,
-                      imageAsset: 'assets/images/@.png',
-                      validator: (value) => null,
-                      readOnly: true,
+                      imageAsset: '@.png',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Ingrese su correo electrónico';
+                        }
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          return 'Correo electrónico inválido';
+                        }
+                        return null;
+                      },
                     ),
-
-                    // Nombre de Usuario
                     _buildTextField(
                       labelText: 'Nombre de Usuario',
                       controller: _usernameController,
-                      imageAsset: 'assets/images/nombreusuario.png',
+                      imageAsset: 'nombreusuario.png',
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Ingrese su nombre de usuario';
@@ -489,12 +522,10 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                         return null;
                       },
                     ),
-
-                    // Fecha de Nacimiento (ahora con selector de fecha)
                     _buildTextField(
                       labelText: 'Fecha de Nacimiento',
                       controller: _fechaNacimientoController,
-                      imageAsset: 'assets/images/fechanacimientopersona.png',
+                      imageAsset: 'fechanacimientopersona.png',
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Ingrese su fecha de nacimiento';
@@ -504,12 +535,10 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                       readOnly: true,
                       onTap: () => _selectDate(context),
                     ),
-
-                    // Documento
                     _buildTextField(
                       labelText: 'Número de Documento',
                       controller: _documentoController,
-                      imageAsset: 'assets/images/id.png',
+                      imageAsset: 'id.png',
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Ingrese su documento';
@@ -518,12 +547,10 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                       },
                       keyboardType: TextInputType.number,
                     ),
-
-                    // Contacto
                     _buildTextField(
                       labelText: 'Número de Contacto',
                       controller: _contactoController,
-                      imageAsset: 'assets/images/numerocontacto.png',
+                      imageAsset: 'numerocontacto.png',
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Ingrese su número de contacto';
@@ -532,12 +559,10 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                       },
                       keyboardType: TextInputType.phone,
                     ),
-
-                    // Nueva Contraseña
                     _buildTextField(
                       labelText: 'Nueva Contraseña (opcional)',
                       controller: _passwordController,
-                      imageAsset: 'assets/images/password.png',
+                      imageAsset: 'password.png',
                       obscureText: true,
                       validator: (value) {
                         if (value != null && value.isNotEmpty && value.length < 8) {
@@ -546,12 +571,10 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                         return null;
                       },
                     ),
-
-                    // Confirmar Contraseña
                     _buildTextField(
                       labelText: 'Confirmar Contraseña',
                       controller: _confirmPasswordController,
-                      imageAsset: 'assets/images/password.png',
+                      imageAsset: 'password.png',
                       obscureText: true,
                       validator: (value) {
                         if (_passwordController.text.isNotEmpty &&
@@ -564,7 +587,6 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                         return null;
                       },
                     ),
-
                     if (_errorMessage != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 20),
@@ -578,8 +600,6 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
                           ),
                         ),
                       ),
-
-                    // Botón Guardar Cambios
                     GestureDetector(
                       onTap: _isUpdating ? null : _updateUser,
                       child: Stack(
