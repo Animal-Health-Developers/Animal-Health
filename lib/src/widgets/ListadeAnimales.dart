@@ -10,6 +10,8 @@ import './CrearPerfildeAnimales.dart';
 import './EditarPerfildeAnimal.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ListadeAnimales extends StatefulWidget {
   const ListadeAnimales({Key? key}) : super(key: key);
@@ -21,6 +23,7 @@ class ListadeAnimales extends StatefulWidget {
 class _ListadeAnimalesState extends State<ListadeAnimales> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Widget _buildPlaceholder() {
     return Container(
@@ -44,8 +47,30 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
         color: Colors.white.withOpacity(0.7),
         border: Border.all(color: Colors.red, width: 2),
       ),
-      child: Icon(Icons.error, size: 30, color: Colors.red),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error, size: 30, color: Colors.red),
+          Text('Error', style: TextStyle(fontSize: 10, color: Colors.red)),
+        ],
+      ),
     );
+  }
+
+  Future<String?> _getFreshDownloadUrl(String url) async {
+    try {
+      // Extraemos la ruta del archivo desde la URL
+      final uri = Uri.parse(url);
+      final path = uri.path.split('/o/').last.split('?').first;
+      final decodedPath = Uri.decodeFull(path);
+
+      // Obtenemos nueva URL de descarga
+      final ref = _storage.ref(decodedPath);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      print('Error al obtener nueva URL: $e');
+      return null;
+    }
   }
 
   Widget _buildAnimalImage(String? imageUrl) {
@@ -53,94 +78,124 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
       return _buildPlaceholder();
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(15),
-      child: Image.network(
-        imageUrl,
-        width: 100,
-        height: 100,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: CircularProgressIndicator(
-              value:
-                  loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                      : null,
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) => _buildErrorPlaceholder(),
-      ),
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      width: 100,
+      height: 100,
+      fit: BoxFit.cover,
+      memCacheWidth: 200,
+      memCacheHeight: 200,
+      placeholder: (context, url) => _buildPlaceholder(),
+      errorWidget: (context, url, error) {
+        print('Error al cargar imagen (intentando nueva URL): $error');
+
+        // Intentamos obtener una nueva URL si falla la carga
+        return FutureBuilder<String?>(
+          future: _getFreshDownloadUrl(url),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return _buildPlaceholder();
+            }
+
+            if (snapshot.hasData && snapshot.data != null) {
+              return CachedNetworkImage(
+                imageUrl: snapshot.data!,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => _buildPlaceholder(),
+                errorWidget: (context, url, error) {
+                  print('Error persistente al cargar imagen: $error');
+                  return _buildErrorPlaceholder();
+                },
+              );
+            }
+
+            return _buildErrorPlaceholder();
+          },
+        );
+      },
     );
   }
 
   Widget _buildAnimalItem(DocumentSnapshot animal, String userId) {
-    final data = animal.data() as Map<String, dynamic>;
-    final fotoUrl = data['fotoPerfilUrl']; // Usando el campo correcto
+    try {
+      final data = animal.data() as Map<String, dynamic>;
+      final fotoUrl = data['fotoPerfilUrl'] ?? '';
+      final nombre = data['nombre'] ?? 'Sin nombre';
+      final especie = data['especie'] ?? 'Sin especie';
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => EditarPerfildeAnimal(
-                  key: Key('EditarPerfildeAnimal_${animal.id}'),
-                  animalId: animal.id,
-                ),
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EditarPerfildeAnimal(
+                key: Key('EditarPerfildeAnimal_${animal.id}'),
+                animalId: animal.id,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0x7a54d1e0),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 6,
+                offset: Offset(0, 3),
+              ),
+            ],
           ),
-        );
-      },
-      child: Container(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                margin: EdgeInsets.only(bottom: 8),
+                child: _buildAnimalImage(fotoUrl),
+              ),
+              Text(
+                nombre,
+                style: const TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 18,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                especie,
+                style: const TextStyle(
+                  fontFamily: 'Comic Sans MS',
+                  fontSize: 14,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Error al construir ítem de animal: $e');
+      return Container(
         decoration: BoxDecoration(
-          color: const Color(0x7a54d1e0),
+          color: Colors.red.withOpacity(0.3),
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.white, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 6,
-              offset: Offset(0, 3),
-            ),
-          ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Imagen más grande y con bordes redondeados
-            Container(
-              width: 100,
-              height: 100,
-              margin: EdgeInsets.only(bottom: 8),
-              child: _buildAnimalImage(fotoUrl),
-            ),
-            Text(
-              data['nombre'] ?? 'Sin nombre',
-              style: const TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 18,
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              data['especie'] ?? 'Sin especie',
-              style: const TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 14,
-                color: Colors.black,
-              ),
-            ),
-          ],
+        child: Center(
+          child: Text('Error al cargar',
+              style: TextStyle(color: Colors.white)),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -250,8 +305,7 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => PerfilPublico(key: const Key('PerfilPublico')),
+                  pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')),
                 ),
               ],
               child: Container(
@@ -276,11 +330,10 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => Configuraciones(
-                        key: const Key('Settings'),
-                        authService: AuthService(),
-                      ),
+                  pageBuilder: () => Configuraciones(
+                    key: const Key('Settings'),
+                    authService: AuthService(),
+                  ),
                 ),
               ],
               child: Container(
@@ -331,17 +384,29 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
                 // Lista de animales con espacio para scroll
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
-                    stream:
-                        userId != null
-                            ? _firestore
-                                .collection('users')
-                                .doc(userId)
-                                .collection('animals')
-                                .snapshots()
-                            : Stream.empty(),
+                    stream: userId != null
+                        ? _firestore
+                        .collection('users')
+                        .doc(userId)
+                        .collection('animals')
+                        .snapshots()
+                        : Stream.empty(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Error: ${snapshot.error}',
+                            style: const TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
                       }
 
                       final animals = snapshot.data?.docs;
@@ -358,15 +423,16 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
                           ),
                         );
                       }
+
                       return GridView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 15,
-                              mainAxisSpacing: 15,
-                              childAspectRatio: 0.8,
-                            ),
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 15,
+                          mainAxisSpacing: 15,
+                          childAspectRatio: 0.8,
+                        ),
                         itemCount: animals?.length ?? 0,
                         itemBuilder: (context, index) {
                           return _buildAnimalItem(animals![index], userId!);
@@ -386,10 +452,9 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder:
-                                  (context) => CrearPerfildeAnimal(
-                                    key: const Key('CrearPerfildeAnimal'),
-                                  ),
+                              builder: (context) => CrearPerfildeAnimal(
+                                key: const Key('CrearPerfildeAnimal'),
+                              ),
                             ),
                           );
                         },
