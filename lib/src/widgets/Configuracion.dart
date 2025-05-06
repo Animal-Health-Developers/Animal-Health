@@ -553,7 +553,6 @@ class _ConfiguracionesState extends State<Configuraciones> {
                               _audioVisualAccessibility = value;
                               // Aquí falta implemetar el metodo y la logica para activa y desactivar
                               //el modo de asistencia para personas con dispaciad audiovisual
-
                             });
                           },
                           activeTrackColor: Colors.lightGreenAccent,
