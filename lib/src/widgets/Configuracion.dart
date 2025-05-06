@@ -202,7 +202,7 @@ class _ConfiguracionesState extends State<Configuraciones> {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage(''),
+                    image: const AssetImage('assets/images/listaanimales.png'),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -544,21 +544,20 @@ class _ConfiguracionesState extends State<Configuraciones> {
                         ),
                       ),
                       Positioned(
-                        right: 10.0,
-                        top: 10.0,
+                        right: 15.0,
+                        top: 5.0,
                         child: Switch(
                           value: _audioVisualAccessibility,
                           onChanged: (bool value) {
                             setState(() {
                               _audioVisualAccessibility = value;
-                              // Aquí puedes implementar la lógica para activar/desactivar
-                              // las funcionalidades de accesibilidad
-                              // Por ejemplo, podrías usar un Provider para manejar el estado global
-                              // de accesibilidad en la aplicación
+                              // Aquí falta implemetar el metodo y la logica para activa y desactivar
+                              //el modo de asistencia para personas con dispaciad audiovisual
+
                             });
                           },
-                          activeTrackColor: Colors.lightBlueAccent,
-                          activeColor: Colors.blue,
+                          activeTrackColor: Colors.lightGreenAccent,
+                          activeColor: Colors.lightGreen,
                         ),
                       ),
                     ],

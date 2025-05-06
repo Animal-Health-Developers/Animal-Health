@@ -217,7 +217,6 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
               ),
             ),
           ),
-
           // Logo central superior
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
