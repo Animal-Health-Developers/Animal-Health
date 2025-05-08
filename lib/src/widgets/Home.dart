@@ -19,9 +19,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
 
 class Home extends StatelessWidget {
-  const Home({
-    required Key key,
-  }) : super(key: key);
+  const Home({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -157,7 +155,10 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('Configuraciones'), authService: AuthService(),),
+                  pageBuilder: () => Configuraciones(
+                    key: const Key('Configuraciones'),
+                    authService: AuthService(),
+                  ),
                 ),
               ],
               child: Container(
@@ -380,9 +381,9 @@ class Home extends StatelessWidget {
     final mediaUrl = publicacion['imagenUrl'] as String?;
     final isVideo = (publicacion['esVideo'] as bool?) ?? false;
     final hasValidMedia = mediaUrl != null && mediaUrl.isNotEmpty && mediaUrl.startsWith('http');
-
-    // Obtener el ID del usuario actual
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    final postOwnerId = publicacion['usuarioId'] as String?;
+    final isOwnPost = currentUserId != null && postOwnerId == currentUserId;
     final likes = publicacion['likes'] as int? ?? 0;
     final likedBy = List<String>.from(publicacion['likedBy'] ?? []);
 
@@ -394,6 +395,7 @@ class Home extends StatelessWidget {
         border: Border.all(width: 1.0, color: const Color(0xe3000000)),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Encabezado de la publicación
           Padding(
@@ -412,7 +414,8 @@ class Home extends StatelessWidget {
                   ],
                   child: CircleAvatar(
                     radius: 20,
-                    backgroundImage: publicacion['usuarioFoto'] != null && publicacion['usuarioFoto'].toString().isNotEmpty
+                    backgroundImage: publicacion['usuarioFoto'] != null &&
+                        publicacion['usuarioFoto'].toString().isNotEmpty
                         ? NetworkImage(publicacion['usuarioFoto'])
                         : const AssetImage('assets/images/perfilusuario.jpeg') as ImageProvider,
                   ),
@@ -425,7 +428,7 @@ class Home extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        publicacion['usuarioNombre'] ?? 'Nombre de Usuario',
+                        publicacion['usuarioNombre'] ?? 'Usuario Anónimo',
                         style: const TextStyle(
                           fontFamily: 'Comic Sans MS',
                           fontSize: 16,
@@ -452,35 +455,62 @@ class Home extends StatelessWidget {
                     ],
                   ),
                 ),
+
+                // Botón de opciones (solo visible para publicaciones propias)
+                if (isOwnPost)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.black),
+                    onSelected: (value) {
+                      if (value == 'eliminar') {
+                        _eliminarPublicacion(publicacion.id, context);
+                      } else if (value == 'editar') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Funcionalidad de edición en desarrollo')),
+                        );
+                      }
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem<String>(
+                        value: 'editar',
+                        child: Text('Editar publicación'),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'eliminar',
+                        child: Text('Eliminar publicación'),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
 
-          // Contenido multimedia - Ahora con tamaño proporcional
+          // Contenido multimedia
           if (hasValidMedia)
-            AspectRatio(
-              aspectRatio: 1, // Relación 1:1 (cuadrado)
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: isVideo
-                    ? _VideoPlayerWidget(videoUrl: mediaUrl)
-                    : ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: CachedNetworkImage(
-                    imageUrl: mediaUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(const Color(0xff4ec8dd)),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final maxWidth = constraints.maxWidth;
+                return Container(
+                  width: maxWidth,
+                  child: AspectRatio(
+                    aspectRatio: isVideo ? 16/9 : 1, // Relación de aspecto para video o imagen
+                    child: isVideo
+                        ? _VideoPlayerWidget(videoUrl: mediaUrl!)
+                        : ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: CachedNetworkImage(
+                        imageUrl: mediaUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(const Color(0xff4ec8dd)),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => _buildImageErrorWidget(),
                       ),
                     ),
-                    errorWidget: (context, url, error) => _buildImageErrorWidget(),
                   ),
-                ),
-              ),
+                );
+              },
             )
           else
             _buildNoImageWidget(),
@@ -497,13 +527,14 @@ class Home extends StatelessWidget {
               ),
             ),
           ),
+
           // Botones (like, comentario, compartir, guardar)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // Botón de Like simplificado
+                // Botón de Like
                 GestureDetector(
                   onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, context),
                   child: Row(
@@ -519,6 +550,7 @@ class Home extends StatelessWidget {
                         style: const TextStyle(
                           fontFamily: 'Comic Sans MS',
                           fontSize: 16,
+                          color: Colors.black,
                         ),
                       ),
                     ],
@@ -613,38 +645,44 @@ class Home extends StatelessWidget {
   }
 
   Widget _buildImageErrorWidget() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.error_outline, color: Colors.red, size: 50),
-        const SizedBox(height: 10),
-        const Text(
-          'Error al cargar el contenido',
-          style: TextStyle(
-            fontFamily: 'Comic Sans MS',
-            fontSize: 16,
-            color: Colors.red,
+    return Container(
+      height: 200,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red, size: 50),
+          const SizedBox(height: 10),
+          const Text(
+            'Error al cargar el contenido',
+            style: TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 16,
+              color: Colors.red,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildNoImageWidget() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
-        const SizedBox(height: 10),
-        const Text(
-          'Contenido no disponible',
-          style: TextStyle(
-            fontFamily: 'Comic Sans MS',
-            fontSize: 16,
-            color: Colors.grey,
+    return Container(
+      height: 200,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+          const SizedBox(height: 10),
+          const Text(
+            'Contenido no disponible',
+            style: TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 16,
+              color: Colors.grey,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -711,6 +749,29 @@ class Home extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al guardar: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _eliminarPublicacion(String publicacionId, BuildContext context) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('publicaciones')
+          .doc(publicacionId)
+          .delete();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Publicación eliminada correctamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al eliminar: $e'),
           backgroundColor: Colors.red,
         ),
       );

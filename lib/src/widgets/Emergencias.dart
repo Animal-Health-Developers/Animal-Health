@@ -83,6 +83,7 @@ class Emergencias extends StatelessWidget {
               ),
             ),
           ),
+          //Barra de busqueda
           Pinned.fromPins(
             Pin(size: 307.0, end: 33.0),
             Pin(size: 45.0, middle: 0.1995),
@@ -125,6 +126,7 @@ class Emergencias extends StatelessWidget {
               ],
             ),
           ),
+          //Mini foto de perfil
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
             Pin(size: 60.0, middle: 0.1947),
