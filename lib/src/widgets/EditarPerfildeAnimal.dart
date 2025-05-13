@@ -362,7 +362,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                     // Contenedor para el botón y la foto
                     Stack(
                       children: [
-                        // Foto de perfil CENTRADA
+                        // Foto de perfil
                         Align(
                           alignment: Alignment.center,
                           child: GestureDetector(
@@ -407,7 +407,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                           ),
                         ),
 
-                        // Botón de funciones PEGADO AL BORDE IZQUIERDO
+                        // Botón de funciones
                         Positioned(
                           left: 0,
                           top: 0,
