@@ -348,12 +348,12 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
             ),
           ),
 
-          //foto de perfil y formulario
+          //foto de perfil  boton de funciones y formulario
           Positioned(
             top: 120,
             left: 30,
             right: 30,
-            bottom: 27,
+            bottom: 0,
             child: Form(
               key: _formKey,
               child: SingleChildScrollView(

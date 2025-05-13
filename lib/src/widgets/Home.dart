@@ -610,8 +610,8 @@ class Home extends StatelessWidget {
               width: double.infinity, // This ensures it takes the parent's width
               child:
               isVideo
-                  ? _VideoPlayerWidget(videoUrl: mediaUrl) // Added null check assertion
-                  : _buildImageWidget(mediaUrl, context), // Added null check assertion
+                  ? _VideoPlayerWidget(videoUrl: mediaUrl!) // Added null check assertion
+                  : _buildImageWidget(mediaUrl!, context), // Added null check assertion
             )
           else
             _buildNoImageWidget(),
