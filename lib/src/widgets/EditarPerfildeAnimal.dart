@@ -6,6 +6,7 @@ import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
+import './FuncionesdelaApp.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -346,6 +347,8 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
               ),
             ),
           ),
+
+          //foto de perfil y formulario
           Positioned(
             top: 120,
             left: 30,
@@ -356,54 +359,82 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    // Foto de perfil
-                    GestureDetector(
-                      onTap: _isUploading ? null : _pickImage,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.grey[200],
-                            child: _isUploading
-                                ? CircularProgressIndicator()
-                                : _imageBytes != null
-                                ? ClipOval(
-                              child: Image.memory(
-                                _imageBytes!,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Icon(Icons.error, size: 40, color: Colors.red);
-                                },
-                              ),
-                            )
-                                : _imageUrl != null
-                                ? ClipOval(
-                              child: Image.network(
-                                _imageUrl!,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Icon(Icons.error, size: 40, color: Colors.red);
-                                },
-                                loadingBuilder: (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return CircularProgressIndicator();
-                                },
-                              ),
-                            )
-                                : Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+                    // Contenedor para el botón y la foto
+                    Stack(
+                      children: [
+                        // Foto de perfil CENTRADA
+                        Align(
+                          alignment: Alignment.center,
+                          child: GestureDetector(
+                            onTap: _isUploading ? null : _pickImage,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: 50,
+                                  backgroundColor: Colors.grey[200],
+                                  child: _isUploading
+                                      ? const CircularProgressIndicator()
+                                      : _imageBytes != null
+                                      ? ClipOval(
+                                    child: Image.memory(
+                                      _imageBytes!,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.error, size: 40, color: Colors.red),
+                                    ),
+                                  )
+                                      : _imageUrl != null
+                                      ? ClipOval(
+                                    child: Image.network(
+                                      _imageUrl!,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.error, size: 40, color: Colors.red),
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return const CircularProgressIndicator();
+                                      },
+                                    ),
+                                  )
+                                      : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+                                ),
+                                if (_isUploading) const CircularProgressIndicator(),
+                              ],
+                            ),
                           ),
-                          if (_isUploading)
-                            CircularProgressIndicator(),
-                        ],
-                      ),
+                        ),
+
+                        // Botón de funciones PEGADO AL BORDE IZQUIERDO
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => FuncionesdelaApp(key: Key('FuncionesdelaApp'))),
+                              ),
+                              child: Container(
+                                width: 60,
+                                height: 70,
+                                decoration: const BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage('assets/images/funciones.png'),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 30),
-
                     // Nombre
                     Container(
                       height: 60,

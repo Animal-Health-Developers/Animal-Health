@@ -79,8 +79,8 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
 
       if (user != null) {
         setState(() {
-          _emailController.text = firebaseUser.email ?? user.email ?? '';
-          _usernameController.text = user.userName ?? '';
+          _emailController.text = firebaseUser.email ?? user.email;
+          _usernameController.text = user.userName;
 
           if (user.fechaNacimiento != null) {
             _selectedDate = user.fechaNacimiento;

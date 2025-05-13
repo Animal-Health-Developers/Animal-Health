@@ -487,11 +487,11 @@ class AuthService {
         final bytes = await imageFile.readAsBytes();
         final metadata = SettableMetadata(contentType: 'image/jpeg');
         final UploadTask uploadTask = ref.putData(bytes, metadata);
-        final TaskSnapshot snapshot = await uploadTask;
+        final TaskSnapshot _ = await uploadTask;
       } else {
         // Para móvil (File)
         final UploadTask uploadTask = ref.putFile(imageFile as File);
-        final TaskSnapshot snapshot = await uploadTask;
+        final TaskSnapshot _ = await uploadTask;
       }
 
       // Obtener URL de descarga

@@ -21,6 +21,8 @@ import 'Comunidad.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:video_player/video_player.dart';
 import '../services/auth_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 class Crearpublicaciones extends StatefulWidget {
   const Crearpublicaciones({required Key key}) : super(key: key);
 
@@ -37,11 +39,13 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
   String? _fileExtension;
   final TextEditingController _captionController = TextEditingController();
   VideoPlayerController? _videoController;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void dispose() {
     _captionController.dispose();
     _videoController?.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -122,8 +126,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
   }
 
   Future<String> _getWebVideoUrl(Uint8List bytes) async {
-    // Implementación para web - necesitarías subir el video temporalmente o usar Blob
-    return 'https://example.com/temp-video.mp4'; // Esto es un placeholder
+    return 'https://example.com/temp-video.mp4';
   }
 
   Future<void> _guardarPublicacionEnFirestore(String mediaUrl) async {
@@ -137,20 +140,22 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       }
 
       final userDoc = await FirebaseFirestore.instance
-          .collection('usuarios')
+          .collection('users')
           .doc(user.uid)
           .get();
 
       await FirebaseFirestore.instance.collection('publicaciones').add({
         'usuarioId': user.uid,
-        'usuarioNombre': user.displayName ?? 'Usuario Anónimo',
-        'usuarioFoto': userDoc.data()?['fotoPerfil'] ?? '',
+        'usuarioNombre': (userDoc.data())?['displayName']?.toString() ??
+            user.displayName ??
+            'Usuario Anónimo',
+        'usuarioFoto': (userDoc.data())?['profilePhotoUrl']?.toString() ?? '',
         'imagenUrl': mediaUrl,
-        'esVideo': _fileExtension == '.mp4' || _fileExtension == '.avi', // Asegúrate de incluir esto
+        'esVideo': _fileExtension == '.mp4' || _fileExtension == '.avi',
         'caption': _captionController.text,
         'fecha': Timestamp.now(),
         'likes': 0,
-        "likedBy": [], // array de userIDs
+        "likedBy": [],
         'comentarios': 0,
         'compartir': 0,
         'tipoPublicacion': 'Público',
@@ -183,7 +188,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ? path.extension(_selectedFile!.path).toLowerCase()
               : '.jpg');
 
-      // Validar extensión del archivo
       if (!['.jpg', '.jpeg', '.png', '.mp4', '.gif', '.avi'].contains(extension)) {
         throw 'Formato no soportado. Usa JPG, JPEG, PNG, MP4 o GIF';
       }
@@ -191,7 +195,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       final storageRef = FirebaseStorage.instance.ref();
       final fileRef = storageRef.child('publicaciones/$timestamp$extension');
 
-      // Configurar metadatos según el tipo de archivo
       final metadata = SettableMetadata(
         contentType: extension == '.png' ? 'image/png' :
         extension == '.jpg' || extension == '.jpeg' ? 'image/jpeg' :
@@ -199,7 +202,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
         extension == '.gif' ? 'image/gif' : 'application/octet-stream',
       );
 
-      // Subir el archivo
       final uploadTask = kIsWeb && _selectedImageBytes != null
           ? fileRef.putData(_selectedImageBytes!, metadata)
           : _selectedFile != null
@@ -209,7 +211,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       final snapshot = await uploadTask.whenComplete(() {});
       _downloadUrl = await snapshot.ref.getDownloadURL();
 
-      // Guardar en Firestore
       await _guardarPublicacionEnFirestore(_downloadUrl!);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -219,7 +220,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
         ),
       );
 
-      // Resetear el estado
       setState(() {
         _selectedFile = null;
         _selectedImageBytes = null;
@@ -336,7 +336,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
-          // Fondo de pantalla
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -345,8 +344,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
-          // Logo y botones superiores
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
@@ -374,8 +371,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
-          // Botón de ayuda
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
@@ -398,10 +393,8 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
-          // Barra de búsqueda
           Pinned.fromPins(
-            Pin(size: 307.0, end: 33.0),
+            Pin(size: 307.0, middle: 0.5),
             Pin(size: 45.0, middle: 0.1995),
             child: Stack(
               children: <Widget>[
@@ -444,33 +437,70 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ],
             ),
           ),
-
-          // Botón de perfil
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
             Pin(size: 60.0, middle: 0.1947),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/perfilusuario.jpeg'),
-                    fit: BoxFit.fill,
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  return Center(
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        color: Colors.grey[200],
+                      ),
+                      child: const Icon(Icons.person, size: 30, color: Colors.grey),
+                    ),
+                  );
+                }
+
+                final userData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                final profilePhotoUrl = userData['profilePhotoUrl'] as String?;
+
+                return PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')),
+                    ),
+                  ],
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.0),
+                      color: Colors.grey[200],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10.0),
+                      child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
+                          ? CachedNetworkImage(
+                        imageUrl: profilePhotoUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Center(
+                          child: Icon(Icons.person, size: 30, color: Colors.grey),
+                        ),
+                        errorWidget: (context, url, error) => Center(
+                          child: Icon(Icons.person, size: 30, color: Colors.grey),
+                        ),
+                      )
+                          : Center(
+                        child: Icon(Icons.person, size: 30, color: Colors.grey),
+                      ),
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
+                );
+              },
             ),
           ),
-
-          // Botón de configuración
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
@@ -480,7 +510,10 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService(),),
+                  pageBuilder: () => Configuraciones(
+                    key: const Key('Settings'),
+                    authService: AuthService(),
+                  ),
                 ),
               ],
               child: Container(
@@ -493,8 +526,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
-          // Botones de navegación inferiores
           Pinned.fromPins(
             Pin(size: 60.1, start: 6.0),
             Pin(size: 60.0, start: 44.0),
@@ -517,7 +548,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
           Pinned.fromPins(
             Pin(size: 58.5, end: 2.0),
             Pin(size: 60.0, start: 105.0),
@@ -540,7 +570,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
           Pinned.fromPins(
             Pin(size: 54.3, start: 24.0),
             Pin(size: 60.0, middle: 0.2712),
@@ -563,7 +592,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
           Align(
             alignment: const Alignment(-0.459, -0.458),
             child: PageLink(
@@ -587,7 +615,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
           Align(
             alignment: const Alignment(0.0, -0.458),
             child: PageLink(
@@ -611,7 +638,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
           Align(
             alignment: const Alignment(0.477, -0.458),
             child: PageLink(
@@ -635,7 +661,6 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
           Pinned.fromPins(
             Pin(size: 53.6, end: 20.3),
             Pin(size: 60.0, middle: 0.2712),
@@ -655,199 +680,239 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
               ),
             ),
           ),
-
-          // Área principal de creación de publicación
+          // Sección desplazable de creación de publicaciones
           Pinned.fromPins(
             Pin(start: 16.0, end: 15.0),
-            Pin(size: 550.0, end: 99.0),
-            child: Stack(
-              children: <Widget>[
-                Stack(
+            Pin(size: MediaQuery.of(context).size.height * 0.65, end: 0.0),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                child: Stack(
                   children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 73.0),
-                      child: SizedBox.expand(
-                        child: SvgPicture.string(
-                          _svg_cepmj,
-                          allowDrawingOutsideViewBox: true,
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-
-                    // Sección superior con foto de perfil, nombre y tipo de publicación
-                    Pinned.fromPins(
-                      Pin(start: 15.0, end: 15.0),
-                      Pin(size: 70.0, start: 15.0),
-                      child: Row(
-                        children: [
-                          // Foto de perfil
-                          Container(
-                            width: 40.0,
-                            height: 40.0,
-                            decoration: BoxDecoration(
-                              image: const DecorationImage(
-                                image: AssetImage('assets/images/perfilusuario.jpeg'),
-                                fit: BoxFit.cover,
-                              ),
-                              borderRadius: BorderRadius.circular(20.0),
+                    Stack(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 73.0),
+                          child: SizedBox.expand(
+                            child: SvgPicture.string(
+                              _svg_cepmj,
+                              allowDrawingOutsideViewBox: true,
+                              fit: BoxFit.fill,
                             ),
                           ),
-                          const SizedBox(width: 10),
-
-                          // Nombre de usuario y tipo de publicación
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                'Nombre de Usuario',
-                                style: TextStyle(
-                                  fontFamily: 'Comic Sans MS',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  Image.asset(
-                                    'assets/images/publico.png',
-                                    width: 35,
-                                    height: 35,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  const Text(
-                                    'Público',
-                                    style: TextStyle(
-                                      fontFamily: 'Comic Sans MS',
-                                      fontSize: 14,
+                        ),
+                        Pinned.fromPins(
+                          Pin(start: 15.0, end: 15.0),
+                          Pin(size: 70.0, start: 15.0),
+                          child: StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(FirebaseAuth.instance.currentUser?.uid)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData || !snapshot.data!.exists) {
+                                return Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 5,
+                                      backgroundColor: Colors.grey[200],
+                                      child: const Icon(Icons.person, color: Colors.white, size: 40),
                                     ),
+                                    const SizedBox(width: 10),
+                                    const Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Usuario Anónimo',
+                                          style: TextStyle(
+                                            fontFamily: 'Comic Sans MS',
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            SizedBox(width: 35, height: 35),
+                                            SizedBox(width: 5),
+                                            Text(
+                                              'Público',
+                                              style: TextStyle(
+                                                fontFamily: 'Comic Sans MS',
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              final userData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                              final profilePhotoUrl = userData['profilePhotoUrl'] as String?;
+                              final displayName = userData['displayName'] as String? ??
+                                  FirebaseAuth.instance.currentUser?.displayName ??
+                                  'Usuario Anónimo';
+
+                              return Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Colors.grey[200],
+                                    backgroundImage: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
+                                        ? NetworkImage(profilePhotoUrl)
+                                        : null,
+                                    child: profilePhotoUrl == null || profilePhotoUrl.isEmpty
+                                        ? const Icon(Icons.person, color: Colors.white, size: 20)
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        displayName,
+                                        style: const TextStyle(
+                                          fontFamily: 'Comic Sans MS',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Image.asset(
+                                            'assets/images/publico.png',
+                                            width: 35,
+                                            height: 35,
+                                          ),
+                                          const SizedBox(width: 5),
+                                          const Text(
+                                            'Público',
+                                            style: TextStyle(
+                                              fontFamily: 'Comic Sans MS',
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ],
+                              );
+                            },
+                          ),
+                        ),
+                        Pinned.fromPins(
+                          Pin(start: 15.0, end: 15.0),
+                          Pin(size: 100.0, start: 80.0),
+                          child: TextField(
+                            controller: _captionController,
+                            decoration: const InputDecoration(
+                              hintText: '¿Qué estás pensando?',
+                              border: InputBorder.none,
+                              hintStyle: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 17,
+                                color: Color(0xff000000),
+                              ),
+                            ),
+                            maxLines: 3,
+                            style: const TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 17,
+                              color: Color(0xff000000),
+                            ),
+                          ),
+                        ),
+                        Pinned.fromPins(
+                          Pin(start: 15.0, end: 15.0),
+                          Pin(size: 280.0, middle: 0.55),
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15.0),
+                              child: _buildMediaPreview(),
+                            ),
+                          ),
+                        ),
+                        Pinned.fromPins(
+                          Pin(start: 15.0, end: 15.0),
+                          Pin(size: 50.0, middle: 0.85),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Container(
+                                width: 47.0,
+                                height: 50.0,
+                                decoration: const BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage('assets/images/ubicacion.png'),
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                width: 45.0,
+                                height: 50.0,
+                                decoration: const BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage('assets/images/gif.png'),
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                width: 52.5,
+                                height: 50.0,
+                                decoration: const BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage('assets/images/etiqueta.png'),
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // Campo de texto para el caption
-                    Pinned.fromPins(
-                      Pin(start: 15.0, end: 15.0),
-                      Pin(size: 100.0, start: 80.0),
-                      child: TextField(
-                        controller: _captionController,
-                        decoration: const InputDecoration(
-                          hintText: '¿Qué estás pensando?',
-                          border: InputBorder.none,
-                          hintStyle: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 17,
-                            color: Color(0xff000000),
-                          ),
                         ),
-                        maxLines: 3,
-                        style: const TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 17,
-                          color: Color(0xff000000),
-                        ),
-                      ),
-                    ),
-
-                    // Área de previsualización de imagen/video
-                    Pinned.fromPins(
-                      Pin(start: 15.0, end: 15.0),
-                      Pin(size: 280.0, middle: 0.55),
-                      child: AspectRatio(
-                        aspectRatio: 1,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(15.0),
-                          child: _buildMediaPreview(),
-                        ),
-                      ),
-                    ),
-
-                    // Botones de opciones (ubicación, GIF, etiqueta)
-                    Pinned.fromPins(
-                      Pin(start: 15.0, end: 15.0),
-                      Pin(size: 50.0, middle: 0.85),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          // Ubicación
-                          Container(
-                            width: 47.0,
-                            height: 50.0,
-                            decoration: const BoxDecoration(
-                              image: DecorationImage(
-                                image: AssetImage('assets/images/ubicacion.png'),
-                                fit: BoxFit.fill,
+                        Pinned.fromPins(
+                          Pin(start: 15.0, end: 15.0),
+                          Pin(size: 50.0, end: 10.0),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xff4ec8dd),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                                side: const BorderSide(
+                                  width: 1.0,
+                                  color: Color(0xff000000),
+                                ),
+                              ),
+                              elevation: 3,
+                              shadowColor: const Color(0xff000000),
+                            ),
+                            onPressed: _isUploading ? null : _uploadFile,
+                            child: _isUploading
+                                ? const CircularProgressIndicator()
+                                : const Text(
+                              'publicar',
+                              style: TextStyle(
+                                fontFamily: 'Comic Sans MS',
+                                fontSize: 20,
+                                color: Color(0xff000000),
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
-
-                          // GIF
-                          Container(
-                            width: 45.0,
-                            height: 50.0,
-                            decoration: const BoxDecoration(
-                              image: DecorationImage(
-                                image: AssetImage('assets/images/gif.png'),
-                                fit: BoxFit.fill,
-                              ),
-                            ),
-                          ),
-
-                          // Etiqueta
-                          Container(
-                            width: 52.5,
-                            height: 50.0,
-                            decoration: const BoxDecoration(
-                              image: DecorationImage(
-                                image: AssetImage('assets/images/etiqueta.png'),
-                                fit: BoxFit.fill,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Botón de publicar
-                    Pinned.fromPins(
-                      Pin(start: 15.0, end: 15.0),
-                      Pin(size: 50.0, end: 10.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff4ec8dd),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                            side: const BorderSide(
-                              width: 1.0,
-                              color: const Color(0xff000000),
-                            ),
-                          ),
-                          elevation: 3,
-                          shadowColor: const Color(0xff000000),
                         ),
-                        onPressed: _isUploading ? null : _uploadFile,
-                        child: _isUploading
-                            ? const CircularProgressIndicator()
-                            : const Text(
-                          'publicar',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 20,
-                            color: Color(0xff000000),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ],
