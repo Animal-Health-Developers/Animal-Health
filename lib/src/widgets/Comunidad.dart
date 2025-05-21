@@ -6,7 +6,7 @@ import './Ayuda.dart';
 import './PerfilPublico.dart';
 import './AmigosenLInea.dart';
 import './Contactos.dart';
-import 'dart:ui' as ui;
+// import 'dart:ui' as ui; // No se está usando ui.ImageFilter directamente aquí
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import './CompradeProductos.dart';
@@ -14,46 +14,166 @@ import './CuidadosyRecomendaciones.dart';
 import './Emergencias.dart';
 import './Crearpublicaciones.dart';
 import '../services/auth_service.dart';
-class Comunidad extends StatelessWidget {
-  Comunidad({
-    required Key key,
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'dart:developer' as developer;
+
+// --- CONFIGURACIÓN DE API KEYS ---
+// ¡¡¡ADVERTENCIA!!! NO SUBAS ESTA CLAVE A REPOSITORIOS PÚBLICOS NI LA DISTRIBUYAS.
+const String GEMINI_API_KEY_COMMUNITY = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3nenc'; // TU API KEY DE GEMINI AQUÍ
+// ---------------------------------
+
+class Comunidad extends StatefulWidget {
+  const Comunidad({
+    Key? key,
   }) : super(key: key);
+
+  @override
+  _ComunidadState createState() => _ComunidadState();
+}
+
+class _ComunidadState extends State<Comunidad> {
+  final TextEditingController _searchController = TextEditingController();
+  GenerativeModel? _geminiModel;
+  bool _isSearching = false;
+
+  List<Map<String, String>> _friendRequests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeGemini();
+    _loadFriendRequests();
+  }
+
+  void _initializeGemini() {
+    if (GEMINI_API_KEY_COMMUNITY.isNotEmpty && GEMINI_API_KEY_COMMUNITY != 'TU_API_KEY_DE_GEMINI_AQUI') {
+      try {
+        _geminiModel = GenerativeModel(
+          model: 'gemini-1.5-flash-latest',
+          apiKey: GEMINI_API_KEY_COMMUNITY,
+        );
+        developer.log("Modelo Gemini inicializado en Comunidad.");
+      } catch (e) {
+        developer.log("Error inicializando modelo Gemini en Comunidad: $e");
+      }
+    } else {
+      developer.log("API Key de Gemini no configurada en Comunidad. La búsqueda con IA no funcionará.");
+    }
+  }
+
+  void _loadFriendRequests() {
+    // Simulación: En una app real, cargarías esto desde Firestore
+    // Por ahora, la dejamos vacía.
+    // Para probar, puedes añadir datos aquí temporalmente:
+    /*
+    if (mounted) {
+      setState(() {
+        _friendRequests = [
+          {'id': 'user123', 'name': 'Usuario Prueba 1', 'time': 'Hace 1 día', 'profilePicUrl': 'https://via.placeholder.com/150/92c952'},
+          {'id': 'user456', 'name': 'Otro Usuario', 'time': 'Hace 2 horas', 'profilePicUrl': 'https://via.placeholder.com/150/771796'},
+        ];
+      });
+    }
+    */
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, ingresa un término de búsqueda')),
+        );
+      }
+      return;
+    }
+    if (_geminiModel == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('La búsqueda con IA no está disponible.')),
+        );
+      }
+      return;
+    }
+    if (mounted) {
+      setState(() { _isSearching = true; });
+    }
+    try {
+      final prompt = 'Busca usuarios, grupos o temas relevantes para una comunidad de amantes de las mascotas sobre: "$query". Proporciona una breve descripción o sugerencia.';
+      final content = [Content.text(prompt)];
+      final response = await _geminiModel!.generateContent(content).timeout(const Duration(seconds: 20));
+      developer.log("Respuesta de Gemini para búsqueda en Comunidad '$query': ${response.text}");
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Resultado de búsqueda: $query'),
+              content: SingleChildScrollView(child: Text(response.text ?? 'No se encontró información relevante.')),
+              actions: <Widget>[
+                TextButton(child: const Text('Cerrar'), onPressed: () => Navigator.of(context).pop()),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
+      developer.log("Error al buscar en Comunidad con Gemini: $e");
+      String errorMessageText = "Hubo un problema al realizar la búsqueda.";
+      if (e is GenerativeAIException) {
+        if (e.message.contains('API key not valid')) {
+          errorMessageText = "Error: La API Key de Gemini no es válida.";
+        } else if (e.message.contains('quota')) {
+          errorMessageText = "Cuota de API de Gemini alcanzada.";
+        } else if (e.message.contains('not found for API version v1') || e.message.contains('not supported for generateContent')) {
+          errorMessageText = "Error: El modelo de IA no es compatible.";
+        }
+      } else if (e.toString().contains('timeout')) {
+        errorMessageText = "La búsqueda tardó demasiado.";
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessageText)));
+      }
+    } finally {
+      if (mounted) { setState(() { _isSearching = false; }); }
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    final double navBarCenterY = MediaQuery.of(context).size.height * 0.2712;
+    final double navBarBottomY = navBarCenterY + 30;
+    final double topOffsetForCommunityBlock = navBarBottomY + 20;
+
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
-                fit: BoxFit.cover,
-              ),
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/Animal Health Fondo de Pantalla.png',
+              fit: BoxFit.cover,
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
-                ),
-              ],
+              links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
               child: Container(
                 decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/logo.png'),
-                    fit: BoxFit.cover,
-                  ),
+                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
                   borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
+                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
                 ),
               ),
             ),
@@ -62,1140 +182,131 @@ class Comunidad extends StatelessWidget {
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
-                ),
-              ],
+              links: [PageLinkInfo(pageBuilder: () => const Ayuda(key: Key('Ayuda')))],
               child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
-                  ),
+                decoration: const BoxDecoration(
+                  image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill),
                 ),
               ),
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 307.0, end: 33.0),
+            Pin(size: 307.0, middle: 0.5),
             Pin(size: 45.0, middle: 0.1995),
-            child: Stack(
-              children: <Widget>[
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xffffffff),
-                    borderRadius: BorderRadius.circular(5.0),
-                    border:
-                        Border.all(width: 1.0, color: const Color(0xff707070)),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xffffffff),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(width: 1.0, color: const Color(0xff707070)),
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Image.asset('assets/images/busqueda1.png', width: 24.0, height: 24.0),
                   ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 216.0, end: 40.0),
-                  Pin(size: 28.0, middle: 0.4118),
-                  child: Text(
-                    '¿Qué estás buscando?',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 31.0, start: 7.0),
-                  Pin(start: 7.0, end: 7.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: const AssetImage('assets/images/busqueda1.png'),
-                        fit: BoxFit.fill,
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Color(0xff000000)),
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar en comunidad...',
+                        hintStyle: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Colors.grey),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.only(left: 4, right: 4, top: 12, bottom: 12),
                       ),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (value) { if (!_isSearching) _performSearch(value); },
                     ),
                   ),
-                ),
-              ],
+                  if (_isSearching)
+                    const Padding(padding: EdgeInsets.all(8.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.0)))
+                  else
+                    IconButton(icon: const Icon(Icons.search, color: Colors.black54), onPressed: () { if (!_isSearching) _performSearch(_searchController.text); }),
+                ],
+              ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
             Pin(size: 60.0, middle: 0.1947),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
-                    fit: BoxFit.fill,
-                  ),
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 33.9, start: 10.0),
-            Pin(size: 32.0, middle: 0.3605),
-            child: PageLink(
-              links: [
-                PageLinkInfo(),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/back.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 14.0, end: 14.0),
-            Pin(size: 488.1, end: 92.9),
-            child: Stack(
-              children: <Widget>[
-                Pinned.fromPins(
-                  Pin(size: 129.0, start: 23.0),
-                  Pin(size: 30.0, start: 47.0),
-                  child: Stack(
-                    children: <Widget>[
-                      PageLink(
-                        links: [
-                          PageLinkInfo(
-                            transition: LinkTransition.Fade,
-                            ease: Curves.easeOut,
-                            duration: 0.3,
-                            pageBuilder: () => AmigosenLInea(key: Key('AmigosenLInea'),),
-                          ),
-                        ],
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xe3a0f4fe),
-                            borderRadius: BorderRadius.circular(10.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xe3000000)),
-                          ),
-                        ),
-                      ),
-                      Pinned.fromPins(
-                        Pin(size: 57.0, middle: 0.5417),
-                        Pin(size: 21.0, start: 4.0),
-                        child: Text(
-                          'En linea',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 15,
-                            color: const Color(0xff000000),
-                            fontWeight: FontWeight.w700,
-                          ),
-                          softWrap: false,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 129.0, end: 15.0),
-                  Pin(size: 30.0, start: 47.0),
-                  child: Stack(
-                    children: <Widget>[
-                      PageLink(
-                        links: [
-                          PageLinkInfo(
-                            transition: LinkTransition.Fade,
-                            ease: Curves.easeOut,
-                            duration: 0.3,
-                            pageBuilder: () => Contactos(key: Key('Contactos'),),
-                          ),
-                        ],
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xe3a0f4fe),
-                            borderRadius: BorderRadius.circular(10.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xe3000000)),
-                          ),
-                        ),
-                      ),
-                      Pinned.fromPins(
-                        Pin(start: 14.0, end: 14.0),
-                        Pin(size: 21.0, end: 4.0),
-                        child: Text(
-                          'Tus contactos',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 15,
-                            color: const Color(0xff000000),
-                            fontWeight: FontWeight.w700,
-                          ),
-                          softWrap: false,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(0.033, -1.0),
-                  child: SizedBox(
-                    width: 143.0,
-                    height: 30.0,
-                    child: Stack(
-                      children: <Widget>[
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xe3a0f4fe),
-                            borderRadius: BorderRadius.circular(10.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xe3000000)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xe31b0ed9),
-                                offset: Offset(0, 3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Pinned.fromPins(
-                          Pin(size: 78.0, middle: 0.5538),
-                          Pin(size: 21.0, start: 4.0),
-                          child: Text(
-                            'Solicitudes',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 15,
-                              color: const Color(0xff000000),
-                              fontWeight: FontWeight.w700,
-                            ),
-                            softWrap: false,
-                          ),
-                        ),
-                      ],
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
+              builder: (context, snapshot) {
+                final profilePhotoUrl = snapshot.data?['profilePhotoUrl'] as String?;
+                return PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')))],
+                  child: Container(
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.grey[200]),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10.0),
+                      child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
+                          ? CachedNetworkImage(
+                        imageUrl: profilePhotoUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
+                        errorWidget: (context, url, error) => const Icon(Icons.person, size: 30, color: Colors.grey),
+                      )
+                          : const Icon(Icons.person, size: 30, color: Colors.grey),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0.0, 142.1, 0.0, 0.0),
-                  child: Stack(
-                    children: <Widget>[
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xe3a0f4fe),
-                          borderRadius: BorderRadius.circular(20.0),
-                          border: Border.all(
-                              width: 1.0, color: const Color(0xe3000000)),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 27.0, vertical: 0.9),
-                        child: Stack(
-                          children: <Widget>[
-                            Pinned.fromPins(
-                              Pin(size: 330.0, middle: 0.5),
-                              Pin(start: 0.0, end: 0.0),
-                              child: SingleChildScrollView(
-                                primary: false,
-                                child: SizedBox(
-                                  width: 330.0,
-                                  height: 650.0,
-                                  child: Stack(
-                                    children: <Widget>[
-                                      Padding(
-                                        padding: EdgeInsets.fromLTRB(
-                                            0.0, 0.0, 0.0, 0.0),
-                                        child: SingleChildScrollView(
-                                          primary: false,
-                                          child: Wrap(
-                                            alignment: WrapAlignment.center,
-                                            spacing: 20,
-                                            runSpacing: 26,
-                                            children: [{}, {}].map((itemData) {
-                                              return SizedBox(
-                                                width: 330.0,
-                                                height: 302.0,
-                                                child: Stack(
-                                                  children: <Widget>[
-                                                    Align(
-                                                      alignment: Alignment(
-                                                          1.0, -0.574),
-                                                      child: ClipRect(
-                                                        child: BackdropFilter(
-                                                          filter: ui.ImageFilter
-                                                              .blur(
-                                                                  sigmaX: 7.0,
-                                                                  sigmaY: 7.0),
-                                                          child: Container(
-                                                            width: 111.0,
-                                                            height: 25.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                  0xffe4e4e4),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                              border: Border.all(
-                                                                  width: 1.0,
-                                                                  color: const Color(
-                                                                      0xff707070)),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 57.0,
-                                                          end: 24.0),
-                                                      Pin(
-                                                          size: 21.0,
-                                                          middle: 0.2171),
-                                                      child: Text(
-                                                        'Eliminar',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 15,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment: Alignment(
-                                                          -0.068, -0.574),
-                                                      child: ClipRect(
-                                                        child: BackdropFilter(
-                                                          filter: ui.ImageFilter
-                                                              .blur(
-                                                                  sigmaX: 36.0,
-                                                                  sigmaY: 36.0),
-                                                          child: Container(
-                                                            width: 111.0,
-                                                            height: 25.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                  0x7a54d1e0),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                              border: Border.all(
-                                                                  width: 1.0,
-                                                                  color: const Color(
-                                                                      0xff707070)),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment: Alignment(
-                                                          -0.066, -0.566),
-                                                      child: SizedBox(
-                                                        width: 71.0,
-                                                        height: 21.0,
-                                                        child: Text(
-                                                          'Confirmar',
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Comic Sans MS',
-                                                            fontSize: 15,
-                                                            color: const Color(
-                                                                0xff000000),
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                          softWrap: false,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 36.0,
-                                                          middle: 0.3537),
-                                                      Pin(
-                                                          size: 21.0,
-                                                          start: 16.0),
-                                                      child: Text(
-                                                        'Kitty',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 15,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 102.0,
-                                                          middle: 0.4561),
-                                                      Pin(
-                                                          size: 14.0,
-                                                          start: 41.0),
-                                                      child: Text(
-                                                        'Usuario nuevo - 2 días',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 10,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          height: 1.2,
-                                                        ),
-                                                        textHeightBehavior:
-                                                            TextHeightBehavior(
-                                                                applyHeightToFirstAscent:
-                                                                    false),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment:
-                                                          Alignment(1.0, 0.213),
-                                                      child: ClipRect(
-                                                        child: BackdropFilter(
-                                                          filter: ui.ImageFilter
-                                                              .blur(
-                                                                  sigmaX: 7.0,
-                                                                  sigmaY: 7.0),
-                                                          child: Container(
-                                                            width: 111.0,
-                                                            height: 25.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                  0xffe4e4e4),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                              border: Border.all(
-                                                                  width: 1.0,
-                                                                  color: const Color(
-                                                                      0xff707070)),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 57.0,
-                                                          end: 24.0),
-                                                      Pin(
-                                                          size: 21.0,
-                                                          middle: 0.605),
-                                                      child: Text(
-                                                        'Eliminar',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 15,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment: Alignment(
-                                                          -0.068, 0.213),
-                                                      child: ClipRect(
-                                                        child: BackdropFilter(
-                                                          filter: ui.ImageFilter
-                                                              .blur(
-                                                                  sigmaX: 36.0,
-                                                                  sigmaY: 36.0),
-                                                          child: Container(
-                                                            width: 111.0,
-                                                            height: 25.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                  0x7a54d1e0),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                              border: Border.all(
-                                                                  width: 1.0,
-                                                                  color: const Color(
-                                                                      0xff707070)),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment: Alignment(
-                                                          -0.28, -0.11),
-                                                      child: SizedBox(
-                                                        width: 41.0,
-                                                        height: 21.0,
-                                                        child: Text(
-                                                          'Donut',
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Comic Sans MS',
-                                                            fontSize: 15,
-                                                            color: const Color(
-                                                                0xff000000),
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                          softWrap: false,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment: Alignment(
-                                                          -0.088, 0.042),
-                                                      child: SizedBox(
-                                                        width: 102.0,
-                                                        height: 14.0,
-                                                        child: Text(
-                                                          'Usuario nuevo - 4 días',
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Comic Sans MS',
-                                                            fontSize: 10,
-                                                            color: const Color(
-                                                                0xff000000),
-                                                            height: 1.2,
-                                                          ),
-                                                          textHeightBehavior:
-                                                              TextHeightBehavior(
-                                                                  applyHeightToFirstAscent:
-                                                                      false),
-                                                          softWrap: false,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 111.0,
-                                                          end: 1.0),
-                                                      Pin(size: 25.0, end: 0.0),
-                                                      child: ClipRect(
-                                                        child: BackdropFilter(
-                                                          filter: ui.ImageFilter
-                                                              .blur(
-                                                                  sigmaX: 7.0,
-                                                                  sigmaY: 7.0),
-                                                          child: Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                  0xffe4e4e4),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 57.0,
-                                                          end: 25.0),
-                                                      Pin(size: 21.0, end: 2.0),
-                                                      child: Text(
-                                                        'Eliminar',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 15,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment: Alignment(
-                                                          -0.078, 1.0),
-                                                      child: ClipRect(
-                                                        child: BackdropFilter(
-                                                          filter: ui.ImageFilter
-                                                              .blur(
-                                                                  sigmaX: 36.0,
-                                                                  sigmaY: 36.0),
-                                                          child: Container(
-                                                            width: 111.0,
-                                                            height: 25.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                  0x7a54d1e0),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                              border: Border.all(
-                                                                  width: 1.0,
-                                                                  color: const Color(
-                                                                      0xff707070)),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 71.0,
-                                                          middle: 0.4633),
-                                                      Pin(size: 21.0, end: 2.0),
-                                                      child: Text(
-                                                        'Confirmar',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 15,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment: Alignment(
-                                                          -0.264, 0.665),
-                                                      child: SizedBox(
-                                                        width: 50.0,
-                                                        height: 21.0,
-                                                        child: Text(
-                                                          'Winter',
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Comic Sans MS',
-                                                            fontSize: 15,
-                                                            color: const Color(
-                                                                0xff000000),
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                          softWrap: false,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 105.0,
-                                                          middle: 0.4578),
-                                                      Pin(
-                                                          size: 14.0,
-                                                          end: 29.0),
-                                                      child: Text(
-                                                        'Usuario nuevo -  7 días',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 10,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          height: 1.2,
-                                                        ),
-                                                        textHeightBehavior:
-                                                            TextHeightBehavior(
-                                                                applyHeightToFirstAscent:
-                                                                    false),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment:
-                                                          Alignment.centerLeft,
-                                                      child: Container(
-                                                        width: 84.0,
-                                                        height: 84.0,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          image:
-                                                              DecorationImage(
-                                                            image:
-                                                                const AssetImage(
-                                                                    'assets/images/donut.jpg'),
-                                                            fit: BoxFit.fill,
-                                                          ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      42.0),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment:
-                                                          Alignment.topLeft,
-                                                      child: Container(
-                                                        width: 84.0,
-                                                        height: 84.0,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          image:
-                                                              DecorationImage(
-                                                            image:
-                                                                const AssetImage(
-                                                                    'assets/images/kitty.jpg'),
-                                                            fit: BoxFit.fill,
-                                                          ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      42.0),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 84.0,
-                                                          start: 2.0),
-                                                      Pin(size: 84.0, end: 0.0),
-                                                      child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          image:
-                                                              DecorationImage(
-                                                            image:
-                                                                const AssetImage(
-                                                                    'assets/images/winter.jpg'),
-                                                            fit: BoxFit.fill,
-                                                          ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      42.0),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 111.0,
-                                                          end: 1.0),
-                                                      Pin(size: 25.0, end: 0.0),
-                                                      child: ClipRect(
-                                                        child: BackdropFilter(
-                                                          filter: ui.ImageFilter
-                                                              .blur(
-                                                                  sigmaX: 7.0,
-                                                                  sigmaY: 7.0),
-                                                          child: Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                  0xffe4e4e4),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 57.0,
-                                                          end: 25.0),
-                                                      Pin(size: 21.0, end: 2.0),
-                                                      child: Text(
-                                                        'Eliminar',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 15,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 84.0,
-                                                          start: 2.0),
-                                                      Pin(size: 84.0, end: 0.0),
-                                                      child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          image:
-                                                              DecorationImage(
-                                                            image:
-                                                                const AssetImage(
-                                                                    'assets/images/donut.jpg'),
-                                                            fit: BoxFit.fill,
-                                                          ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      42.0),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 111.0,
-                                                          end: 1.0),
-                                                      Pin(size: 25.0, end: 0.0),
-                                                      child: ClipRect(
-                                                        child: BackdropFilter(
-                                                          filter: ui.ImageFilter
-                                                              .blur(
-                                                                  sigmaX: 7.0,
-                                                                  sigmaY: 7.0),
-                                                          child: Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                  0xffe4e4e4),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 57.0,
-                                                          end: 25.0),
-                                                      Pin(size: 21.0, end: 2.0),
-                                                      child: Text(
-                                                        'Eliminar',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 15,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 84.0,
-                                                          start: 2.0),
-                                                      Pin(size: 84.0, end: 0.0),
-                                                      child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          image:
-                                                              DecorationImage(
-                                                            image:
-                                                                const AssetImage(
-                                                                    'assets/images/kitty.jpg'),
-                                                            fit: BoxFit.fill,
-                                                          ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      42.0),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 111.0,
-                                                          end: 1.0),
-                                                      Pin(size: 25.0, end: 0.0),
-                                                      child: ClipRect(
-                                                        child: BackdropFilter(
-                                                          filter: ui.ImageFilter
-                                                              .blur(
-                                                                  sigmaX: 7.0,
-                                                                  sigmaY: 7.0),
-                                                          child: Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                  0xffe4e4e4),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          8.0),
-                                                              border: Border.all(
-                                                                  width: 1.0,
-                                                                  color: const Color(
-                                                                      0xff707070)),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 57.0,
-                                                          end: 25.0),
-                                                      Pin(size: 21.0, end: 2.0),
-                                                      child: Text(
-                                                        'Eliminar',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Comic Sans MS',
-                                                          fontSize: 15,
-                                                          color: const Color(
-                                                              0xff000000),
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                        softWrap: false,
-                                                      ),
-                                                    ),
-                                                    Pinned.fromPins(
-                                                      Pin(
-                                                          size: 84.0,
-                                                          start: 2.0),
-                                                      Pin(size: 84.0, end: 0.0),
-                                                      child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          image:
-                                                              DecorationImage(
-                                                            image:
-                                                                const AssetImage(
-                                                                    'assets/images/winter.jpg'),
-                                                            fit: BoxFit.fill,
-                                                          ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      42.0),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment: Alignment(
-                                                          -0.066, 0.21),
-                                                      child: SizedBox(
-                                                        width: 71.0,
-                                                        height: 21.0,
-                                                        child: Text(
-                                                          'Confirmar',
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Comic Sans MS',
-                                                            fontSize: 15,
-                                                            color: const Color(
-                                                                0xff000000),
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                          softWrap: false,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            }).toList(),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ),
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 60.1, start: 6.0),
             Pin(size: 60.0, start: 44.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/listaanimales.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales')))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 58.5, end: 2.0),
             Pin(size: 60.0, start: 105.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CompradeProductos(key: Key('CompradeProductos'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/store.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => const CompradeProductos(key: Key('CompradeProductos')))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 54.3, start: 24.0),
             Pin(size: 60.0, middle: 0.2712),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/noticias.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/noticias.png'), fit: BoxFit.fill))),
             ),
           ),
           Align(
-            alignment: Alignment(-0.459, -0.458),
+            alignment: const Alignment(-0.459, -0.458),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones'),),
-                ),
-              ],
-              child: Container(
-                width: 63.0,
-                height: 60.0,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/cuidadosrecomendaciones.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => const CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones')))],
+              child: Container(width: 63.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/cuidadosrecomendaciones.png'), fit: BoxFit.fill))),
             ),
           ),
           Align(
-            alignment: Alignment(0.0, -0.458),
+            alignment: const Alignment(0.0, -0.458),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Emergencias(key: Key('Emergencias'),),
-                ),
-              ],
-              child: Container(
-                width: 65.0,
-                height: 60.0,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/emergencias.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => const Emergencias(key: Key('Emergencias')))],
+              child: Container(width: 65.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/emergencias.png'), fit: BoxFit.fill))),
             ),
           ),
           Align(
-            alignment: Alignment(0.477, -0.458),
+            alignment: const Alignment(0.477, -0.458),
             child: Container(
-              width: 67.0,
-              height: 60.0,
+              width: 67.0, height: 60.0,
               decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/comunidad.png'),
-                  fit: BoxFit.fill,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xff9dedf9),
-                    offset: Offset(0, 3),
-                    blurRadius: 6,
-                  ),
-                ],
+                image: const DecorationImage(image: AssetImage('assets/images/comunidad.png'), fit: BoxFit.fill),
+                boxShadow: [BoxShadow(color: const Color(0xff9dedf9), offset: const Offset(0, 3), blurRadius: 6)],
               ),
             ),
           ),
@@ -1203,24 +314,190 @@ class Comunidad extends StatelessWidget {
             Pin(size: 53.6, end: 20.3),
             Pin(size: 60.0, middle: 0.2712),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/crearpublicacion.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => const Crearpublicaciones(key: Key('Crearpublicaciones')))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/crearpublicacion.png'), fit: BoxFit.fill))),
             ),
           ),
+
+          Positioned(
+            top: topOffsetForCommunityBlock,
+            left: 14.0,
+            right: 14.0,
+            bottom: 20.0,
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Expanded(child: _buildCommunityTabButton('Solicitudes', true, () {})),
+                    const SizedBox(width: 10),
+                    Expanded(child: _buildCommunityTabButton('En línea', false, () {
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AmigosenLInea(key: Key('AmigosenLInea'))));
+                    })),
+                    const SizedBox(width: 10),
+                    Expanded(child: _buildCommunityTabButton('Contactos', false, () {
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Contactos(key: Key('Contactos'))));
+                    })),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Expanded( // ESTE ES EL CAMBIO PRINCIPAL
+                  child: Container(
+                    padding: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xe3a0f4fe),
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(width: 1.0, color: const Color(0xe3000000)),
+                    ),
+                    child: _friendRequests.isEmpty
+                        ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text(
+                          'No tienes solicitudes de amistad pendientes.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ),
+                    )
+                        : ListView.builder(
+                      itemCount: _friendRequests.length,
+                      itemBuilder: (context, index) {
+                        final request = _friendRequests[index];
+                        return _buildFriendRequestItem(
+                          name: request['name']!,
+                          time: request['time']!,
+                          profilePicUrl: request['profilePicUrl']!,
+                          onConfirm: () {
+                            developer.log('Confirmar amistad con ${request['name']}');
+                            if (mounted) {
+                              setState(() {
+                                _friendRequests.removeAt(index);
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Solicitud de ${request['name']} aceptada.')));
+                            }
+                          },
+                          onDelete: () {
+                            developer.log('Eliminar solicitud de ${request['name']}');
+                            if (mounted) {
+                              setState(() {
+                                _friendRequests.removeAt(index);
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Solicitud de ${request['name']} eliminada.')));
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommunityTabButton(String title, bool isSelected, VoidCallback onPressed) {
+    return InkWell(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        decoration: BoxDecoration(
+          color: const Color(0xe3a0f4fe),
+          borderRadius: BorderRadius.circular(10.0),
+          border: Border.all(width: 1.0, color: const Color(0xe3000000)),
+          boxShadow: isSelected
+              ? [const BoxShadow(color: Color(0xe31b0ed9), offset: Offset(0, 3), blurRadius: 6)]
+              : [],
+        ),
+        child: Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'Comic Sans MS',
+            fontSize: 15,
+            color: Color(0xff000000),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFriendRequestItem({
+    required String name,
+    required String time,
+    required String profilePicUrl,
+    required VoidCallback onConfirm,
+    required VoidCallback onDelete,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15.0),
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(15.0),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundImage: NetworkImage(profilePicUrl),
+            backgroundColor: Colors.grey[200],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  time,
+                  style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 12, color: Colors.black54),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 30,
+                child: ElevatedButton(
+                  onPressed: onConfirm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0x7a54d1e0),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                  ),
+                  child: const Text('Confirmar', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 12, color: Colors.black)),
+                ),
+              ),
+              const SizedBox(height: 5),
+              SizedBox(
+                height: 30,
+                child: OutlinedButton(
+                  onPressed: onDelete,
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.shade400),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                  ),
+                  child: const Text('Eliminar', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 12, color: Colors.black54)),
+                ),
+              ),
+            ],
+          )
         ],
       ),
     );

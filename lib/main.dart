@@ -9,11 +9,12 @@ import 'src/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebaseauth;
 import 'src/widgets/AnimalHealth.dart';
 import 'src/widgets/Home.dart';
-
+import 'package:intl/date_symbol_data_local.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final AuthService authService = AuthService();
+  await initializeDateFormatting('es_ES', null);
   runApp(MyApp(authService: authService));
 }
 

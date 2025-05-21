@@ -17,10 +17,121 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
-import 'dart:developer' as developer; // Import for logging
+import 'dart:developer' as developer;
+import 'package:google_generative_ai/google_generative_ai.dart'; // Importar Gemini
+import 'dart:convert'; // Para json.decode en _fetchImageFromUnsplash (si se usa)
+// Para _fetchImageFromUnsplash (si se usa)
 
-class Home extends StatelessWidget {
+// --- CONFIGURACIÓN DE API KEYS ---
+
+const String GEMINI_API_KEY_HOME = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3nenc'; // TU API KEY DE GEMINI AQUÍ
+// ---------------------------------
+
+
+class Home extends StatefulWidget { // Convertido a StatefulWidget
   const Home({Key? key}) : super(key: key);
+
+  @override
+  _HomeState createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> { // Estado para Home
+  final TextEditingController _searchController = TextEditingController();
+  GenerativeModel? _geminiModel;
+  bool _isSearching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeGemini();
+  }
+
+  void _initializeGemini() {
+    if (GEMINI_API_KEY_HOME.isNotEmpty && GEMINI_API_KEY_HOME != 'TU_API_KEY_DE_GEMINI_AQUI') {
+      _geminiModel = GenerativeModel(
+        model: 'gemini-pro',
+        apiKey: GEMINI_API_KEY_HOME,
+      );
+      developer.log("Modelo Gemini inicializado en Home.");
+    } else {
+      developer.log("API Key de Gemini no configurada en Home. La búsqueda con IA no funcionará.");
+    }
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, ingresa un término de búsqueda')),
+      );
+      return;
+    }
+
+    if (_geminiModel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La búsqueda con IA no está disponible en este momento.')),
+      );
+      developer.log("Intento de búsqueda pero el modelo Gemini no está inicializado.");
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+    });
+
+    try {
+      final prompt = 'Busca información o un consejo de cuidado relevante para mascotas sobre: "$query". Proporciona una respuesta concisa y útil. Si es un animal, menciona algún dato curioso o consejo de cuidado principal. Si es un producto o servicio, describe brevemente su utilidad para mascotas.';
+      final content = [Content.text(prompt)];
+      final response = await _geminiModel!.generateContent(content).timeout(const Duration(seconds: 20));
+
+      developer.log("Respuesta de Gemini para búsqueda '$query': ${response.text}");
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Resultado para: $query'),
+              content: SingleChildScrollView(child: Text(response.text ?? 'No se encontró información.')),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cerrar'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
+      developer.log("Error al buscar con Gemini: $e");
+      String errorMessage = "Hubo un problema al realizar la búsqueda con IA.";
+      if (e is GenerativeAIException && e.message.contains('API key not valid')) {
+        errorMessage = "Error: La API Key de Gemini no es válida. Por favor, verifica la configuración.";
+      } else if (e.toString().contains('timeout')) {
+        errorMessage = "La búsqueda tardó demasiado en responder. Inténtalo de nuevo.";
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSearching = false;
+        });
+      }
+    }
+  }
+
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,53 +191,80 @@ class Home extends StatelessWidget {
             ),
           ),
 
-          // Barra de búsqueda
+          // Barra de búsqueda (AHORA FUNCIONAL)
           Pinned.fromPins(
             Pin(size: 307.0, middle: 0.5),
             Pin(size: 45.0, middle: 0.1995),
-            child: Stack(
-              children: <Widget>[
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xffffffff),
-                    borderRadius: BorderRadius.circular(5.0),
-                    border: Border.all(
-                      width: 1.0,
-                      color: const Color(0xff707070),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xffffffff),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(
+                  width: 1.0,
+                  color: const Color(0xff707070),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Image.asset( // Ícono original
+                      'assets/images/busqueda1.png',
+                      width: 24.0, // Ajusta el tamaño según sea necesario
+                      height: 24.0,
                     ),
                   ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 216.0, end: 40.0),
-                  Pin(size: 28.0, middle: 0.4118),
-                  child: const Text(
-                    '¿Qué estás buscando?',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 31.0, start: 7.0),
-                  Pin(start: 7.0, end: 7.0),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/busqueda1.png'),
-                        fit: BoxFit.fill,
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(
+                        fontFamily: 'Comic Sans MS',
+                        fontSize: 18, // Ajustado para que quepa mejor
+                        color: Color(0xff000000),
                       ),
+                      decoration: const InputDecoration(
+                        hintText: '¿Qué estás buscando?',
+                        hintStyle: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 18,
+                          color: Colors.grey, // Color del placeholder
+                        ),
+                        border: InputBorder.none, // Sin borde interno del TextField
+                        contentPadding: EdgeInsets.symmetric(vertical: 12.0), // Ajuste vertical
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (value) {
+                        if (!_isSearching) {
+                          _performSearch(value);
+                        }
+                      },
                     ),
                   ),
-                ),
-              ],
+                  if (_isSearching) // Indicador de carga
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2.0),
+                      ),
+                    )
+                  else // Botón de búsqueda si no se está buscando
+                    IconButton(
+                      icon: const Icon(Icons.search, color: Colors.black54),
+                      onPressed: () {
+                        if (!_isSearching) {
+                          _performSearch(_searchController.text);
+                        }
+                      },
+                    ),
+                ],
+              ),
             ),
           ),
 
-          // Botón de perfil - Ahora muestra la foto del usuario desde Firestore
+
+          // Botón de perfil
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
             Pin(size: 60.0, middle: 0.1947),
@@ -137,7 +275,6 @@ class Home extends StatelessWidget {
                   .snapshots(),
               builder: (context, snapshot) {
                 final profilePhotoUrl = snapshot.data?['profilePhotoUrl'] as String?;
-
                 return PageLink(
                   links: [
                     PageLinkInfo(
@@ -162,16 +299,13 @@ class Home extends StatelessWidget {
                           fit: BoxFit.cover,
                           placeholder: (context, url) => const Center(
                             child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xff4ec8dd),
-                              ),
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)),
                             ),
                           ),
                           errorWidget: (context, url, error) {
                             developer.log('Error CachedNetworkImage (Perfil): $error, URL: $url');
-                            // Fallback a Image.network si CachedNetworkImage falla
                             return Image.network(
-                              profilePhotoUrl, // Usar la misma URL
+                              profilePhotoUrl,
                               fit: BoxFit.cover,
                               loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
                                 if (loadingProgress == null) return child;
@@ -185,24 +319,11 @@ class Home extends StatelessWidget {
                               },
                               errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
                                 developer.log('Error Image.network (Perfil Fallback): $exception, URL: $url');
-                                return const Center(
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 30,
-                                    color: Colors.grey,
-                                  ),
-                                );
+                                return const Center(child: Icon(Icons.person, size: 30, color: Colors.grey));
                               },
                             );
-                          }
-                      )
-                          : const Center(
-                        child: Icon(
-                          Icons.person,
-                          size: 30,
-                          color: Colors.grey,
-                        ),
-                      ),
+                          })
+                          : const Center(child: Icon(Icons.person, size: 30, color: Colors.grey)),
                     ),
                   ),
                 );
@@ -220,19 +341,12 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => Configuraciones(
-                    key: const Key('Configuraciones'),
-                    authService: AuthService(),
-                  ),
+                  pageBuilder: () => Configuraciones(key: const Key('Configuraciones'), authService: AuthService()),
                 ),
               ],
               child: Container(
                 decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
-                  ),
+                  image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill),
                 ),
               ),
             ),
@@ -248,18 +362,12 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => CompradeProductos(
-                    key: const Key('CompradeProductos'),
-                  ),
+                  pageBuilder: () => CompradeProductos(key: const Key('CompradeProductos')),
                 ),
               ],
               child: Container(
                 decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/store.png'),
-                    fit: BoxFit.fill,
-                  ),
+                  image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill),
                 ),
               ),
             ),
@@ -275,38 +383,25 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => ListadeAnimales(key: const Key('ListadeAnimales')),
+                  pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimales')),
                 ),
               ],
               child: Container(
                 decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/listaanimales.png'),
-                    fit: BoxFit.fill,
-                  ),
+                  image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill),
                 ),
               ),
             ),
           ),
 
-          // Botón de noticias
+          // Botón de noticias (resaltado)
           Pinned.fromPins(
             Pin(size: 54.3, start: 24.0),
             Pin(size: 60.0, middle: 0.2712),
             child: Container(
               decoration: BoxDecoration(
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/noticias.png'),
-                  fit: BoxFit.fill,
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0xff9ff1fb),
-                    offset: Offset(0, 3),
-                    blurRadius: 6,
-                  ),
-                ],
+                image: const DecorationImage(image: AssetImage('assets/images/noticias.png'), fit: BoxFit.fill),
+                boxShadow: const [BoxShadow(color: Color(0xff9ff1fb), offset: Offset(0, 3), blurRadius: 6)],
               ),
             ),
           ),
@@ -320,22 +415,14 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => CuidadosyRecomendaciones(
-                    key: const Key('CuidadosyRecomendaciones'),
-                  ),
+                  pageBuilder: () => CuidadosyRecomendaciones(key: const Key('CuidadosyRecomendaciones')),
                 ),
               ],
               child: Container(
                 width: 63.0,
                 height: 60.0,
                 decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(
-                      'assets/images/cuidadosrecomendaciones.png',
-                    ),
-                    fit: BoxFit.fill,
-                  ),
+                  image: DecorationImage(image: AssetImage('assets/images/cuidadosrecomendaciones.png'), fit: BoxFit.fill),
                 ),
               ),
             ),
@@ -357,10 +444,7 @@ class Home extends StatelessWidget {
                 width: 65.0,
                 height: 60.0,
                 decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/emergencias.png'),
-                    fit: BoxFit.fill,
-                  ),
+                  image: DecorationImage(image: AssetImage('assets/images/emergencias.png'), fit: BoxFit.fill),
                 ),
               ),
             ),
@@ -382,10 +466,7 @@ class Home extends StatelessWidget {
                 width: 67.0,
                 height: 60.0,
                 decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/comunidad.png'),
-                    fit: BoxFit.fill,
-                  ),
+                  image: DecorationImage(image: AssetImage('assets/images/comunidad.png'), fit: BoxFit.fill),
                 ),
               ),
             ),
@@ -401,47 +482,34 @@ class Home extends StatelessWidget {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder:
-                      () => Crearpublicaciones(
-                    key: const Key('Crearpublicaciones'),
-                  ),
+                  pageBuilder: () => Crearpublicaciones(key: const Key('Crearpublicaciones')),
                 ),
               ],
               child: Container(
                 decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/crearpublicacion.png'),
-                    fit: BoxFit.fill,
-                  ),
+                  image: DecorationImage(image: AssetImage('assets/images/crearpublicacion.png'), fit: BoxFit.fill),
                 ),
               ),
             ),
           ),
 
-          // Lista de publicaciones (cambios principales aquí)
+          // Lista de publicaciones
           Pinned.fromPins(
             Pin(start: 16.0, end: 16.0),
             Pin(start: 240.0, end: 0.0),
             child: StreamBuilder<QuerySnapshot>(
-              stream:
-              FirebaseFirestore.instance
-                  .collection('publicaciones')
-                  .orderBy('fecha', descending: true)
-                  .snapshots(),
+              stream: FirebaseFirestore.instance.collection('publicaciones').orderBy('fecha', descending: true).snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
                 if (snapshot.hasError) {
                   developer.log('Error en StreamBuilder (publicaciones): ${snapshot.error}');
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
-
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(child: Text('No hay publicaciones aún'));
                 }
-
                 return MediaQuery.removePadding(
                   context: context,
                   removeBottom: true,
@@ -463,10 +531,8 @@ class Home extends StatelessWidget {
     );
   }
 
-  Widget _buildPublicacionItem(
-      DocumentSnapshot publicacion,
-      BuildContext context,
-      ) {
+  Widget _buildPublicacionItem(DocumentSnapshot publicacion, BuildContext context) {
+    // ... (El resto de _buildPublicacionItem y otros widgets de publicación no cambian)
     final mediaUrl = publicacion['imagenUrl'] as String?;
     final isVideo = (publicacion['esVideo'] as bool?) ?? false;
     final hasValidMedia = mediaUrl != null && mediaUrl.isNotEmpty;
@@ -528,7 +594,7 @@ class Home extends StatelessWidget {
                         backgroundImage:
                         profilePhotoUrl != null &&
                             profilePhotoUrl.isNotEmpty
-                            ? NetworkImage(profilePhotoUrl) // Usar NetworkImage para la foto de perfil en la publicación, podría ser CachedNetworkImage también.
+                            ? NetworkImage(profilePhotoUrl)
                             : null,
                         child:
                         profilePhotoUrl == null || profilePhotoUrl.isEmpty
@@ -606,12 +672,12 @@ class Home extends StatelessWidget {
 
           // Contenido multimedia
           if (hasValidMedia)
-            SizedBox( // Changed from Container to SizedBox to avoid redundant width
-              width: double.infinity, // This ensures it takes the parent's width
+            SizedBox(
+              width: double.infinity,
               child:
               isVideo
-                  ? _VideoPlayerWidget(videoUrl: mediaUrl!) // Added null check assertion
-                  : _buildImageWidget(mediaUrl!, context), // Added null check assertion
+                  ? _VideoPlayerWidget(videoUrl: mediaUrl)
+                  : _buildImageWidget(mediaUrl, context),
             )
           else
             _buildNoImageWidget(),
@@ -673,7 +739,14 @@ class Home extends StatelessWidget {
                       duration: 0.3,
                       pageBuilder:
                           () => DetallesdeFotooVideo(
-                        key: const Key('DetallesdeFotooVideo'), // TODO: Pasar datos de la publicación
+                        key: const Key('DetallesdeFotooVideo'),
+                        // TODO: Pasar datos de la publicación
+                        // publicationId: publicacion.id,
+                        // mediaUrl: mediaUrl,
+                        // isVideo: isVideo,
+                        // caption: publicacion['caption'],
+                        // userName: publicacion['usuarioNombre'],
+                        // userProfilePic: (userSnapshot.data?['profilePhotoUrl'] as String?), // Necesitarías obtener esto de alguna manera
                       ),
                     ),
                   ],
@@ -703,8 +776,12 @@ class Home extends StatelessWidget {
                       ease: Curves.easeOut,
                       duration: 0.3,
                       pageBuilder:
-                          () => CompartirPublicacion( // TODO: Pasar datos de la publicación
+                          () => CompartirPublicacion(
                         key: const Key('CompartirPublicacion'),
+                        // TODO: Pasar datos de la publicación
+                        // publicationId: publicacion.id,
+                        // mediaUrl: mediaUrl,
+                        // caption: publicacion['caption'],
                       ),
                     ),
                   ],
@@ -756,13 +833,14 @@ class Home extends StatelessWidget {
   }
 
   Widget _buildImageWidget(String imageUrl, BuildContext context) {
+    // ... (sin cambios)
     return ClipRRect(
       borderRadius: BorderRadius.circular(8.0),
       child: CachedNetworkImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
-        width: MediaQuery.of(context).size.width - 32, // Ancho de la imagen
-        height: 300, // Altura fija para la imagen
+        width: MediaQuery.of(context).size.width - 32,
+        height: 300,
         placeholder: (context, url) => const Center(
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(
@@ -772,7 +850,6 @@ class Home extends StatelessWidget {
         ),
         errorWidget: (context, url, error) {
           developer.log('Error CachedNetworkImage (Publicación): $error, URL: $url');
-          // Intenta cargar la imagen directamente como fallback
           return Image.network(
               imageUrl,
               fit: BoxFit.cover,
@@ -800,9 +877,10 @@ class Home extends StatelessWidget {
   }
 
   Widget _buildImageErrorWidget() {
+    // ... (sin cambios)
     return Container(
-      width: double.infinity, // Asegura que tome el ancho disponible
-      height: 200, // Altura del widget de error
+      width: double.infinity,
+      height: 200,
       color: Colors.grey[200],
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -824,9 +902,10 @@ class Home extends StatelessWidget {
   }
 
   Widget _buildNoImageWidget() {
+    // ... (sin cambios)
     return Container(
-      width: double.infinity, // Asegura que tome el ancho disponible
-      height: 200, // Altura del widget sin imagen
+      width: double.infinity,
+      height: 200,
       color: Colors.grey[200],
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -847,131 +926,76 @@ class Home extends StatelessWidget {
     );
   }
 
-  Future<void> _toggleLike(
-      String postId,
-      String? userId,
-      List<String> likedBy,
-      BuildContext context,
-      ) async {
+  Future<void> _toggleLike(String postId, String? userId, List<String> likedBy, BuildContext context) async {
+    // ... (sin cambios)
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debes iniciar sesión para dar like')),
       );
       return;
     }
-
     try {
-      final postRef = FirebaseFirestore.instance
-          .collection('publicaciones')
-          .doc(postId);
-
+      final postRef = FirebaseFirestore.instance.collection('publicaciones').doc(postId);
       await FirebaseFirestore.instance.runTransaction((transaction) async {
         final postSnapshot = await transaction.get(postRef);
         if (!postSnapshot.exists) {
           developer.log('Error: Publicación no encontrada para dar like: $postId');
           throw Exception("Publicación no encontrada.");
         }
-
-        // Asegurarse de que 'likedBy' es una lista, incluso si es null en Firestore.
         List<String> currentLikedBy = List<String>.from(postSnapshot.data()?['likedBy'] as List<dynamic>? ?? []);
         final bool isLiked = currentLikedBy.contains(userId);
-
         List<String> newLikedBy;
         if (isLiked) {
           newLikedBy = currentLikedBy.where((id) => id != userId).toList();
         } else {
           newLikedBy = [...currentLikedBy, userId];
         }
-
-        transaction.update(postRef, {
-          'likes': newLikedBy.length,
-          'likedBy': newLikedBy,
-        });
+        transaction.update(postRef, {'likes': newLikedBy.length, 'likedBy': newLikedBy});
       });
     } catch (e) {
       developer.log('Error al actualizar like: $e');
-      if (context.mounted) { // Verificar si el widget está montado
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al actualizar like: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...')));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al actualizar like: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...')));
       }
     }
   }
 
-  Future<void> _guardarPublicacion(
-      String publicacionId,
-      BuildContext context,
-      ) async {
+  Future<void> _guardarPublicacion(String publicacionId, BuildContext context) async {
+    // ... (sin cambios)
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Debes iniciar sesión para guardar publicaciones'),
-            ),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Debes iniciar sesión para guardar publicaciones')));
         }
         return;
       }
-
-      await FirebaseFirestore.instance
-          .collection('publicaciones_guardadas')
-          .doc(user.uid)
-          .collection('guardados')
-          .doc(publicacionId)
-          .set({
+      await FirebaseFirestore.instance.collection('publicaciones_guardadas').doc(user.uid).collection('guardados').doc(publicacionId).set({
         'publicacionId': publicacionId,
         'fechaGuardado': FieldValue.serverTimestamp(),
       });
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Publicación guardada correctamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación guardada correctamente'), backgroundColor: Colors.green));
       }
     } catch (e) {
       developer.log('Error al guardar publicación: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al guardar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'), backgroundColor: Colors.red));
       }
     }
   }
 
-  Future<void> _eliminarPublicacion(
-      String publicacionId,
-      BuildContext context,
-      ) async {
-    // TODO: Considerar eliminar también la imagen de Firebase Storage
+  Future<void> _eliminarPublicacion(String publicacionId, BuildContext context) async {
+    // ... (sin cambios)
     try {
-      await FirebaseFirestore.instance
-          .collection('publicaciones')
-          .doc(publicacionId)
-          .delete();
+      await FirebaseFirestore.instance.collection('publicaciones').doc(publicacionId).delete();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Publicación eliminada correctamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación eliminada correctamente'), backgroundColor: Colors.green));
       }
     } catch (e) {
       developer.log('Error al eliminar publicación: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al eliminar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al eliminar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'), backgroundColor: Colors.red));
       }
     }
   }
@@ -979,23 +1003,22 @@ class Home extends StatelessWidget {
 
 class _VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
-
-  const _VideoPlayerWidget({Key? key, required this.videoUrl}) : super(key: key); // Added Key
+  const _VideoPlayerWidget({Key? key, required this.videoUrl}) : super(key: key);
 
   @override
   __VideoPlayerWidgetState createState() => __VideoPlayerWidgetState();
 }
 
 class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
+  // ... (El widget _VideoPlayerWidget no cambia)
   late VideoPlayerController _controller;
   late Future<void> _initializeVideoPlayerFuture;
-  bool _isPlaying = false;
   bool _hasError = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl)); // Changed to networkUrl
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
     _initializeVideoPlayerFuture = _controller.initialize().then((_) {
       if (mounted) {
         setState(() {});
@@ -1025,19 +1048,18 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
     return FutureBuilder(
       future: _initializeVideoPlayerFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && !_hasError) { // Check _hasError again
-          if (_controller.value.hasError) { // Check controller error state
+        if (snapshot.connectionState == ConnectionState.done && !_hasError) {
+          if (_controller.value.hasError) {
             developer.log("Error en VideoPlayerController: ${_controller.value.errorDescription}, URL: ${widget.videoUrl}");
             return _buildVideoErrorWidget();
           }
-          if (!_controller.value.isInitialized) { // Check if initialized
+          if (!_controller.value.isInitialized) {
             return const Center(child: CircularProgressIndicator());
           }
 
           final videoAspectRatio = _controller.value.aspectRatio;
-          // final screenWidth = MediaQuery.of(context).size.width; // No es necesario si se usa AspectRatio correctamente
 
-          return AspectRatio( // Usar AspectRatio para mantener la proporción del video
+          return AspectRatio(
             aspectRatio: videoAspectRatio,
             child: Stack(
               alignment: Alignment.center,
@@ -1047,7 +1069,7 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
               ],
             ),
           );
-        } else if (snapshot.hasError || _hasError) { // Check snapshot error
+        } else if (snapshot.hasError || _hasError) {
           developer.log("Error en FutureBuilder de VideoPlayer: ${snapshot.error}, URL: ${widget.videoUrl}");
           return _buildVideoErrorWidget();
         }
@@ -1061,19 +1083,17 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   Widget _buildPlayPauseOverlay() {
     return GestureDetector(
       onTap: () {
-        if (!_controller.value.isInitialized) return; // No hacer nada si no está inicializado
+        if (!_controller.value.isInitialized) return;
         setState(() {
           if (_controller.value.isPlaying) {
             _controller.pause();
-            _isPlaying = false;
           } else {
             _controller.play();
-            _isPlaying = true;
           }
         });
       },
       child: AnimatedOpacity(
-        opacity: _controller.value.isPlaying ? 0.0 : 1.0, // Ocultar si está reproduciendo
+        opacity: _controller.value.isPlaying ? 0.0 : 1.0,
         duration: const Duration(milliseconds: 300),
         child: Container(
           color: Colors.black26,
@@ -1092,7 +1112,7 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   Widget _buildVideoErrorWidget() {
     return Container(
       width: double.infinity,
-      height: 200, // O la altura que prefieras para el error de video
+      height: 200,
       color: Colors.black,
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,

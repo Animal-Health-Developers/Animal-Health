@@ -46,6 +46,7 @@ dependencies:
   adobe_xd: ^2.0.1
   mockito: any
   firebase_app_check: ^0.3.1+3
+  google_generative_ai: ^0.2.2
   flutter_svg: any
   image_picker: ^0.8.7
   firebase_storage: ^12.4.5

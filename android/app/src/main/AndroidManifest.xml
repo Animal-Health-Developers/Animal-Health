@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Permisos añadidos aquí -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -6,8 +7,7 @@
 
     <application
         android:label="animal_health"
-        android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/logo">
         <activity
             android:name=".MainActivity"
             android:exported="true"
