@@ -19,7 +19,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:developer' as developer;
 import 'package:google_generative_ai/google_generative_ai.dart'; // Importar Gemini
-import 'dart:convert'; // Para json.decode en _fetchImageFromUnsplash (si se usa)
+// import 'dart:convert'; // Para json.decode en _fetchImageFromUnsplash (si se usa)
 // Para _fetchImageFromUnsplash (si se usa)
 
 // --- CONFIGURACIÓN DE API KEYS ---
@@ -47,7 +47,7 @@ class _HomeState extends State<Home> { // Estado para Home
   }
 
   void _initializeGemini() {
-    if (GEMINI_API_KEY_HOME.isNotEmpty && GEMINI_API_KEY_HOME != 'TU_API_KEY_DE_GEMINI_AQUI') {
+    if (GEMINI_API_KEY_HOME.isNotEmpty && GEMINI_API_KEY_HOME != 'AIzaSyD4FUbajaBbCslYPKZNyF-WGwrJZPcBZss') {
       _geminiModel = GenerativeModel(
         model: 'gemini-pro',
         apiKey: GEMINI_API_KEY_HOME,
@@ -133,6 +133,41 @@ class _HomeState extends State<Home> { // Estado para Home
     super.dispose();
   }
 
+  // Método para construir los items de la barra de navegación
+  Widget _buildNavigationButtonItem({
+    required String imagePath,
+    bool isHighlighted = false,
+    double? fixedWidth, // Para mantener los anchos originales
+    double height = 60.0,
+  }) {
+    double itemWidth;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      // Fallback si no se provee ancho específico, aunque se recomienda hacerlo
+      if (imagePath.contains('noticias')) itemWidth = 54.3;
+      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      else if (imagePath.contains('emergencias')) itemWidth = 65.0;
+      else if (imagePath.contains('comunidad')) itemWidth = 67.0;
+      else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
+      else itemWidth = 60.0; // Default
+    }
+
+    return Container(
+      width: itemWidth,
+      height: height,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(imagePath),
+          fit: BoxFit.fill, // Mantenemos BoxFit.fill como en el original
+        ),
+        boxShadow: isHighlighted
+            ? const [BoxShadow(color: Color(0xff9ff1fb), offset: Offset(0, 3), blurRadius: 6)]
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,10 +226,10 @@ class _HomeState extends State<Home> { // Estado para Home
             ),
           ),
 
-          // Barra de búsqueda (AHORA FUNCIONAL)
+          // Barra de búsqueda
           Pinned.fromPins(
             Pin(size: 307.0, middle: 0.5),
-            Pin(size: 45.0, middle: 0.1995),
+            Pin(size: 45.0, start: 150), // Ajustado start en lugar de middle para más control
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xffffffff),
@@ -208,9 +243,9 @@ class _HomeState extends State<Home> { // Estado para Home
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Image.asset( // Ícono original
+                    child: Image.asset(
                       'assets/images/busqueda1.png',
-                      width: 24.0, // Ajusta el tamaño según sea necesario
+                      width: 24.0,
                       height: 24.0,
                     ),
                   ),
@@ -219,7 +254,7 @@ class _HomeState extends State<Home> { // Estado para Home
                       controller: _searchController,
                       style: const TextStyle(
                         fontFamily: 'Comic Sans MS',
-                        fontSize: 18, // Ajustado para que quepa mejor
+                        fontSize: 18,
                         color: Color(0xff000000),
                       ),
                       decoration: const InputDecoration(
@@ -227,10 +262,10 @@ class _HomeState extends State<Home> { // Estado para Home
                         hintStyle: TextStyle(
                           fontFamily: 'Comic Sans MS',
                           fontSize: 18,
-                          color: Colors.grey, // Color del placeholder
+                          color: Colors.grey,
                         ),
-                        border: InputBorder.none, // Sin borde interno del TextField
-                        contentPadding: EdgeInsets.symmetric(vertical: 12.0), // Ajuste vertical
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 12.0),
                       ),
                       textInputAction: TextInputAction.search,
                       onSubmitted: (value) {
@@ -240,7 +275,7 @@ class _HomeState extends State<Home> { // Estado para Home
                       },
                     ),
                   ),
-                  if (_isSearching) // Indicador de carga
+                  if (_isSearching)
                     const Padding(
                       padding: EdgeInsets.all(8.0),
                       child: SizedBox(
@@ -249,7 +284,7 @@ class _HomeState extends State<Home> { // Estado para Home
                         child: CircularProgressIndicator(strokeWidth: 2.0),
                       ),
                     )
-                  else // Botón de búsqueda si no se está buscando
+                  else
                     IconButton(
                       icon: const Icon(Icons.search, color: Colors.black54),
                       onPressed: () {
@@ -267,7 +302,7 @@ class _HomeState extends State<Home> { // Estado para Home
           // Botón de perfil
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
-            Pin(size: 60.0, middle: 0.1947),
+            Pin(size: 60.0, middle: 0.1947), // Este middle es relativo a la altura disponible
             child: StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('users')
@@ -304,24 +339,7 @@ class _HomeState extends State<Home> { // Estado para Home
                           ),
                           errorWidget: (context, url, error) {
                             developer.log('Error CachedNetworkImage (Perfil): $error, URL: $url');
-                            return Image.network(
-                              profilePhotoUrl,
-                              fit: BoxFit.cover,
-                              loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                        : null,
-                                  ),
-                                );
-                              },
-                              errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                                developer.log('Error Image.network (Perfil Fallback): $exception, URL: $url');
-                                return const Center(child: Icon(Icons.person, size: 30, color: Colors.grey));
-                              },
-                            );
+                            return const Center(child: Icon(Icons.person, size: 30, color: Colors.grey));
                           })
                           : const Center(child: Icon(Icons.person, size: 30, color: Colors.grey)),
                     ),
@@ -355,7 +373,7 @@ class _HomeState extends State<Home> { // Estado para Home
           // Botón de tienda
           Pinned.fromPins(
             Pin(size: 58.5, end: 2.0),
-            Pin(size: 60.0, start: 105.0),
+            Pin(size: 60.0, start: 105.0), // Ajustar este valor si es necesario
             child: PageLink(
               links: [
                 PageLinkInfo(
@@ -394,109 +412,95 @@ class _HomeState extends State<Home> { // Estado para Home
             ),
           ),
 
-          // Botón de noticias (resaltado)
-          Pinned.fromPins(
-            Pin(size: 54.3, start: 24.0),
-            Pin(size: 60.0, middle: 0.2712),
-            child: Container(
-              decoration: BoxDecoration(
-                image: const DecorationImage(image: AssetImage('assets/images/noticias.png'), fit: BoxFit.fill),
-                boxShadow: const [BoxShadow(color: Color(0xff9ff1fb), offset: Offset(0, 3), blurRadius: 6)],
-              ),
-            ),
-          ),
+          // --- NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+          Positioned(
+            top: 200.0, // Posición vertical fija desde la parte superior
+            left: 16.0,  // Margen izquierdo para la fila
+            right: 16.0, // Margen derecho para la fila
+            height: 60.0, // Altura de los botones
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribuye el espacio entre los botones
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                // Botón de noticias (resaltado) - sin PageLink según el original
+                _buildNavigationButtonItem(
+                  imagePath: 'assets/images/noticias.png',
+                  isHighlighted: true,
+                  fixedWidth: 54.3,
+                ),
 
-          // Botón de cuidados y recomendaciones
-          Align(
-            alignment: const Alignment(-0.459, -0.458),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CuidadosyRecomendaciones(key: const Key('CuidadosyRecomendaciones')),
+                // Botón de cuidados y recomendaciones
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => CuidadosyRecomendaciones(key: const Key('CuidadosyRecomendaciones')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/cuidadosrecomendaciones.png',
+                    fixedWidth: 63.0,
+                  ),
+                ),
+
+                // Botón de emergencias
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Emergencias(key: const Key('Emergencias')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/emergencias.png',
+                    fixedWidth: 65.0,
+                  ),
+                ),
+
+                // Botón de comunidad
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Comunidad(key: const Key('Comunidad')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/comunidad.png',
+                    fixedWidth: 67.0,
+                  ),
+                ),
+
+                // Botón de crear publicación
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Crearpublicaciones(key: const Key('Crearpublicaciones')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/crearpublicacion.png',
+                    fixedWidth: 53.6,
+                  ),
                 ),
               ],
-              child: Container(
-                width: 63.0,
-                height: 60.0,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/images/cuidadosrecomendaciones.png'), fit: BoxFit.fill),
-                ),
-              ),
             ),
           ),
-
-          // Botón de emergencias
-          Align(
-            alignment: const Alignment(0.0, -0.458),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Emergencias(key: const Key('Emergencias')),
-                ),
-              ],
-              child: Container(
-                width: 65.0,
-                height: 60.0,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/images/emergencias.png'), fit: BoxFit.fill),
-                ),
-              ),
-            ),
-          ),
-
-          // Botón de comunidad
-          Align(
-            alignment: const Alignment(0.477, -0.458),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Comunidad(key: const Key('Comunidad')),
-                ),
-              ],
-              child: Container(
-                width: 67.0,
-                height: 60.0,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/images/comunidad.png'), fit: BoxFit.fill),
-                ),
-              ),
-            ),
-          ),
-
-          // Botón de crear publicación
-          Pinned.fromPins(
-            Pin(size: 53.6, end: 20.3),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Crearpublicaciones(key: const Key('Crearpublicaciones')),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/images/crearpublicacion.png'), fit: BoxFit.fill),
-                ),
-              ),
-            ),
-          ),
+          // --- FIN DE NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
 
           // Lista de publicaciones
           Pinned.fromPins(
             Pin(start: 16.0, end: 16.0),
-            Pin(start: 240.0, end: 0.0),
+            Pin(start: 270.0, end: 0.0), // Ajustado start para estar debajo de los botones de navegación
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance.collection('publicaciones').orderBy('fecha', descending: true).snapshots(),
               builder: (context, snapshot) {
@@ -512,10 +516,11 @@ class _HomeState extends State<Home> { // Estado para Home
                 }
                 return MediaQuery.removePadding(
                   context: context,
-                  removeBottom: true,
+                  removeBottom: true, // Importante si hay elementos fijos abajo
+                  removeTop: true, // Importante ya que estamos usando Pinned para posicionar
                   child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    physics: const ClampingScrollPhysics(),
+                    padding: EdgeInsets.zero, // Asegurar que no haya padding extra
+                    // physics: const ClampingScrollPhysics(), // Puede ser útil
                     itemCount: snapshot.data!.docs.length,
                     itemBuilder: (context, index) {
                       var publicacion = snapshot.data!.docs[index];
@@ -532,7 +537,6 @@ class _HomeState extends State<Home> { // Estado para Home
   }
 
   Widget _buildPublicacionItem(DocumentSnapshot publicacion, BuildContext context) {
-    // ... (El resto de _buildPublicacionItem y otros widgets de publicación no cambian)
     final mediaUrl = publicacion['imagenUrl'] as String?;
     final isVideo = (publicacion['esVideo'] as bool?) ?? false;
     final hasValidMedia = mediaUrl != null && mediaUrl.isNotEmpty;
@@ -540,7 +544,7 @@ class _HomeState extends State<Home> { // Estado para Home
     final postOwnerId = publicacion['usuarioId'] as String?;
     final isOwnPost = currentUserId != null && postOwnerId == currentUserId;
     final likes = publicacion['likes'] as int? ?? 0;
-    final likedBy = List<String>.from(publicacion['likedBy'] ?? []);
+    final likedBy = List<String>.from(publicacion['likedBy'] as List<dynamic>? ?? []); // Asegurar tipo
 
     return Container(
       margin: const EdgeInsets.only(top: 10.0),
@@ -551,6 +555,7 @@ class _HomeState extends State<Home> { // Estado para Home
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Encabezado de la publicación
           Padding(
@@ -594,7 +599,7 @@ class _HomeState extends State<Home> { // Estado para Home
                         backgroundImage:
                         profilePhotoUrl != null &&
                             profilePhotoUrl.isNotEmpty
-                            ? NetworkImage(profilePhotoUrl)
+                            ? NetworkImage(profilePhotoUrl) // CachedNetworkImage podría ser una opción aquí también
                             : null,
                         child:
                         profilePhotoUrl == null || profilePhotoUrl.isEmpty
@@ -645,6 +650,7 @@ class _HomeState extends State<Home> { // Estado para Home
                       if (value == 'eliminar') {
                         _eliminarPublicacion(publicacion.id, context);
                       } else if (value == 'editar') {
+                        // TODO: Implementar edición o mostrar mensaje
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
@@ -672,15 +678,15 @@ class _HomeState extends State<Home> { // Estado para Home
 
           // Contenido multimedia
           if (hasValidMedia)
-            SizedBox(
-              width: double.infinity,
+            SizedBox( // Se asegura que el contenido multimedia no desborde
+              width: double.infinity, // Ocupa el ancho disponible en la tarjeta
               child:
               isVideo
-                  ? _VideoPlayerWidget(videoUrl: mediaUrl)
-                  : _buildImageWidget(mediaUrl, context),
+                  ? _VideoPlayerWidget(videoUrl: mediaUrl!) // Aseguramos que mediaUrl no es null aquí
+                  : _buildImageWidget(mediaUrl!, context), // Aseguramos que mediaUrl no es null aquí
             )
           else
-            _buildNoImageWidget(),
+            _buildNoImageWidget(), // Placeholder si no hay media
 
           // Caption
           Padding(
@@ -695,6 +701,7 @@ class _HomeState extends State<Home> { // Estado para Home
             ),
           ),
 
+          // Acciones (Like, Comment, Share, Save)
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
@@ -833,14 +840,14 @@ class _HomeState extends State<Home> { // Estado para Home
   }
 
   Widget _buildImageWidget(String imageUrl, BuildContext context) {
-    // ... (sin cambios)
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8.0),
+      borderRadius: BorderRadius.circular(8.0), //Consistente con el contenedor de la publicación
       child: CachedNetworkImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
-        width: MediaQuery.of(context).size.width - 32,
-        height: 300,
+        // El ancho se tomará del SizedBox padre en _buildPublicacionItem
+        // width: MediaQuery.of(context).size.width - 32, // -32 por los márgenes del Pinned y del Container
+        height: 300, // Altura fija para la imagen
         placeholder: (context, url) => const Center(
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(
@@ -850,37 +857,16 @@ class _HomeState extends State<Home> { // Estado para Home
         ),
         errorWidget: (context, url, error) {
           developer.log('Error CachedNetworkImage (Publicación): $error, URL: $url');
-          return Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              width: MediaQuery.of(context).size.width - 32,
-              height: 300,
-              loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Center(
-                  child: CircularProgressIndicator(
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                        : null,
-                  ),
-                );
-              },
-              errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                developer.log('Error Image.network (Publicación Fallback): $exception, URL: $url');
-                return _buildImageErrorWidget();
-              }
-          );
+          return _buildImageErrorWidget(); // Simplificado: usar directamente el widget de error
         },
       ),
     );
   }
 
   Widget _buildImageErrorWidget() {
-    // ... (sin cambios)
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 200, // Coincide con _buildNoImageWidget
       color: Colors.grey[200],
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -902,7 +888,6 @@ class _HomeState extends State<Home> { // Estado para Home
   }
 
   Widget _buildNoImageWidget() {
-    // ... (sin cambios)
     return Container(
       width: double.infinity,
       height: 200,
@@ -927,7 +912,6 @@ class _HomeState extends State<Home> { // Estado para Home
   }
 
   Future<void> _toggleLike(String postId, String? userId, List<String> likedBy, BuildContext context) async {
-    // ... (sin cambios)
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debes iniciar sesión para dar like')),
@@ -942,7 +926,9 @@ class _HomeState extends State<Home> { // Estado para Home
           developer.log('Error: Publicación no encontrada para dar like: $postId');
           throw Exception("Publicación no encontrada.");
         }
+        // Asegurar que likedBy es una lista de Strings
         List<String> currentLikedBy = List<String>.from(postSnapshot.data()?['likedBy'] as List<dynamic>? ?? []);
+
         final bool isLiked = currentLikedBy.contains(userId);
         List<String> newLikedBy;
         if (isLiked) {
@@ -961,7 +947,6 @@ class _HomeState extends State<Home> { // Estado para Home
   }
 
   Future<void> _guardarPublicacion(String publicacionId, BuildContext context) async {
-    // ... (sin cambios)
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
@@ -986,7 +971,6 @@ class _HomeState extends State<Home> { // Estado para Home
   }
 
   Future<void> _eliminarPublicacion(String publicacionId, BuildContext context) async {
-    // ... (sin cambios)
     try {
       await FirebaseFirestore.instance.collection('publicaciones').doc(publicacionId).delete();
       if (context.mounted) {
@@ -1010,7 +994,6 @@ class _VideoPlayerWidget extends StatefulWidget {
 }
 
 class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
-  // ... (El widget _VideoPlayerWidget no cambia)
   late VideoPlayerController _controller;
   late Future<void> _initializeVideoPlayerFuture;
   bool _hasError = false;
@@ -1021,6 +1004,7 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
     _initializeVideoPlayerFuture = _controller.initialize().then((_) {
       if (mounted) {
+        // Asegurar que el estado se actualice solo si el widget está montado
         setState(() {});
       }
     }).catchError((error) {
@@ -1031,6 +1015,7 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         });
       }
     });
+    _controller.setLooping(true); // Opcional: si quieres que el video se repita
   }
 
   @override
@@ -1054,13 +1039,17 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
             return _buildVideoErrorWidget();
           }
           if (!_controller.value.isInitialized) {
-            return const Center(child: CircularProgressIndicator());
+            // Muestra un indicador de carga si aún no está inicializado después de 'done'.
+            return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))));
           }
 
           final videoAspectRatio = _controller.value.aspectRatio;
+          // Se asegura que el AspectRatio sea válido
+          final validAspectRatio = (videoAspectRatio > 0) ? videoAspectRatio : 16/9;
+
 
           return AspectRatio(
-            aspectRatio: videoAspectRatio,
+            aspectRatio: validAspectRatio,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -1073,8 +1062,8 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           developer.log("Error en FutureBuilder de VideoPlayer: ${snapshot.error}, URL: ${widget.videoUrl}");
           return _buildVideoErrorWidget();
         }
-        else {
-          return const Center(child: CircularProgressIndicator());
+        else { // ConnectionState.waiting or active
+          return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))));
         }
       },
     );
@@ -1093,10 +1082,10 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         });
       },
       child: AnimatedOpacity(
-        opacity: _controller.value.isPlaying ? 0.0 : 1.0,
+        opacity: _controller.value.isPlaying && _controller.value.isInitialized ? 0.0 : 1.0,
         duration: const Duration(milliseconds: 300),
         child: Container(
-          color: Colors.black26,
+          color: Colors.black26, // Fondo semitransparente para el botón
           child: Center(
             child: Icon(
               _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
@@ -1112,8 +1101,8 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   Widget _buildVideoErrorWidget() {
     return Container(
       width: double.infinity,
-      height: 200,
-      color: Colors.black,
+      height: 200, // Altura estándar para errores de media
+      color: Colors.black, // Fondo oscuro para errores de video
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -1122,7 +1111,7 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           Text(
             'Error al cargar el video',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'Comic Sans MS'),
           ),
         ],
       ),

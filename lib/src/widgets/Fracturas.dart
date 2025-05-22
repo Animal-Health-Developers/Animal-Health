@@ -1,61 +1,203 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import '../services/auth_service.dart';
-import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+import './Home.dart';
 import './Ayuda.dart';
 import './PerfilPublico.dart';
+import './SolucionAEMERGENCIAS.dart';
 import './Configuracion.dart';
-import './ListadeAnimales.dart';
+import './ListadeAnimales.dart'; // Para la selección de animales
 import './CompradeProductos.dart';
 import './CuidadosyRecomendaciones.dart';
 import './Emergencias.dart';
 import './Comunidad.dart';
 import './Crearpublicaciones.dart';
-import 'dart:ui' as ui;
-import './SolucionAEMERGENCIAS.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import '../services/auth_service.dart';
+import '../models/animal.dart'; // Asegúrate que la ruta a tu clase Animal sea correcta
 
-class Fracturas extends StatelessWidget {
+// Ya no se usa SvgPicture.string si los botones son ElevatedButton
+// import 'package:flutter_svg/flutter_svg.dart';
+// import 'dart:ui' as ui; // No se usa directamente
+
+class Fracturas extends StatefulWidget {
+  final Animal? animalPreseleccionado;
+
   const Fracturas({
-    required Key key,
+    Key? key,
+    this.animalPreseleccionado,
   }) : super(key: key);
+
+  @override
+  _FracturasState createState() => _FracturasState();
+}
+
+class _FracturasState extends State<Fracturas> {
+  final TextEditingController _lugarCuerpoController = TextEditingController();
+  final TextEditingController _descripcionSintomasController = TextEditingController();
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+  GlobalKey<ScaffoldMessengerState>();
+
+  Animal? _animalSeleccionado;
+
+  @override
+  void initState() {
+    super.initState();
+    _animalSeleccionado = widget.animalPreseleccionado;
+  }
+
+  @override
+  void dispose() {
+    _lugarCuerpoController.dispose();
+    _descripcionSintomasController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _navegarParaSeleccionarAnimal() async {
+    final Animal? animalEscogido = await Navigator.push<Animal?>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ListadeAnimales(
+          key: Key('seleccionAnimalParaFractura'),
+          isSelectionMode: true,
+        ),
+      ),
+    );
+
+    if (animalEscogido != null) {
+      setState(() {
+        _animalSeleccionado = animalEscogido;
+      });
+    }
+  }
+
+  Future<void> _guardarFractura() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      _mostrarSnackbar("Error: Debes iniciar sesión para guardar.", Colors.red);
+      return;
+    }
+
+    if (_animalSeleccionado == null) {
+      _mostrarSnackbar("Por favor, selecciona un animal primero.", Colors.orange);
+      return;
+    }
+
+    if (_lugarCuerpoController.text.trim().isEmpty ||
+        _descripcionSintomasController.text.trim().isEmpty) {
+      _mostrarSnackbar(
+          "Por favor, completa todos los campos sobre la fractura.", Colors.orange);
+      return;
+    }
+
+    try {
+      final fracturaData = {
+        'lugarCuerpo': _lugarCuerpoController.text.trim(),
+        'descripcionSintomas': _descripcionSintomasController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+        'animalId': _animalSeleccionado!.id,
+        'animalNombre': _animalSeleccionado!.nombre,
+      };
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('animals') // Usamos 'animals' consistentemente
+          .doc(_animalSeleccionado!.id)
+          .collection('registros_fracturas') // Nueva subcolección
+          .add(fracturaData);
+
+      _mostrarSnackbar(
+          "Registro de fractura para ${_animalSeleccionado!.nombre} guardado con éxito.",
+          Colors.green);
+      _lugarCuerpoController.clear();
+      _descripcionSintomasController.clear();
+    } catch (e) {
+      _mostrarSnackbar("Error al guardar la información: $e", Colors.red);
+    }
+  }
+
+  void _mostrarSnackbar(String message, Color backgroundColor) {
+    _scaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(fontFamily: 'Comic Sans MS')),
+        backgroundColor: backgroundColor,
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Widget _buildNavigationButtonItem({
+    required String imagePath,
+    bool isHighlighted = false,
+    double? fixedWidth,
+    double height = 60.0,
+    required VoidCallback onPressed,
+  }) {
+    double itemWidth;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      if (imagePath.contains('noticias')) itemWidth = 54.3;
+      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      else if (imagePath.contains('emergencias')) itemWidth = 65.0;
+      else if (imagePath.contains('comunidad')) itemWidth = 67.0;
+      else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
+      else itemWidth = 60.0;
+    }
+
+    return InkWell(
+      onTap: onPressed,
+      child: Container(
+        width: itemWidth,
+        height: height,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(imagePath),
+            fit: BoxFit.fill,
+          ),
+          boxShadow: isHighlighted
+              ? const [BoxShadow(color: Color(0xffa3f0fb), offset: Offset(0, 3), blurRadius: 6)]
+              : null,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    const double navBarTopPosition = 200.0;
+    const double navBarHeight = 60.0;
+    const double spaceBelowNavBar = 20.0;
+    final double topOffsetForContent = navBarTopPosition + navBarHeight + spaceBelowNavBar;
+    final User? currentUserAuth = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
+      key: _scaffoldMessengerKey,
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
-                ),
-              ],
+              links: [PageLinkInfo(pageBuilder: () => Home(key: const Key('Home')))],
               child: Container(
                 decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/logo.png'),
-                    fit: BoxFit.cover,
-                  ),
+                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
                   borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
+                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
                 ),
               ),
             ),
@@ -64,491 +206,255 @@ class Fracturas extends StatelessWidget {
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
-                ),
-              ],
+              links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda')))],
               child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
+                decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill)),
               ),
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 307.0, end: 33.0),
-            Pin(size: 45.0, middle: 0.1995),
-            child: Stack(
-              children: <Widget>[
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xffffffff),
-                    borderRadius: BorderRadius.circular(5.0),
-                    border:
-                        Border.all(width: 1.0, color: const Color(0xff707070)),
+            Pin(size: 307.0, middle: 0.5),
+            Pin(size: 45.0, start: 135.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xffffffff),
+                borderRadius: BorderRadius.circular(5.0),
+                border: Border.all(width: 1.0, color: const Color(0xff707070)),
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Image.asset('assets/images/busqueda1.png', width: 24.0, height: 24.0),
                   ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 216.0, end: 40.0),
-                  Pin(size: 28.0, middle: 0.4118),
-                  child: Text(
-                    '¿Qué estás buscando?',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 31.0, start: 7.0),
-                  Pin(start: 7.0, end: 7.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: const AssetImage('assets/images/busqueda1.png'),
-                        fit: BoxFit.fill,
+                  const Expanded(
+                    child: TextField(
+                      style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Color(0xff000000)),
+                      decoration: InputDecoration(
+                        hintText: '¿Qué estás buscando?',
+                        hintStyle: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Colors.grey),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 12.0),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 60.0, start: 6.0),
-            Pin(size: 60.0, middle: 0.1947),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
-                    fit: BoxFit.fill,
-                  ),
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
+                ],
               ),
             ),
           ),
-          Pinned.fromPins(
-            Pin(size: 33.9, start: 10.0),
-            Pin(size: 32.0, middle: 0.3605),
-            child: PageLink(
-              links: [
-                PageLinkInfo(),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/back.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
+          if (currentUserAuth != null)
+            Pinned.fromPins(
+              Pin(size: 60.0, start: 6.0),
+              Pin(size: 60.0, start: 115.0), // Ajustar posición si es necesario
+              child: StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance.collection('users').doc(currentUserAuth.uid).snapshots(),
+                builder: (context, snapshot) {
+                  String? profilePhotoUrl;
+                  if (snapshot.hasData && snapshot.data!.exists) {
+                    final userData = snapshot.data!.data() as Map<String, dynamic>;
+                    profilePhotoUrl = userData['profilePhotoUrl'] as String?;
+                  }
+                  return PageLink(
+                    links: [PageLinkInfo(pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')))],
+                    child: Container(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.0),
+                          color: Colors.grey[200],
+                          border: Border.all(color: Colors.white, width: 1.5)
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.5),
+                        child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                            imageUrl: profilePhotoUrl,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
+                            errorWidget: (context, url, error) {
+                              print("Error cargando foto de perfil del usuario (Fracturas): $error");
+                              return const Icon(Icons.person, size: 35, color: Colors.grey);
+                            }
+                        )
+                            : const Icon(Icons.person, size: 35, color: Colors.grey),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-          ),
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 60.1, start: 6.0),
             Pin(size: 60.0, start: 44.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/listaanimales.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales')))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 58.5, end: 2.0),
             Pin(size: 60.0, start: 105.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CompradeProductos(key: Key('CompradeProductos'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/store.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => const CompradeProductos(key: Key('CompradeProductos')))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
             ),
           ),
-          Pinned.fromPins(
-            Pin(size: 54.3, start: 24.0),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/noticias.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(-0.459, -0.458),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones'),),
-                ),
-              ],
-              child: Container(
-                width: 63.0,
-                height: 60.0,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/cuidadosrecomendaciones.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.0, -0.458),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Emergencias(key: Key('Emergencias'),),
-                ),
-              ],
-              child: Container(
-                width: 65.0,
-                height: 60.0,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/emergencias.png'),
-                    fit: BoxFit.fill,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xffa3f0fb),
-                      offset: Offset(0, 3),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.477, -0.458),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Comunidad(key: Key('Comunidad'),),
-                ),
-              ],
-              child: Container(
-                width: 67.0,
-                height: 60.0,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/comunidad.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 53.6, end: 20.3),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Crearpublicaciones(key: Key('Crearpublicaciones'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/crearpublicacion.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 15.5, end: 15.5),
-            Pin(size: 476.0, end: 10.0),
-            child: Stack(
+          Positioned(
+            top: navBarTopPosition,
+            left: 16.0,
+            right: 16.0,
+            height: navBarHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                Stack(
+                _buildNavigationButtonItem(imagePath: 'assets/images/noticias.png', fixedWidth: 54.3, onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home(key: const Key('Home'))))),
+                _buildNavigationButtonItem(imagePath: 'assets/images/cuidadosrecomendaciones.png', fixedWidth: 63.0, onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CuidadosyRecomendaciones(key: const Key('CuidadosyRecomendaciones'))))),
+                _buildNavigationButtonItem(imagePath: 'assets/images/emergencias.png', isHighlighted: true, fixedWidth: 65.0, onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Emergencias(key: Key('Emergencias'))))),
+                _buildNavigationButtonItem(imagePath: 'assets/images/comunidad.png', fixedWidth: 67.0, onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Comunidad(key: const Key('Comunidad'))))),
+                _buildNavigationButtonItem(imagePath: 'assets/images/crearpublicacion.png', fixedWidth: 53.6, onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Crearpublicaciones(key: const Key('Crearpublicaciones'))))),
+              ],
+            ),
+          ),
+          Positioned(
+            top: topOffsetForContent,
+            left: 20.0,
+            right: 20.0,
+            bottom: 20.0,
+            child: Container(
+              padding: const EdgeInsets.all(15.0),
+              decoration: BoxDecoration(
+                color: const Color(0xcc54d1e0),
+                borderRadius: BorderRadius.circular(20.0),
+                border: Border.all(width: 1.0, color: const Color(0x87000000)),
+                boxShadow: const [BoxShadow(color: Color(0x40000000), offset: Offset(0, 3), blurRadius: 6)],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0x8754d1e0),
-                        borderRadius: BorderRadius.circular(20.0),
-                        border: Border.all(
-                            width: 1.0, color: const Color(0x87000000)),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 122.0, middle: 0.3649),
-                      Pin(size: 28.0, start: 21.0),
-                      child: Text(
-                        'FRACTURAS',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 20,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset('assets/images/fracturas.png', width: 45.0, height: 45.0),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'FRACTURAS',
+                          style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Color(0xff000000), fontWeight: FontWeight.w700),
                         ),
-                        softWrap: false,
-                      ),
+                      ],
                     ),
-                    Pinned.fromPins(
-                      Pin(size: 57.0, middle: 0.2917),
-                      Pin(size: 19.0, start: 51.0),
-                      child: Text(
-                        'síntomas',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 14,
-                          color: const Color(0xff000000),
-                          height: 1.7142857142857142,
+                    const SizedBox(height: 20.0),
+                    _animalSeleccionado == null
+                        ? ElevatedButton.icon(
+                      icon: const Icon(Icons.pets, color: Colors.black),
+                      label: const Text('Seleccionar Animal', style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black, fontSize: 16)),
+                      onPressed: _navegarParaSeleccionarAnimal,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.9),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: Color(0xff707070))),
+                      ),
+                    )
+                        : Card(
+                      elevation: 2,
+                      color: Colors.white.withOpacity(0.95),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0), side: const BorderSide(color: Color(0xff707070))),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          radius: 25,
+                          backgroundImage: _animalSeleccionado!.fotoPerfilUrl.isNotEmpty ? CachedNetworkImageProvider(_animalSeleccionado!.fotoPerfilUrl) : null,
+                          child: _animalSeleccionado!.fotoPerfilUrl.isEmpty ? const Icon(Icons.pets, size: 25) : null,
                         ),
-                        textHeightBehavior:
-                            TextHeightBehavior(applyHeightToFirstAscent: false),
-                        softWrap: false,
+                        title: Text("Mascota: ${_animalSeleccionado!.nombre}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontWeight: FontWeight.bold, fontSize: 16)),
+                        subtitle: Text(_animalSeleccionado!.especie, style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14)),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.edit_note, color: Color(0xff4ec8dd), size: 28),
+                          tooltip: 'Cambiar animal',
+                          onPressed: _navegarParaSeleccionarAnimal,
+                        ),
                       ),
                     ),
-                    Pinned.fromPins(
-                      Pin(start: 9.0, end: 10.0),
-                      Pin(size: 45.0, middle: 0.2111),
-                      child: SvgPicture.string(
-                        _svg_kl01em,
-                        allowDrawingOutsideViewBox: true,
-                        fit: BoxFit.fill,
-                      ),
+                    const SizedBox(height: 20.0),
+                    const Text(
+                      'LUGAR DEL CUERPO AFECTADO:',
+                      style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 17, color: Color(0xff000000), fontWeight: FontWeight.w700),
                     ),
-                    Pinned.fromPins(//CUADRO DE DESCRIPCION DEL PROBLEMA
-                      Pin(start: 9.0, end: 10.0),
-                      Pin(size: 145.0, middle: 0.568),
-                      child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(
-                              sigmaX: 22.0, sigmaY: 22.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xe3a0f4fe),
-                              borderRadius: BorderRadius.circular(20.0),
-                              border: Border.all(
-                                  width: 1.0,
-                                  color: const Color(0xff707070)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xf2000000),
-                                  offset: Offset(0, 3),
-                                  blurRadius: 6,
-                                ),
-                              ],
-                            ),
+                    const SizedBox(height: 8.0),
+                    TextField(
+                      controller: _lugarCuerpoController,
+                      decoration: InputDecoration(
+                        hintText: 'Ej: Pata delantera derecha, costillas, cola...',
+                        hintStyle: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 15, color: Colors.grey.shade700),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: const BorderSide(color: Color(0xff707070))),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                      ),
+                      style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16),
+                    ),
+                    const SizedBox(height: 20.0),
+                    const Text(
+                      'DESCRIPCIÓN Y SÍNTOMAS OBSERVADOS:',
+                      style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 17, color: Color(0xff000000), fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8.0),
+                    TextField(
+                      controller: _descripcionSintomasController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: 'Describe cómo ocurrió (si se sabe), y los síntomas: cojera, hinchazón, dolor al tacto, deformidad visible, incapacidad para moverse...',
+                        hintStyle: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 15, color: Colors.grey.shade700),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: const BorderSide(color: Color(0xff707070))),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                      ),
+                      style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16),
+                    ),
+                    const SizedBox(height: 25.0),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xffffffff),
+                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                            textStyle: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 17, color: Colors.black),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0), side: const BorderSide(color: Colors.black)),
+                            foregroundColor: Colors.black,
                           ),
+                          onPressed: _guardarFractura,
+                          child: const Text('Guardar'),
                         ),
-                      ),
-                    ),
-                    Pinned.fromPins(
-                      Pin(size: 100.0, start: 20.0),
-                      Pin(size: 24.0, middle: 0.3562),
-                      child: Text(
-                        'Descripción:',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 17,
-                          color: const Color(0xff000000),
-                          fontWeight: FontWeight.w700,
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xffffffff),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            textStyle: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 17, color: Colors.black),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0), side: const BorderSide(color: Colors.black)),
+                            foregroundColor: Colors.black,
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SolucionAEMERGENCIAS(key: const Key('SolucionAEMERGENCIAS_Fracturas'))),
+                            );
+                          },
+                          child: const Text('Ver Soluciones'),
                         ),
-                        softWrap: false,
-                      ),
+                      ],
                     ),
-                    Pinned.fromPins(
-                      Pin(size: 171.0, start: 19.5),
-                      Pin(size: 24.0, middle: 0.2246),
-                      child: Text(
-                        'LUGAR DEL CUERPO:',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 17,
-                          color: const Color(0xff000000),
-                        ),
-                        softWrap: false,
-                      ),
-                    ),
+                    const SizedBox(height: 10.0),
                   ],
                 ),
-                Pinned.fromPins(
-                  Pin(size: 147.0, start: 21.0),
-                  Pin(size: 34.0, middle: 0.7941),
-                  child: Stack(
-                    children: <Widget>[
-                      SizedBox(
-                        width: 147.0,
-                        height: 34.0,
-                        child: PageLink(
-                          links: [
-                            PageLinkInfo(
-                              transition: LinkTransition.Fade,
-                              ease: Curves.easeOut,
-                              duration: 0.3,
-                              pageBuilder: () => SolucionAEMERGENCIAS(key: Key('SolucionAEMERGENCIAS'),),
-                            ),
-                          ],
-                          child: SvgPicture.string(
-                            _svg_jwejqy,
-                            allowDrawingOutsideViewBox: true,
-                          ),
-                        ),
-                      ),
-                      Pinned.fromPins(
-                        Pin(size: 49.0, middle: 0.5204),
-                        Pin(start: 5.0, end: 5.0),
-                        child: Text(
-                          'Envíar',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 17,
-                            color: const Color(0xff000000),
-                          ),
-                          softWrap: false,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 147.0, end: 21.0),
-                  Pin(size: 34.0, middle: 0.7941),
-                  child: Stack(
-                    children: <Widget>[
-                      Container(
-                        width: 147.0,
-                        height: 34.0,
-                        decoration: BoxDecoration(
-                          color: const Color(0xff4ec8dd),
-                          borderRadius: BorderRadius.circular(8.0),
-                          border: Border.all(
-                              width: 1.0, color: const Color(0xff000000)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xff080808),
-                              offset: Offset(0, 3),
-                              blurRadius: 6,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Pinned.fromPins(
-                        Pin(size: 64.0, middle: 0.5301),
-                        Pin(start: 5.0, end: 5.0),
-                        child: Text(
-                          'Guardar',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 17,
-                            color: const Color(0xff000000),
-                          ),
-                          softWrap: false,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 62.9, start: 14.5),
-                  Pin(size: 70.0, start: 13.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: const AssetImage('assets/images/fracturas.png'),
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -556,8 +462,3 @@ class Fracturas extends StatelessWidget {
     );
   }
 }
-
-const String _svg_kl01em =
-    '<svg viewBox="9.2 82.5 362.0 45.0" ><path transform="translate(9.2, 82.5)" d="M 20 0 L 342 0 C 353.0456848144531 0 362 8.954304695129395 362 20 L 362 25 C 362 36.04569625854492 353.0456848144531 45 342 45 L 20 45 C 8.954304695129395 45 0 36.04569625854492 0 25 L 0 20 C 0 8.954304695129395 8.954304695129395 0 20 0 Z" fill="#4ec8dd" stroke="#707070" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
-const String _svg_jwejqy =
-    '<svg viewBox="36.5 705.0 147.0 34.0" ><path transform="translate(36.5, 705.0)" d="M 8 0 L 139 0 C 143.4182739257812 0 147 3.581721782684326 147 8 L 147 26 C 147 30.41827774047852 143.4182739257812 34 139 34 L 8 34 C 3.581721782684326 34 0 30.41827774047852 0 26 L 0 8 C 0 3.581721782684326 3.581721782684326 0 8 0 Z" fill="#4ec8dd" stroke="#000000" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';

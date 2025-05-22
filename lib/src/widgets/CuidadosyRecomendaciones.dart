@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import './Home.dart'; // Asegúrate que estas rutas sean correctas
@@ -22,7 +24,6 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:developer' as developer; // Para logging
 
 // --- CONFIGURACIÓN DE API KEYS ---
-// ¡¡¡ADVERTENCIA!!! NO SUBAS ESTA CLAVE A REPOSITORIOS PÚBLICOS NI LA DISTRIBUYAS.
 // PARA PRODUCCIÓN, USA UN BACKEND (CLOUD FUNCTIONS) PARA MANEJAR ESTA CLAVE.
 const String GEMINI_API_KEY_CARE = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3nenc'; // TU API KEY DE GEMINI AQUÍ (puede ser la misma que en Home)
 
@@ -136,6 +137,41 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> { /
     super.dispose();
   }
 
+  // Método para construir los items de la barra de navegación (copiado y adaptado de Home)
+  Widget _buildNavigationButtonItem({
+    required String imagePath,
+    bool isHighlighted = false,
+    double? fixedWidth,
+    double height = 60.0,
+  }) {
+    double itemWidth;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      // Fallback si no se provee ancho específico
+      if (imagePath.contains('noticias')) itemWidth = 54.3;
+      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      else if (imagePath.contains('emergencias')) itemWidth = 65.0;
+      else if (imagePath.contains('comunidad')) itemWidth = 67.0;
+      else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
+      else itemWidth = 60.0; // Default
+    }
+
+    return Container(
+      width: itemWidth,
+      height: height,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(imagePath),
+          fit: BoxFit.fill,
+        ),
+        boxShadow: isHighlighted
+            ? const [BoxShadow(color: Color(0xff9ff0fa), offset: Offset(0, 3), blurRadius: 6)] // Mismo color de Home para consistencia
+            : null,
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +242,7 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> { /
           // Barra de búsqueda (AHORA FUNCIONAL)
           Pinned.fromPins(
             Pin(size: 307.0, middle: 0.5), // Centrado
-            Pin(size: 45.0, middle: 0.1995),
+            Pin(size: 45.0, start: 150), // Posición vertical fija desde arriba (similar a Home)
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xffffffff),
@@ -276,7 +312,7 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> { /
           // Foto de perfil del usuario
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
-            Pin(size: 60.0, middle: 0.1947),
+            Pin(size: 60.0, middle: 0.1947), // Manteniendo su posición original relativa
             child: StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('users')
@@ -391,130 +427,97 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> { /
             ),
           ),
 
-          // Botón de noticias
-          Pinned.fromPins(
-            Pin(size: 54.3, start: 24.0),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: const Key('Home')),
+          // --- NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+          Positioned(
+            top: 200.0, // Posición vertical fija desde la parte superior (igual que en Home)
+            left: 16.0,  // Margen izquierdo para la fila
+            right: 16.0, // Margen derecho para la fila
+            height: 60.0, // Altura de los botones
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribuye el espacio entre los botones
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                // Botón de noticias
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Home(key: const Key('Home')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/noticias.png',
+                    fixedWidth: 54.3,
+                  ),
+                ),
+
+                // Botón de cuidados y recomendaciones (resaltado, ya que estamos en esta pantalla)
+                // No necesita PageLink a sí mismo
+                _buildNavigationButtonItem(
+                  imagePath: 'assets/images/cuidadosrecomendaciones.png',
+                  isHighlighted: true, // Resaltado
+                  fixedWidth: 63.0,
+                ),
+
+                // Botón de emergencias
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Emergencias(key: const Key('Emergencias')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/emergencias.png',
+                    fixedWidth: 65.0,
+                  ),
+                ),
+
+                // Botón de comunidad
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Comunidad(key: const Key('Comunidad')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/comunidad.png',
+                    fixedWidth: 67.0,
+                  ),
+                ),
+
+                // Botón de crear publicación
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Crearpublicaciones(key: const Key('Crearpublicaciones')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/crearpublicacion.png',
+                    fixedWidth: 53.6,
+                  ),
                 ),
               ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/noticias.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
             ),
           ),
-
-          // Botón de cuidados y recomendaciones (resaltado)
-          Align(
-            alignment: const Alignment(-0.459, -0.458),
-            child: Container(
-              width: 63.0,
-              height: 60.0,
-              decoration: BoxDecoration(
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/cuidadosrecomendaciones.png'),
-                  fit: BoxFit.fill,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xff9ff0fa),
-                    offset: Offset(0, 3),
-                    blurRadius: 6,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Botón de emergencias
-          Align(
-            alignment: const Alignment(0.0, -0.458),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Emergencias(key: const Key('Emergencias')),
-                ),
-              ],
-              child: Container(
-                width: 65.0,
-                height: 60.0,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/emergencias.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Botón de comunidad
-          Align(
-            alignment: const Alignment(0.477, -0.458),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Comunidad(key: const Key('Comunidad')),
-                ),
-              ],
-              child: Container(
-                width: 67.0,
-                height: 60.0,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/comunidad.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Botón de crear publicación
-          Pinned.fromPins(
-            Pin(size: 53.6, end: 20.3),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Crearpublicaciones(key: const Key('Crearpublicaciones')),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/crearpublicacion.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // --- FIN DE NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
 
           // Contenido dinámico de cuidados y recomendaciones
           Pinned.fromPins(
             Pin(start: 16.0, end: 16.0),
-            Pin(start: 240.0, end: 16.0),
+            Pin(start: 270.0, end: 16.0), // Ajustado start para estar debajo de los botones de navegación
+            // 200 (top botones) + 60 (alto botones) + 10 (espacio) = 270
             child: DailyAnimalCareContent(), // El widget interno que maneja la lista de consejos
           ),
         ],
@@ -559,7 +562,6 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
   }
 
   Future<String> _fetchImageFromUnsplash(String query) async {
-    // ... (sin cambios)
     if (UNSPLASH_ACCESS_KEY.isEmpty || UNSPLASH_ACCESS_KEY == 'TU_UNSPLASH_ACCESS_KEY') {
       developer.log("Unsplash API Key no configurada. Usando imagen de fallback para '$query'.");
       final Map<String, List<String>> sampleImageUrls = {
@@ -571,7 +573,12 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
         'vaca': ['https://images.unsplash.com/photo-1552797599-96f0a10001a8?w=500'],
         'conejo': ['https://images.unsplash.com/photo-1590900547020-17101905f89a?w=500'],
         'pregunta': ['https://images.unsplash.com/photo-1531011074460-b0d3930c0f7a?w=500'],
-        'error': ['https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?w=500'] // Imagen para errores
+        'error': ['https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?w=500'], // Imagen para errores
+        'loro': ['https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=500'],
+        'hámster': ['https://images.unsplash.com/photo-1593628026050-39998109554e?w=500'],
+        'iguana': ['https://images.unsplash.com/photo-1509247999901-638878935f59?w=500'],
+        'cerdo miniatura': ['https://images.unsplash.com/photo-1516457016043-6409a4aa5d9a?w=500'],
+        'vaca pequeña': ['https://images.unsplash.com/photo-1552797599-96f0a10001a8?w=500'],
       };
       final lowerQuery = query.toLowerCase();
       if (sampleImageUrls.containsKey(lowerQuery) && sampleImageUrls[lowerQuery]!.isNotEmpty) {
@@ -599,8 +606,7 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
     return _fallbackImageUrl;
   }
 
-  Future<String> _generateTipWithGemini(String animalType) async {
-    // ... (sin cambios)
+  Future <String> _generateTipWithGemini(String animalType) async {
     if (_geminiModelTips == null) {
       developer.log("Modelo Gemini no disponible para generar consejo.");
       return "Consejo no disponible en este momento.";
@@ -622,7 +628,6 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
 
 
   Future<void> _loadDailyTips() async {
-    // ... (sin cambios)
     setState(() {
       isLoading = true;
       errorMessage = '';
@@ -658,7 +663,6 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
   }
 
   Future<void> _fetchAndCacheTips(String todayString) async {
-    // ... (sin cambios, sigue generando la lista de consejos como antes)
     try {
       final List<AnimalCareTip> fetchedTips = [];
 
@@ -677,7 +681,7 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
               fetchedTips.add(AnimalCareTip(
                 title: 'Consejo Canino: ${breedInfo['name'] ?? 'Perro'}',
                 description: 'Temperamento: ${breedInfo['temperament'] ?? 'N/A'}.\nVida: ${breedInfo['life_span'] ?? 'N/A'}.',
-                imageUrl: dogData[0]['url'] ?? _fallbackImageUrl,
+                imageUrl: dogData[0]['url'] ?? await _fetchImageFromUnsplash('perro'), // Fallback con Unsplash
                 source: 'The Dog API',
                 date: todayString,
               ));
@@ -700,7 +704,7 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
               fetchedTips.add(AnimalCareTip(
                 title: 'Consejo Felino: ${breedInfo['name'] ?? 'Gato'}',
                 description: 'Temperamento: ${breedInfo['temperament'] ?? 'N/A'}.\nOrigen: ${breedInfo['origin'] ?? 'N/A'}.',
-                imageUrl: catData[0]['url'] ?? _fallbackImageUrl,
+                imageUrl: catData[0]['url'] ?? await _fetchImageFromUnsplash('gato'), // Fallback con Unsplash
                 source: 'The Cat API',
                 date: todayString,
               ));
@@ -714,12 +718,14 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
         final List<String> animalTypesForGemini = ['perro', 'gato', 'pájaro', 'hámster', 'conejo', 'tortuga'];
         final randomAnimalForGemini = animalTypesForGemini[_random.nextInt(animalTypesForGemini.length)];
         String geminiTipText = await _generateTipWithGemini(randomAnimalForGemini);
+        String geminiImageUrl = await _fetchImageFromUnsplash(randomAnimalForGemini);
 
         if (geminiTipText.contains("API Key de Gemini no es válida")) {
+          geminiImageUrl = await _fetchImageFromUnsplash('error');
           fetchedTips.add(AnimalCareTip(
             title: 'Error de Configuración IA',
             description: geminiTipText,
-            imageUrl: await _fetchImageFromUnsplash('error'),
+            imageUrl: geminiImageUrl,
             source: 'Sistema Gemini',
             date: todayString,
           ));
@@ -727,7 +733,7 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
           fetchedTips.add(AnimalCareTip(
             title: 'Consejo IA para: ${randomAnimalForGemini.replaceFirst(randomAnimalForGemini[0], randomAnimalForGemini[0].toUpperCase())}',
             description: geminiTipText,
-            imageUrl: await _fetchImageFromUnsplash(randomAnimalForGemini),
+            imageUrl: geminiImageUrl,
             source: 'IA Gemini / Unsplash',
             date: todayString,
           ));
@@ -809,26 +815,30 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
         developer.log("Consejos (con IA y Unsplash) guardados en Firestore para $todayString");
       }
 
-      setState(() {
-        tips = fetchedTips;
-        isLoading = false;
-      });
+      if (mounted) { // Verificar si el widget sigue montado antes de llamar a setState
+        setState(() {
+          tips = fetchedTips;
+          isLoading = false;
+        });
+      }
 
     } catch (e, stacktrace) {
       developer.log("Error en _fetchAndCacheTips: $e\n$stacktrace");
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Error al obtener consejos actualizados.';
-        if (tips.isEmpty) {
-          tips.add(AnimalCareTip(
-            title: 'Error de Conexión',
-            description: 'No pudimos cargar nuevos consejos. Por favor, revisa tu conexión e inténtalo más tarde.',
-            imageUrl: _fallbackImageUrl,
-            source: 'Sistema',
-            date: todayString,
-          ));
-        }
-      });
+      if (mounted) { // Verificar si el widget sigue montado
+        setState(() {
+          isLoading = false;
+          errorMessage = 'Error al obtener consejos actualizados.';
+          if (tips.isEmpty) { // Solo añadir el consejo de error si no hay ninguno
+            tips.add(AnimalCareTip(
+              title: 'Error de Conexión',
+              description: 'No pudimos cargar nuevos consejos. Por favor, revisa tu conexión e inténtalo más tarde.',
+              imageUrl: _fallbackImageUrl,
+              source: 'Sistema',
+              date: todayString,
+            ));
+          }
+        });
+      }
     }
   }
 
@@ -840,25 +850,36 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
       ));
     }
 
-    if (errorMessage.isNotEmpty && tips.isEmpty) {
+    if (errorMessage.isNotEmpty && tips.isEmpty) { // Mostrar error solo si no hay tips y hay mensaje de error
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text(
-            errorMessage,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red, fontSize: 16),
+          child: Column( // Para poder añadir un botón de reintento si se desea
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                errorMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red, fontSize: 16, fontFamily: 'Comic Sans MS'),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _loadDailyTips, // Reintentar cargar
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff4ec8dd)),
+                child: const Text('Reintentar', style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.white)),
+              )
+            ],
           ),
         ),
       );
     }
 
-    if (tips.isEmpty) {
-      return const Center(child: Text('No hay consejos disponibles hoy. ¡Vuelve mañana!'));
+    if (tips.isEmpty) { // Si después de todo no hay tips (y no es un error que se maneje arriba)
+      return const Center(child: Text('No hay consejos disponibles hoy. ¡Vuelve mañana!', style: TextStyle(fontFamily: 'Comic Sans MS')));
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.only(top: 10), // Espacio superior para la lista
       itemCount: tips.length,
       itemBuilder: (context, index) {
         final tip = tips[index];
@@ -868,13 +889,14 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
   }
 
   Widget _buildTipCard(AnimalCareTip tip) {
-    // ... (sin cambios)
     String displayDate;
     try {
       final DateTime parsedDate = DateFormat('yyyy-MM-dd').parse(tip.date);
+      // Asegúrate de tener inicializado el locale 'es_ES' en tu main.dart:
+      // await initializeDateFormatting('es_ES', null);
       displayDate = DateFormat("d 'de' MMMM 'de' yyyy", 'es_ES').format(parsedDate);
     } catch (e) {
-      developer.log('Error al formatear la fecha: ${tip.date} - $e');
+      developer.log('Error al formatear la fecha: ${tip.date} - $e. Asegúrate de inicializar el locale "es_ES".');
       displayDate = tip.date; // Fallback
     }
 
@@ -914,26 +936,29 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: CachedNetworkImage(
-                  imageUrl: tip.imageUrl,
-                  width: double.infinity,
-                  height: 200,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
+                    imageUrl: tip.imageUrl,
+                    width: double.infinity,
                     height: 200,
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)),
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      height: 200,
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)),
+                        ),
                       ),
                     ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    height: 200,
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: Icon(Icons.broken_image, color: Colors.grey[400], size: 50),
-                    ),
-                  ),
+                    errorWidget: (context, url, error) {
+                      developer.log('Error cargando imagen para Tip: $url, Error: $error');
+                      return Container(
+                        height: 200,
+                        color: Colors.grey[200],
+                        child: Center(
+                          child: Icon(Icons.broken_image, color: Colors.grey[400], size: 50),
+                        ),
+                      );
+                    }
                 ),
               ),
             ),
@@ -983,7 +1008,6 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
 }
 
 class AnimalCareTip {
-  // ... (sin cambios)
   final String title;
   final String description;
   final String imageUrl;

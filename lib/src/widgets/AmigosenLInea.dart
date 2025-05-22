@@ -5,7 +5,6 @@ import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
 import './PerfilPublico.dart';
 import './chatconamigos.dart'; // Asumo que esta pantalla existe
-import 'dart:ui' as ui;
 import './Contactos.dart';
 import './Comunidad.dart';
 import './Configuracion.dart';
@@ -14,7 +13,6 @@ import './CompradeProductos.dart';
 import './CuidadosyRecomendaciones.dart';
 import './Emergencias.dart';
 import './Crearpublicaciones.dart';
-// import 'package:flutter_svg/flutter_svg.dart'; // No se usa _svg_pp4nt ni _svg_guxmqh
 import '../services/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Para Firestore
 import 'package:firebase_auth/firebase_auth.dart';   // Para FirebaseAuth
@@ -26,30 +24,25 @@ import 'dart:developer' as developer; // Para logging
 const String GEMINI_API_KEY_ONLINE_FRIENDS = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3nenc'; // TU API KEY DE GEMINI AQUÍ
 // ---------------------------------
 
-
 class AmigosenLInea extends StatefulWidget { // Convertido a StatefulWidget
   const AmigosenLInea({ // Constructor actualizado
     Key? key,
   }) : super(key: key);
-
   @override
   _AmigosenLIneaState createState() => _AmigosenLIneaState();
 }
-
 class _AmigosenLIneaState extends State<AmigosenLInea> {
   final TextEditingController _searchController = TextEditingController();
   GenerativeModel? _geminiModel;
   bool _isSearching = false;
 
-  // Lista simulada de amigos en línea (estará vacía inicialmente)
-  // En una app real, esto vendría de Firestore o de un servicio de presencia.
   List<Map<String, String>> _onlineFriends = [];
 
   @override
   void initState() {
     super.initState();
     _initializeGemini();
-    _loadOnlineFriends(); // Cargar amigos en línea (simulado por ahora)
+    _loadOnlineFriends();
   }
 
   void _initializeGemini() {
@@ -68,16 +61,24 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
     }
   }
 
-  // Simulación de carga de amigos en línea
   void _loadOnlineFriends() {
-    // Por ahora, la dejamos vacía.
-    // Para probar, podrías añadir datos aquí temporalmente:
-    // setState(() {
-    //   _onlineFriends = [
-    //     {'name': 'Kitty', 'status': 'En línea', 'profilePicUrl': 'assets/images/kitty.jpg'},
-    //     {'name': 'Donut', 'status': 'En línea', 'profilePicUrl': 'assets/images/donut.jpg'},
-    //   ];
-    // });
+    // Simulación de carga de amigos en línea
+    // En una app real, esto vendría de Firestore o de un servicio de presencia.
+    // Para probar, puedes añadir datos aquí temporalmente:
+    /*
+    if (mounted) {
+      setState(() {
+        _onlineFriends = [
+          {'id': 'friend1', 'name': 'Kitty', 'status': 'En línea', 'profilePicUrl': 'assets/images/kitty.jpg'},
+          {'id': 'friend2', 'name': 'Donut', 'status': 'En línea', 'profilePicUrl': 'assets/images/donut.jpg'},
+          // Asegúrate que estas rutas de assets existan si las usas para probar.
+          // O usa URLs de prueba:
+          // {'id': 'friend1', 'name': 'Usuario Enlinea 1', 'status': 'En línea', 'profilePicUrl': 'https://via.placeholder.com/150/24f355'},
+          // {'id': 'friend2', 'name': 'Mascota Feliz', 'status': 'En línea', 'profilePicUrl': 'https://via.placeholder.com/150/f66b97'},
+        ];
+      });
+    }
+    */
   }
 
   Future<void> _performSearch(String query) async {
@@ -147,12 +148,47 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
     super.dispose();
   }
 
+  // Método para construir los items de la barra de navegación
+  Widget _buildNavigationButtonItem({
+    required String imagePath,
+    bool isHighlighted = false,
+    double? fixedWidth,
+    double height = 60.0,
+  }) {
+    double itemWidth;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      if (imagePath.contains('noticias')) itemWidth = 54.3;
+      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      else if (imagePath.contains('emergencias')) itemWidth = 65.0;
+      else if (imagePath.contains('comunidad')) itemWidth = 67.0;
+      else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
+      else itemWidth = 60.0;
+    }
+
+    return Container(
+      width: itemWidth,
+      height: height,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(imagePath),
+          fit: BoxFit.fill,
+        ),
+        boxShadow: isHighlighted
+            ? const [BoxShadow(color: Color(0xff9dedf9), offset: Offset(0, 3), blurRadius: 6)] // Color de Comunidad
+            : null,
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    final double statusBarHeight = MediaQuery.of(context).padding.top;
-    final double navBarCenterY = MediaQuery.of(context).size.height * 0.2712;
-    final double navBarBottomY = navBarCenterY + 30;
-    final double topOffsetForContentBlock = navBarBottomY + 20;
+    const double navBarTopPosition = 200.0;
+    const double navBarHeight = 60.0;
+    const double spaceBelowNavBar = 20.0;
+    final double topOffsetForContentBlock = navBarTopPosition + navBarHeight + spaceBelowNavBar;
 
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
@@ -196,10 +232,10 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
             ),
           ),
 
-          //Barra de busqueda (POSICIÓN CENTRADA Y FUNCIONAL)
+          //Barra de busqueda
           Pinned.fromPins(
-            Pin(size: 307.0, middle: 0.5), // CENTRADO
-            Pin(size: 45.0, middle: 0.1995),
+            Pin(size: 307.0, middle: 0.5),
+            Pin(size: 45.0, start: 150.0), // Consistente
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xffffffff),
@@ -220,7 +256,7 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
                         hintText: 'Buscar amigos...',
                         hintStyle: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Colors.grey),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.only(left: 4, right: 4, top: 12, bottom: 12),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12.0),
                       ),
                       textInputAction: TextInputAction.search,
                       onSubmitted: (value) { if (!_isSearching) _performSearch(value); },
@@ -235,7 +271,7 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
             ),
           ),
 
-          //Mini foto de perfil (DINÁMICA)
+          //Mini foto de perfil
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
             Pin(size: 60.0, middle: 0.1947),
@@ -291,81 +327,81 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
               child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
             ),
           ),
-          // Botón de noticias
-          Pinned.fromPins(
-            Pin(size: 54.3, start: 24.0),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/noticias.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          // Botón de cuidados y recomendaciones
-          Align(
-            alignment: const Alignment(-0.459, -0.458),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones')))],
-              child: Container(width: 63.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/cuidadosrecomendaciones.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          // Botón de emergencias
-          Align(
-            alignment: const Alignment(0.0, -0.458),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Emergencias(key: Key('Emergencias')))],
-              child: Container(width: 65.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/emergencias.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          // Botón de comunidad (resaltado)
-          Align(
-            alignment: const Alignment(0.477, -0.458),
-            child: PageLink( // Enlace a Comunidad, ya que esta es la pantalla de "Amigos en Línea" que es una subsección
-              links: [PageLinkInfo(pageBuilder: () => const Comunidad(key: Key('Comunidad')))],
-              child: Container(
-                width: 67.0, height: 60.0,
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/comunidad.png'), fit: BoxFit.fill),
-                  boxShadow: [BoxShadow(color: const Color(0xff9dedf9), offset: const Offset(0, 3), blurRadius: 6)],
+
+          // --- NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+          Positioned(
+            top: navBarTopPosition,
+            left: 16.0,
+            right: 16.0,
+            height: navBarHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/noticias.png',
+                    fixedWidth: 54.3,
+                  ),
                 ),
-              ),
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/cuidadosrecomendaciones.png',
+                    fixedWidth: 63.0,
+                  ),
+                ),
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const Emergencias(key: Key('Emergencias')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/emergencias.png',
+                    fixedWidth: 65.0,
+                  ),
+                ),
+                PageLink( // Enlace a Comunidad, ya que "Amigos en línea" es subsección
+                  links: [PageLinkInfo(pageBuilder: () => const Comunidad(key: Key('Comunidad')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/comunidad.png',
+                    isHighlighted: true, // Resaltar comunidad
+                    fixedWidth: 67.0,
+                  ),
+                ),
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const Crearpublicaciones(key: Key('Crearpublicaciones')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/crearpublicacion.png',
+                    fixedWidth: 53.6,
+                  ),
+                ),
+              ],
             ),
           ),
-          // Botón de crear publicación
-          Pinned.fromPins(
-            Pin(size: 53.6, end: 20.3),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Crearpublicaciones(key: Key('Crearpublicaciones')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/crearpublicacion.png'), fit: BoxFit.fill))),
-            ),
-          ),
+          // --- FIN DE NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+
           // BLOQUE DE "SOLICITUDES", "EN LÍNEA", "CONTACTOS" Y LISTA DE AMIGOS EN LÍNEA
           Positioned(
             top: topOffsetForContentBlock,
             left: 14.0,
             right: 14.0,
-            bottom: 20.0, // Añadir un poco de padding inferior para que no se pegue al borde
+            bottom: 20.0,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Fila para "Solicitudes", "En línea", "Contactos"
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Expanded(child: _buildCommunityTabButton('Solicitudes', false, () {
-                      // Navegar a la pantalla de Comunidad (que muestra solicitudes)
                       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Comunidad(key: Key('Comunidad'))));
                     })),
                     const SizedBox(width: 10),
-                    Expanded(child: _buildCommunityTabButton('En línea', true, () {})), // "En línea" es la pestaña actual
+                    Expanded(child: _buildCommunityTabButton('En línea', true, () {})), // Pestaña actual
                     const SizedBox(width: 10),
                     Expanded(child: _buildCommunityTabButton('Contactos', false, () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Contactos(key: const Key('Contactos')))))),
                   ],
                 ),
                 const SizedBox(height: 20),
-
-                // Contenedor para la lista de amigos en línea
-                Expanded( // Usar Expanded para que la lista ocupe el espacio restante
+                Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(10.0),
                     decoration: BoxDecoration(
@@ -392,13 +428,22 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
                       itemCount: _onlineFriends.length,
                       itemBuilder: (context, index) {
                         final friend = _onlineFriends[index];
+                        // Asegúrate de que 'id' esté presente en tus datos simulados si lo necesitas para `chatconamigos`
+                        // String friendId = friend['id'] ?? 'unknown_friend_id';
                         return _buildOnlineFriendItem(
                           name: friend['name']!,
-                          status: friend['status']!, // Aunque siempre será "En línea" aquí
+                          status: friend['status']!,
                           profilePicUrl: friend['profilePicUrl']!,
                           onChat: () {
-                            // Lógica para abrir chat
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => chatconamigos(key: const Key('chatconamigos') /*, friendId: friend['id'] */)));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => chatconamigos(
+                                  key: Key('chatconamigos_${friend['id'] ?? index}'), // Usar un ID único si está disponible
+                                  // friendId: friendId, // Descomenta y pasa el ID si tu chat lo requiere
+                                ),
+                              ),
+                            );
                             developer.log('Abrir chat con ${friend['name']}');
                           },
                         );
@@ -447,7 +492,6 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
     required String profilePicUrl,
     required VoidCallback onChat,
   }) {
-    // Determinar si la URL es de assets o de red
     bool isAsset = profilePicUrl.startsWith('assets/');
 
     return Container(
@@ -462,8 +506,20 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundImage: isAsset ? AssetImage(profilePicUrl) as ImageProvider : NetworkImage(profilePicUrl),
+            backgroundImage: isAsset ? AssetImage(profilePicUrl) as ImageProvider : CachedNetworkImageProvider(profilePicUrl),
+            onBackgroundImageError: isAsset ? null : (exception, stackTrace) {
+              developer.log('Error cargando imagen de red para amigo en línea: $profilePicUrl, $exception');
+            },
             backgroundColor: Colors.grey[200],
+            child: isAsset ? null : ( // Placeholder para NetworkImage si falla la carga principal
+                (CachedNetworkImageProvider(profilePicUrl) as CachedNetworkImageProvider)
+                    .obtainKey(const ImageConfiguration())
+                    .then((resolvedKey) {}) // Intenta cargarla
+                    .catchError((Object error, StackTrace stackTrace) { // Si falla
+                  developer.log('Fallback a icono por error en backgroundImage: $profilePicUrl');
+                  return const Icon(Icons.person_outline, size: 30, color: Colors.grey);
+                }) == null ? const Icon(Icons.person_outline, size: 30, color: Colors.grey) : null
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

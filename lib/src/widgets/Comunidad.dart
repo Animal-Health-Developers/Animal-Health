@@ -147,12 +147,47 @@ class _ComunidadState extends State<Comunidad> {
     super.dispose();
   }
 
+  // Método para construir los items de la barra de navegación
+  Widget _buildNavigationButtonItem({
+    required String imagePath,
+    bool isHighlighted = false,
+    double? fixedWidth,
+    double height = 60.0,
+  }) {
+    double itemWidth;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      // Fallback si no se provee ancho específico
+      if (imagePath.contains('noticias')) itemWidth = 54.3;
+      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      else if (imagePath.contains('emergencias')) itemWidth = 65.0;
+      else if (imagePath.contains('comunidad')) itemWidth = 67.0;
+      else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
+      else itemWidth = 60.0; // Default
+    }
+
+    return Container(
+      width: itemWidth,
+      height: height,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(imagePath),
+          fit: BoxFit.fill,
+        ),
+        boxShadow: isHighlighted
+            ? const [BoxShadow(color: Color(0xff9dedf9), offset: Offset(0, 3), blurRadius: 6)]
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double statusBarHeight = MediaQuery.of(context).padding.top;
-    final double navBarCenterY = MediaQuery.of(context).size.height * 0.2712;
-    final double navBarBottomY = navBarCenterY + 30;
-    final double topOffsetForCommunityBlock = navBarBottomY + 20;
+    const double navBarTopPosition = 200.0;
+    const double navBarHeight = 60.0;
+    const double spaceBelowNavBar = 20.0;
+    final double topOffsetForCommunityBlock = navBarTopPosition + navBarHeight + spaceBelowNavBar;
 
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
@@ -192,7 +227,7 @@ class _ComunidadState extends State<Comunidad> {
           ),
           Pinned.fromPins(
             Pin(size: 307.0, middle: 0.5),
-            Pin(size: 45.0, middle: 0.1995),
+            Pin(size: 45.0, start: 150.0), // Consistente con otras pantallas
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xffffffff),
@@ -213,7 +248,7 @@ class _ComunidadState extends State<Comunidad> {
                         hintText: 'Buscar en comunidad...',
                         hintStyle: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Colors.grey),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.only(left: 4, right: 4, top: 12, bottom: 12),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12.0), // Ajuste vertical
                       ),
                       textInputAction: TextInputAction.search,
                       onSubmitted: (value) { if (!_isSearching) _performSearch(value); },
@@ -229,7 +264,7 @@ class _ComunidadState extends State<Comunidad> {
           ),
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
-            Pin(size: 60.0, middle: 0.1947),
+            Pin(size: 60.0, middle: 0.1947), // Mantener su posición original
             child: StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
               builder: (context, snapshot) {
@@ -278,52 +313,60 @@ class _ComunidadState extends State<Comunidad> {
               child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
             ),
           ),
-          Pinned.fromPins(
-            Pin(size: 54.3, start: 24.0),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/noticias.png'), fit: BoxFit.fill))),
+
+          // --- NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+          Positioned(
+            top: navBarTopPosition, // Posición vertical fija
+            left: 16.0,
+            right: 16.0,
+            height: navBarHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/noticias.png',
+                    fixedWidth: 54.3,
+                  ),
+                ),
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/cuidadosrecomendaciones.png',
+                    fixedWidth: 63.0,
+                  ),
+                ),
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const Emergencias(key: Key('Emergencias')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/emergencias.png',
+                    fixedWidth: 65.0,
+                  ),
+                ),
+                _buildNavigationButtonItem( // Botón de Comunidad (resaltado)
+                  imagePath: 'assets/images/comunidad.png',
+                  isHighlighted: true,
+                  fixedWidth: 67.0,
+                ),
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const Crearpublicaciones(key: Key('Crearpublicaciones')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/crearpublicacion.png',
+                    fixedWidth: 53.6,
+                  ),
+                ),
+              ],
             ),
           ),
-          Align(
-            alignment: const Alignment(-0.459, -0.458),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones')))],
-              child: Container(width: 63.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/cuidadosrecomendaciones.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          Align(
-            alignment: const Alignment(0.0, -0.458),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Emergencias(key: Key('Emergencias')))],
-              child: Container(width: 65.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/emergencias.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          Align(
-            alignment: const Alignment(0.477, -0.458),
-            child: Container(
-              width: 67.0, height: 60.0,
-              decoration: BoxDecoration(
-                image: const DecorationImage(image: AssetImage('assets/images/comunidad.png'), fit: BoxFit.fill),
-                boxShadow: [BoxShadow(color: const Color(0xff9dedf9), offset: const Offset(0, 3), blurRadius: 6)],
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 53.6, end: 20.3),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Crearpublicaciones(key: Key('Crearpublicaciones')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/crearpublicacion.png'), fit: BoxFit.fill))),
-            ),
-          ),
+          // --- FIN DE NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
 
           Positioned(
-            top: topOffsetForCommunityBlock,
+            top: topOffsetForCommunityBlock, // Usar la variable calculada
             left: 14.0,
             right: 14.0,
-            bottom: 20.0,
+            bottom: 20.0, // Dejar espacio en la parte inferior
             child: Column(
               children: [
                 Row(
@@ -341,7 +384,7 @@ class _ComunidadState extends State<Comunidad> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                Expanded( // ESTE ES EL CAMBIO PRINCIPAL
+                Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(10.0),
                     decoration: BoxDecoration(

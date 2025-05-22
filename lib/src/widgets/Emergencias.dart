@@ -47,38 +47,13 @@ class _EmergenciasState extends State<Emergencias> {
   void initState() {
     super.initState();
     _initializeGemini();
-    // _listAvailableModels(); // Descomenta para depurar modelos disponibles
   }
-
-  // // Solo para depuración, puedes quitar esto después
-  // Future<void> _listAvailableModels() async {
-  //   if (GEMINI_API_KEY_EMERGENCIES.isNotEmpty && GEMINI_API_KEY_EMERGENCIES != 'TU_API_KEY_DE_GEMINI_AQUI') {
-  //     try {
-  //       developer.log("Intentando listar modelos...");
-  //       final models = await GenerativeModel.listModels(apiKey: GEMINI_API_KEY_EMERGENCIES);
-  //       if (models.isEmpty) {
-  //         developer.log("No se encontraron modelos listados.");
-  //       }
-  //       for (final m in models) {
-  //         if (m.supportedGenerationMethods.contains('generateContent')) {
-  //              developer.log('Modelo disponible para generateContent: ${m.name} - ${m.displayName}');
-  //         } else {
-  //              developer.log('Modelo (no soporta generateContent): ${m.name} - ${m.displayName} - Soportado: ${m.supportedGenerationMethods}');
-  //         }
-  //       }
-  //     } catch (e) {
-  //       developer.log('Error listando modelos: $e');
-  //     }
-  //   } else {
-  //     developer.log("API Key de Gemini no configurada para listar modelos.");
-  //   }
-  // }
 
   void _initializeGemini() {
     if (GEMINI_API_KEY_EMERGENCIES.isNotEmpty && GEMINI_API_KEY_EMERGENCIES != 'TU_API_KEY_DE_GEMINI_AQUI') {
       try {
         _geminiModel = GenerativeModel(
-          model: 'gemini-1.5-flash-latest', // Modelo actualizado y recomendado
+          model: 'gemini-1.5-flash-latest',
           apiKey: GEMINI_API_KEY_EMERGENCIES,
         );
         developer.log("Modelo Gemini inicializado en Emergencias con 'gemini-1.5-flash-latest'.");
@@ -160,14 +135,48 @@ class _EmergenciasState extends State<Emergencias> {
     super.dispose();
   }
 
+  // Método para construir los items de la barra de navegación
+  Widget _buildNavigationButtonItem({
+    required String imagePath,
+    bool isHighlighted = false,
+    double? fixedWidth,
+    double height = 60.0,
+  }) {
+    double itemWidth;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      // Fallback si no se provee ancho específico
+      if (imagePath.contains('noticias')) itemWidth = 54.3;
+      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      else if (imagePath.contains('emergencias')) itemWidth = 65.0;
+      else if (imagePath.contains('comunidad')) itemWidth = 67.0;
+      else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
+      else itemWidth = 60.0; // Default
+    }
+
+    return Container(
+      width: itemWidth,
+      height: height,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(imagePath),
+          fit: BoxFit.fill,
+        ),
+        boxShadow: isHighlighted
+            ? const [BoxShadow(color: Color(0xffa3f0fb), offset: Offset(0, 3), blurRadius: 6)]
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double statusBarHeight = MediaQuery.of(context).padding.top;
     // Posición Y de la barra de navegación (noticias, cuidados, etc.)
-    // Asumiendo que middle: 0.2712 es el centro de esa barra de 60px de alto.
-    final double navBarCenterY = MediaQuery.of(context).size.height * 0.2712;
-    final double navBarBottomY = navBarCenterY + 30; // 30 es la mitad de la altura de la barra de navegación
-    final double topOffsetForEmergencyButtons = navBarBottomY + 20; // 20 unidades de espacio
+    const double navBarTopPosition = 200.0; // Misma que en Home y Cuidados
+    const double navBarHeight = 60.0;
+    const double spaceBelowNavBar = 20.0; // Espacio entre la barra de nav y los botones de emergencia
+    final double topOffsetForEmergencyButtons = navBarTopPosition + navBarHeight + spaceBelowNavBar;
 
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
@@ -211,10 +220,10 @@ class _EmergenciasState extends State<Emergencias> {
             ),
           ),
 
-          //Barra de busqueda (POSICIÓN CENTRADA)
+          //Barra de busqueda
           Pinned.fromPins(
-            Pin(size: 307.0, middle: 0.5), // CENTRADO
-            Pin(size: 45.0, middle: 0.1995),
+            Pin(size: 307.0, middle: 0.5),
+            Pin(size: 45.0, start: 150), // Igual que en otras pantallas para consistencia
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xffffffff),
@@ -235,7 +244,7 @@ class _EmergenciasState extends State<Emergencias> {
                         hintText: 'Buscar emergencia...',
                         hintStyle: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Colors.grey),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.only(left: 4, right: 4, top: 12, bottom: 12), // Ajuste fino
+                        contentPadding: EdgeInsets.symmetric(vertical: 12.0), // Ajuste vertical
                       ),
                       textInputAction: TextInputAction.search,
                       onSubmitted: (value) { if (!_isSearching) _performSearch(value); },
@@ -253,7 +262,7 @@ class _EmergenciasState extends State<Emergencias> {
           //Mini foto de perfil
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
-            Pin(size: 60.0, middle: 0.1947),
+            Pin(size: 60.0, middle: 0.1947), // Mantener la posición original de este elemento
             child: StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
               builder: (context, snapshot) {
@@ -306,111 +315,154 @@ class _EmergenciasState extends State<Emergencias> {
               child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
             ),
           ),
-          // Botón de noticias
-          Pinned.fromPins(
-            Pin(size: 54.3, start: 24.0),
-            Pin(size: 60.0, middle: 0.2712), // Este es el 'middle' de la barra de navegación
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/noticias.png'), fit: BoxFit.fill))),
+
+          // --- NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+          Positioned(
+            top: navBarTopPosition, // Posición vertical fija desde la parte superior
+            left: 16.0,  // Margen izquierdo para la fila
+            right: 16.0, // Margen derecho para la fila
+            height: navBarHeight, // Altura de los botones
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribuye el espacio entre los botones
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                // Botón de noticias
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Home(key: const Key('Home')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/noticias.png',
+                    fixedWidth: 54.3,
+                  ),
+                ),
+
+                // Botón de cuidados y recomendaciones
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => CuidadosyRecomendaciones(key: const Key('CuidadosyRecomendaciones')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/cuidadosrecomendaciones.png',
+                    fixedWidth: 63.0,
+                  ),
+                ),
+
+                // Botón de emergencias (resaltado)
+                _buildNavigationButtonItem(
+                  imagePath: 'assets/images/emergencias.png',
+                  isHighlighted: true,
+                  fixedWidth: 65.0,
+                ),
+
+                // Botón de comunidad
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Comunidad(key: const Key('Comunidad')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/comunidad.png',
+                    fixedWidth: 67.0,
+                  ),
+                ),
+
+                // Botón de crear publicación
+                PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Crearpublicaciones(key: const Key('Crearpublicaciones')),
+                    ),
+                  ],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/crearpublicacion.png',
+                    fixedWidth: 53.6,
+                  ),
+                ),
+              ],
             ),
           ),
-          // Botón de cuidados y recomendaciones
-          Align(
-            alignment: const Alignment(-0.459, -0.458), // Estos Alignments son relativos al centro de la pantalla
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones')))],
-              child: Container(width: 63.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/cuidadosrecomendaciones.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          // Botón de emergencias (resaltado)
-          Align(
-            alignment: const Alignment(0.0, -0.458),
-            child: Container(
-              width: 65.0, height: 60.0,
-              decoration: BoxDecoration(
-                image: const DecorationImage(image: AssetImage('assets/images/emergencias.png'), fit: BoxFit.fill),
-                boxShadow: [BoxShadow(color: const Color(0xffa3f0fb), offset: const Offset(0, 3), blurRadius: 6)],
-              ),
-            ),
-          ),
-          // Botón de comunidad
-          Align(
-            alignment: const Alignment(0.477, -0.458),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => Comunidad(key: Key('Comunidad')))],
-              child: Container(width: 67.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/comunidad.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          // Botón de crear publicación
-          Pinned.fromPins(
-            Pin(size: 53.6, end: 20.3),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Crearpublicaciones(key: Key('Crearpublicaciones')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/crearpublicacion.png'), fit: BoxFit.fill))),
-            ),
-          ),
+          // --- FIN DE NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+
 
           //BOTONES DE EMERGENCIAS
           Positioned(
-            top: topOffsetForEmergencyButtons,
+            top: topOffsetForEmergencyButtons, // Usar la variable calculada
             left: 30.0,
             right: 30.0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 20.0),
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  decoration: BoxDecoration(
-                    color: const Color(0xe3a0f4fe),
-                    borderRadius: BorderRadius.circular(10.0),
-                    border: Border.all(width: 1.0, color: const Color(0xe3000000)),
+            bottom: 20.0, // Añadir un bottom para que el Column sepa su límite si el GridView es muy largo
+            child: SingleChildScrollView( // Envolver en SingleChildScrollView por si el contenido excede la altura
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 20.0),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xe3a0f4fe),
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(width: 1.0, color: const Color(0xe3000000)),
+                    ),
+                    child: const Text(
+                      'Servicios de Emergencias',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Color(0xff000000), fontWeight: FontWeight.w700),
+                    ),
                   ),
-                  child: const Text(
-                    'Servicios de Emergencias',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Color(0xff000000), fontWeight: FontWeight.w700),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 20.0,
+                    crossAxisSpacing: 20.0,
+                    childAspectRatio: 0.8,
+                    children: <Widget>[
+                      _buildEmergencyButton(
+                        context: context,
+                        imagePath: 'assets/images/maps.png',
+                        label: 'Veterinarias cercanas',
+                        targetPage: () => const GoogleMaps(key: Key('GoogleMaps')),
+                      ),
+                      _buildEmergencyButton(
+                        context: context,
+                        imagePath: 'assets/images/auxilios.png',
+                        label: 'Primeros Auxilios',
+                        targetPage: () => const PrimerosAuxilios(key: Key('PrimerosAuxilios')),
+                      ),
+                      _buildEmergencyButton(
+                        context: context,
+                        imagePath: 'assets/images/ambulancia.png',
+                        label: 'Servicio de Ambulancia',
+                        targetPage: () => const ServiciodeAmbulancia(key: Key('ServiciodeAmbulancia')),
+                      ),
+                      _buildEmergencyButton(
+                        context: context,
+                        imagePath: 'assets/images/atencioncasa.png',
+                        label: 'Atención en Casa',
+                        targetPage: () => const AtencionenCasa(key: Key('AtencionenCasa')),
+                      ),
+                    ],
                   ),
-                ),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 20.0,
-                  crossAxisSpacing: 20.0,
-                  childAspectRatio: 0.8, // Ajustado para dar más altura (ancho / alto)
-                  // Un valor más cercano a 0.75 podría ser necesario si el texto es largo
-                  children: <Widget>[
-                    _buildEmergencyButton(
-                      context: context,
-                      imagePath: 'assets/images/maps.png',
-                      label: 'Veterinarias cercanas',
-                      targetPage: () => const GoogleMaps(key: Key('GoogleMaps')),
-                    ),
-                    _buildEmergencyButton(
-                      context: context,
-                      imagePath: 'assets/images/auxilios.png',
-                      label: 'Primeros Auxilios',
-                      targetPage: () => const PrimerosAuxilios(key: Key('PrimerosAuxilios')),
-                    ),
-                    _buildEmergencyButton(
-                      context: context,
-                      imagePath: 'assets/images/ambulancia.png',
-                      label: 'Servicio de Ambulancia',
-                      targetPage: () => const ServiciodeAmbulancia(key: Key('ServiciodeAmbulancia')),
-                    ),
-                    _buildEmergencyButton(
-                      context: context,
-                      imagePath: 'assets/images/atencioncasa.png',
-                      label: 'Atención en Casa',
-                      targetPage: () => const AtencionenCasa(key: Key('AtencionenCasa')),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -437,7 +489,7 @@ class _EmergenciasState extends State<Emergencias> {
         child: BackdropFilter(
           filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0), // Padding interno ajustado
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
             decoration: BoxDecoration(
               color: const Color(0x5e4ec8dd),
               borderRadius: BorderRadius.circular(20.0),
@@ -445,35 +497,32 @@ class _EmergenciasState extends State<Emergencias> {
               boxShadow: const [BoxShadow(color: Color(0x29000000), offset: Offset(0, 3), blurRadius: 6)],
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround, // Distribuye el espacio
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                // La imagen tomará el espacio disponible gracias a Flexible/Expanded
-                // y se ajustará con BoxFit.contain
-                Expanded( // Usar Expanded para que la imagen se escale
-                  flex: 3, // Dar más proporción a la imagen
+                Expanded(
+                  flex: 3,
                   child: Padding(
-                    padding: const EdgeInsets.all(4.0), // Pequeño padding alrededor de la imagen
+                    padding: const EdgeInsets.all(4.0),
                     child: Image.asset(
                       imagePath,
-                      fit: BoxFit.contain, // Asegura que toda la imagen sea visible
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
-                // const SizedBox(height: 4), // Espacio entre imagen y texto
-                Expanded( // Usar Expanded para el texto también
-                  flex: 2, // Menor proporción para el texto
+                Expanded(
+                  flex: 2,
                   child: Text(
                     label,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontFamily: 'Comic Sans MS',
-                      fontSize: 13.5, // Ajustar según sea necesario
+                      fontSize: 13.5,
                       color: Color(0xff000000),
                       fontWeight: FontWeight.w700,
                     ),
-                    maxLines: 2, // Permitir hasta 2 líneas
-                    overflow: TextOverflow.ellipsis, // Añadir '...' si el texto es muy largo
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

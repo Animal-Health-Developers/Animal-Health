@@ -5,7 +5,7 @@ import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
 import './PerfilPublico.dart';
 import './chatconamigos.dart'; // Asumo que esta pantalla existe
-import 'dart:ui' as ui;
+// import 'dart:ui' as ui; // No se está usando ui.ImageFilter directamente aquí
 import './AmigosenLInea.dart'; // Para navegar a Amigos en Línea
 import './Comunidad.dart';    // Para navegar a Solicitudes (Comunidad)
 import './Configuracion.dart';
@@ -83,41 +83,44 @@ class _ContactosState extends State<Contactos> {
     // Dejaremos la lista vacía para cumplir el requisito inicial.
     // Para probar, puedes descomentar y añadir datos:
     /*
-    setState(() {
-      _allContacts = [
-        Contact(id: '1', name: 'Kitty Amiga', profilePicUrl: 'assets/images/kitty.jpg', isOnline: true),
-        Contact(id: '2', name: 'Donut Amigo', profilePicUrl: 'assets/images/donut.jpg', isOnline: false),
-        Contact(id: '3', name: 'Winter Amigo', profilePicUrl: 'assets/images/winter.jpg', isOnline: true),
-        Contact(id: '4', name: 'Max El Perro', profilePicUrl: 'https://via.placeholder.com/150/24f355', isOnline: false),
-        Contact(id: '5', name: 'Luna La Gata', profilePicUrl: 'https://via.placeholder.com/150/f66b97', isOnline: true),
-      ];
-      _filteredContacts = _allContacts;
-    });
+    if (mounted) {
+      setState(() {
+        _allContacts = [
+          Contact(id: '1', name: 'Kitty Amiga', profilePicUrl: 'assets/images/kitty.jpg', isOnline: true),
+          Contact(id: '2', name: 'Donut Amigo', profilePicUrl: 'assets/images/donut.jpg', isOnline: false),
+          Contact(id: '3', name: 'Winter Amigo', profilePicUrl: 'assets/images/winter.jpg', isOnline: true),
+          Contact(id: '4', name: 'Max El Perro', profilePicUrl: 'https://via.placeholder.com/150/24f355', isOnline: false),
+          Contact(id: '5', name: 'Luna La Gata', profilePicUrl: 'https://via.placeholder.com/150/f66b97', isOnline: true),
+        ];
+        _filteredContacts = _allContacts;
+      });
+    }
     */
-    setState(() {
-      _allContacts = []; // Asegurar que esté vacía al inicio
-      _filteredContacts = _allContacts;
-    });
+    if (mounted) {
+      setState(() {
+        _allContacts = []; // Asegurar que esté vacía al inicio
+        _filteredContacts = _allContacts;
+      });
+    }
   }
 
   void _filterContactsLocal() {
     final query = _searchController.text.toLowerCase();
-    if (query.isEmpty) {
+    if (mounted) {
       setState(() {
-        _filteredContacts = _allContacts;
-      });
-    } else {
-      setState(() {
-        _filteredContacts = _allContacts.where((contact) {
-          return contact.name.toLowerCase().contains(query);
-        }).toList();
+        if (query.isEmpty) {
+          _filteredContacts = _allContacts;
+        } else {
+          _filteredContacts = _allContacts.where((contact) {
+            return contact.name.toLowerCase().contains(query);
+          }).toList();
+        }
       });
     }
   }
 
   Future<void> _performSearchWithGemini(String query) async {
     if (query.isEmpty) {
-      // Si la búsqueda de Gemini está vacía, simplemente mostramos los contactos filtrados localmente.
       _filterContactsLocal();
       return;
     }
@@ -182,12 +185,46 @@ class _ContactosState extends State<Contactos> {
     super.dispose();
   }
 
+  // Método para construir los items de la barra de navegación
+  Widget _buildNavigationButtonItem({
+    required String imagePath,
+    bool isHighlighted = false,
+    double? fixedWidth,
+    double height = 60.0,
+  }) {
+    double itemWidth;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      if (imagePath.contains('noticias')) itemWidth = 54.3;
+      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      else if (imagePath.contains('emergencias')) itemWidth = 65.0;
+      else if (imagePath.contains('comunidad')) itemWidth = 67.0;
+      else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
+      else itemWidth = 60.0;
+    }
+
+    return Container(
+      width: itemWidth,
+      height: height,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(imagePath),
+          fit: BoxFit.fill,
+        ),
+        boxShadow: isHighlighted
+            ? const [BoxShadow(color: Color(0xff9dedf9), offset: Offset(0, 3), blurRadius: 6)] // Color de Comunidad
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double statusBarHeight = MediaQuery.of(context).padding.top;
-    final double navBarCenterY = MediaQuery.of(context).size.height * 0.2712;
-    final double navBarBottomY = navBarCenterY + 30;
-    final double topOffsetForContentBlock = navBarBottomY + 20;
+    const double navBarTopPosition = 200.0;
+    const double navBarHeight = 60.0;
+    const double spaceBelowNavBar = 20.0;
+    final double topOffsetForContentBlock = navBarTopPosition + navBarHeight + spaceBelowNavBar;
 
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
@@ -231,10 +268,10 @@ class _ContactosState extends State<Contactos> {
             ),
           ),
 
-          //Barra de busqueda (POSICIÓN CENTRADA Y FUNCIONAL)
+          //Barra de busqueda
           Pinned.fromPins(
-            Pin(size: 307.0, middle: 0.5), // CENTRADO
-            Pin(size: 45.0, middle: 0.1995),
+            Pin(size: 307.0, middle: 0.5),
+            Pin(size: 45.0, start: 150.0),
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xffffffff),
@@ -255,11 +292,9 @@ class _ContactosState extends State<Contactos> {
                         hintText: 'Buscar contactos...',
                         hintStyle: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Colors.grey),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.only(left: 4, right: 4, top: 12, bottom: 12),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12.0),
                       ),
                       textInputAction: TextInputAction.search,
-                      // onSubmitted se maneja por el listener para filtrado local,
-                      // el botón de lupa activará la búsqueda con Gemini.
                     ),
                   ),
                   if (_isSearchingWithGemini)
@@ -277,7 +312,7 @@ class _ContactosState extends State<Contactos> {
             ),
           ),
 
-          //Mini foto de perfil (DINÁMICA)
+          //Mini foto de perfil
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
             Pin(size: 60.0, middle: 0.1947),
@@ -333,54 +368,58 @@ class _ContactosState extends State<Contactos> {
               child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
             ),
           ),
-          // Botón de noticias
-          Pinned.fromPins(
-            Pin(size: 54.3, start: 24.0),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/noticias.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          // Botón de cuidados y recomendaciones
-          Align(
-            alignment: const Alignment(-0.459, -0.458),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones')))],
-              child: Container(width: 63.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/cuidadosrecomendaciones.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          // Botón de emergencias
-          Align(
-            alignment: const Alignment(0.0, -0.458),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Emergencias(key: Key('Emergencias')))],
-              child: Container(width: 65.0, height: 60.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/emergencias.png'), fit: BoxFit.fill))),
-            ),
-          ),
-          // Botón de comunidad (resaltado)
-          Align(
-            alignment: const Alignment(0.477, -0.458),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Comunidad(key: Key('Comunidad')))], // Enlace a Comunidad
-              child: Container(
-                width: 67.0, height: 60.0,
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/comunidad.png'), fit: BoxFit.fill),
-                  boxShadow: [BoxShadow(color: const Color(0xff9dedf9), offset: const Offset(0, 3), blurRadius: 6)],
+
+          // --- NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+          Positioned(
+            top: navBarTopPosition,
+            left: 16.0,
+            right: 16.0,
+            height: navBarHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/noticias.png',
+                    fixedWidth: 54.3,
+                  ),
                 ),
-              ),
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/cuidadosrecomendaciones.png',
+                    fixedWidth: 63.0,
+                  ),
+                ),
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const Emergencias(key: Key('Emergencias')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/emergencias.png',
+                    fixedWidth: 65.0,
+                  ),
+                ),
+                PageLink( // Enlace a Comunidad, ya que "Contactos" es subsección
+                  links: [PageLinkInfo(pageBuilder: () => const Comunidad(key: Key('Comunidad')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/comunidad.png',
+                    isHighlighted: true, // Resaltar comunidad
+                    fixedWidth: 67.0,
+                  ),
+                ),
+                PageLink(
+                  links: [PageLinkInfo(pageBuilder: () => const Crearpublicaciones(key: Key('Crearpublicaciones')))],
+                  child: _buildNavigationButtonItem(
+                    imagePath: 'assets/images/crearpublicacion.png',
+                    fixedWidth: 53.6,
+                  ),
+                ),
+              ],
             ),
           ),
-          // Botón de crear publicación
-          Pinned.fromPins(
-            Pin(size: 53.6, end: 20.3),
-            Pin(size: 60.0, middle: 0.2712),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Crearpublicaciones(key: Key('Crearpublicaciones')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/crearpublicacion.png'), fit: BoxFit.fill))),
-            ),
-          ),
+          // --- FIN DE NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+
           // BLOQUE DE "SOLICITUDES", "EN LÍNEA", "CONTACTOS" Y LISTA DE CONTACTOS
           Positioned(
             top: topOffsetForContentBlock,
@@ -390,7 +429,6 @@ class _ContactosState extends State<Contactos> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Fila para "Solicitudes", "En línea", "Contactos"
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
@@ -398,12 +436,10 @@ class _ContactosState extends State<Contactos> {
                     const SizedBox(width: 10),
                     Expanded(child: _buildCommunityTabButton('En línea', false, () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AmigosenLInea(key: Key('AmigosenLInea')))))),
                     const SizedBox(width: 10),
-                    Expanded(child: _buildCommunityTabButton('Contactos', true, () {})), // "Contactos" es la pestaña actual
+                    Expanded(child: _buildCommunityTabButton('Contactos', true, () {})),
                   ],
                 ),
                 const SizedBox(height: 20),
-
-                // Contenedor para la lista de contactos
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(10.0),
@@ -412,7 +448,7 @@ class _ContactosState extends State<Contactos> {
                       borderRadius: BorderRadius.circular(20.0),
                       border: Border.all(width: 1.0, color: const Color(0xe3000000)),
                     ),
-                    child: _filteredContacts.isEmpty && _searchController.text.isEmpty // Mostrar si no hay contactos Y no se ha buscado nada
+                    child: _allContacts.isEmpty && _searchController.text.isEmpty
                         ? const Center(
                       child: Padding(
                         padding: EdgeInsets.all(20.0),
@@ -423,7 +459,7 @@ class _ContactosState extends State<Contactos> {
                         ),
                       ),
                     )
-                        : _filteredContacts.isEmpty && _searchController.text.isNotEmpty // Mostrar si la búsqueda no arrojó resultados
+                        : _filteredContacts.isEmpty && _searchController.text.isNotEmpty
                         ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(20.0),
@@ -434,14 +470,22 @@ class _ContactosState extends State<Contactos> {
                         ),
                       ),
                     )
-                        : ListView.builder( // Mostrar contactos filtrados
+                        : ListView.builder(
                       itemCount: _filteredContacts.length,
                       itemBuilder: (context, index) {
                         final contact = _filteredContacts[index];
                         return _buildContactItem(
                           contact: contact,
                           onChat: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => chatconamigos(key: const Key('chatconamigos') /*, friendId: contact.id */)));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => chatconamigos(
+                                  key: Key('chatconamigos_${contact.id}'),
+                                  // friendId: contact.id, // Pasa el ID del contacto si tu chat lo necesita
+                                ),
+                              ),
+                            );
                             developer.log('Abrir chat con ${contact.name}');
                           },
                         );
@@ -501,8 +545,20 @@ class _ContactosState extends State<Contactos> {
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundImage: isAsset ? AssetImage(contact.profilePicUrl) as ImageProvider : NetworkImage(contact.profilePicUrl),
+            backgroundImage: isAsset ? AssetImage(contact.profilePicUrl) as ImageProvider : CachedNetworkImageProvider(contact.profilePicUrl),
+            onBackgroundImageError: isAsset ? null : (exception, stackTrace) {
+              developer.log('Error cargando imagen de red para contacto: ${contact.profilePicUrl}, $exception');
+            },
             backgroundColor: Colors.grey[200],
+            child: isAsset ? null : (
+                (CachedNetworkImageProvider(contact.profilePicUrl) as CachedNetworkImageProvider)
+                    .obtainKey(const ImageConfiguration())
+                    .then((resolvedKey) {})
+                    .catchError((Object error, StackTrace stackTrace) {
+                  developer.log('Fallback a icono por error en backgroundImage de contacto: ${contact.profilePicUrl}');
+                  return const Icon(Icons.person_outline, size: 30, color: Colors.grey);
+                }) == null ? const Icon(Icons.person_outline, size: 30, color: Colors.grey) : null
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
