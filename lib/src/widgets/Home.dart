@@ -12,14 +12,20 @@ import './CuidadosyRecomendaciones.dart';
 import './Emergencias.dart';
 import './Comunidad.dart';
 import './Crearpublicaciones.dart';
-import './DetallesdeFotooVideo.dart'; // Asegúrate que la ruta sea correcta
+import './DetallesdeFotooVideo.dart';
 import './CompartirPublicacion.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
-import 'dart:developer' as developer; // Importante para los logs
+import 'dart:developer' as developer;
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb; // Para detectar si es web
+import 'dart:typed_data'; // Para Uint8List
+
 
 // --- CONFIGURACIÓN DE API KEYS ---
 const String GEMINI_API_KEY_HOME = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3nenc'; // TU API KEY DE GEMINI AQUÍ
@@ -160,6 +166,29 @@ class _HomeState extends State<Home> {
             ? const [BoxShadow(color: Color(0xff9ff1fb), offset: Offset(0, 3), blurRadius: 6)]
             : null,
       ),
+    );
+  }
+
+  Future<void> _mostrarDialogoEditarPublicacion(DocumentSnapshot publicacion) async {
+    final String publicacionId = publicacion.id;
+    final String? captionActual = publicacion['caption'] as String?;
+    final String? mediaUrlActual = publicacion['imagenUrl'] as String?;
+    final bool esVideoActual = (publicacion['esVideo'] as bool?) ?? false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return EditarPublicacionWidget(
+          key: Key('edit_$publicacionId'),
+          publicacionId: publicacionId,
+          captionActual: captionActual ?? '',
+          mediaUrlActual: mediaUrlActual,
+          esVideoActual: esVideoActual,
+          parentContext: this.context,
+        );
+      },
     );
   }
 
@@ -583,9 +612,7 @@ class _HomeState extends State<Home> {
                       if (value == 'eliminar') {
                         _eliminarPublicacion(publicacion.id, context);
                       } else if (value == 'editar') {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Funcionalidad de edición en desarrollo')),
-                        );
+                        _mostrarDialogoEditarPublicacion(publicacion);
                       }
                     },
                     itemBuilder: (BuildContext context) => [
@@ -600,7 +627,7 @@ class _HomeState extends State<Home> {
             SizedBox(
               width: double.infinity,
               child: isVideo
-                  ? _VideoPlayerWidget(videoUrl: mediaUrl!)
+                  ? _VideoPlayerWidget(key: Key('video_pub_${publicacion.id}'), videoUrl: mediaUrl!)
                   : _buildImageWidget(mediaUrl!, context),
             )
           else
@@ -627,7 +654,6 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-                // ***** CAMBIO IMPORTANTE AQUÍ PARA NAVEGAR A DETALLES *****
                 PageLink(
                   links: [
                     PageLinkInfo(
@@ -639,24 +665,19 @@ class _HomeState extends State<Home> {
                         developer.log("Navegando a Detalles: publicationId = '$pubId'", name: "Home.Navigation");
                         if (pubId == null || pubId.isEmpty) {
                           developer.log("ERROR en Home: El ID de la publicación es nulo o vacío ANTES de navegar a Detalles.", name: "Home.Navigation");
-                          // Podrías devolver un widget de error aquí o no permitir la navegación,
-                          // pero la guarda en DetallesdeFotooVideo se encargará
                         }
 
-                        // Obtener ownerUserProfilePic de forma segura
                         String? ownerProfilePic;
-                        final pubData = publicacion.data() as Map<String, dynamic>?; // Cast a Map
+                        final pubData = publicacion.data() as Map<String, dynamic>?;
                         if (pubData != null && pubData.containsKey('usuarioFotoUrl')) {
                           ownerProfilePic = pubData['usuarioFotoUrl'] as String?;
-                        } else if (pubData != null && pubData.containsKey('profilePhotoUrl')) { // Fallback por si el campo se llama diferente
+                        } else if (pubData != null && pubData.containsKey('profilePhotoUrl')) {
                           ownerProfilePic = pubData['profilePhotoUrl'] as String?;
                         }
-                        // developer.log("Owner Profile Pic para detalles: $ownerProfilePic", name: "Home.Navigation");
-
 
                         return DetallesdeFotooVideo(
                           key: Key('Detalles_${pubId ?? "ID_NULO"}'),
-                          publicationId: pubId ?? "", // Pasar string vacío si es nulo para el constructor
+                          publicationId: pubId ?? "",
                           mediaUrl: mediaUrl,
                           isVideo: isVideo,
                           caption: publicacion['caption'] as String?,
@@ -675,7 +696,6 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-                // ***** FIN DEL CAMBIO IMPORTANTE *****
                 PageLink(
                   links: [
                     PageLinkInfo(
@@ -683,10 +703,10 @@ class _HomeState extends State<Home> {
                       ease: Curves.easeOut,
                       duration: 0.3,
                       pageBuilder: () => CompartirPublicacion(
-                        key: const Key('CompartirPublicacion'), publicationId: '',
-                        // publicationId: publicacion.id,
-                        // mediaUrl: mediaUrl,
-                        // caption: publicacion['caption'],
+                        key: Key('Compartir_${publicacion.id}'),
+                        publicationId: publicacion.id,
+                        mediaUrl: mediaUrl,
+                        caption: publicacion['caption'] as String?,
                       ),
                     ),
                   ],
@@ -826,7 +846,51 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _eliminarPublicacion(String publicacionId, BuildContext context) async {
+    bool confirmar = await showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('Confirmar Eliminación'),
+          content: const Text('¿Estás seguro de que deseas eliminar esta publicación? Esta acción no se puede deshacer.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(ctx).pop(false);
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Eliminar'),
+              onPressed: () {
+                Navigator.of(ctx).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+
+    if (!confirmar) return;
+
     try {
+      DocumentSnapshot postDoc = await FirebaseFirestore.instance.collection('publicaciones').doc(publicacionId).get();
+      if (postDoc.exists) {
+        final data = postDoc.data() as Map<String, dynamic>;
+        final String? mediaUrlToDelete = data['imagenUrl'] as String?;
+        if (mediaUrlToDelete != null && mediaUrlToDelete.isNotEmpty) {
+          try {
+            // Solo intentar eliminar de Storage si es una URL de Firebase Storage
+            if (mediaUrlToDelete.startsWith('https://firebasestorage.googleapis.com')) {
+              await FirebaseStorage.instance.refFromURL(mediaUrlToDelete).delete();
+              developer.log('Medio eliminado de Storage: $mediaUrlToDelete', name: "Home.DeleteStorage");
+            }
+          } catch (storageError) {
+            developer.log('Error eliminando medio de Storage: $storageError. URL: $mediaUrlToDelete', name: "Home.DeleteStorage", error: storageError);
+          }
+        }
+      }
+
       await FirebaseFirestore.instance.collection('publicaciones').doc(publicacionId).delete();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación eliminada correctamente'), backgroundColor: Colors.green));
@@ -840,7 +904,447 @@ class _HomeState extends State<Home> {
   }
 }
 
-// _VideoPlayerWidget (sin cambios, se asume que está aquí o importado)
+
+// --- WIDGET PARA EL MODAL DE EDICIÓN ---
+class EditarPublicacionWidget extends StatefulWidget {
+  final String publicacionId;
+  final String captionActual;
+  final String? mediaUrlActual;
+  final bool esVideoActual;
+  final BuildContext parentContext;
+
+  const EditarPublicacionWidget({
+    required Key key,
+    required this.publicacionId,
+    required this.captionActual,
+    this.mediaUrlActual,
+    required this.esVideoActual,
+    required this.parentContext,
+  }) : super(key: key);
+
+  @override
+  _EditarPublicacionWidgetState createState() => _EditarPublicacionWidgetState();
+}
+
+class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
+  late TextEditingController _captionController;
+  File? _nuevoMedioFile; // Para móvil/escritorio y para subir a Storage
+  Uint8List? _nuevoMedioBytesPreview; // Para previsualizar imagen en web
+  bool _esNuevoMedioVideo = false;
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
+  VideoPlayerController? _videoPlayerControllerPreview;
+
+  @override
+  void initState() {
+    super.initState();
+    _captionController = TextEditingController(text: widget.captionActual);
+    if (widget.mediaUrlActual != null && widget.esVideoActual) {
+      _initializeVideoPlayerPreview(widget.mediaUrlActual!);
+    }
+  }
+
+  void _initializeVideoPlayerPreview(String url, {bool isFile = false}) async {
+    await _videoPlayerControllerPreview?.dispose();
+
+    Uri? uri = Uri.tryParse(url);
+    if (uri == null) {
+      developer.log("URL inválida para VideoPlayer: $url", name: "EditWidget.Video");
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+          SnackBar(content: Text('URL de video inválida: $url')),
+        );
+      }
+      return;
+    }
+
+    if (isFile && !kIsWeb) { // Video local en móvil/escritorio
+      _videoPlayerControllerPreview = VideoPlayerController.file(File(url));
+    } else if (kIsWeb && isFile) { // Video local (blob) en web
+      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri); // En web, path de XFile es una blob URL
+    }
+    else { // Video de red
+      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
+    }
+
+    try {
+      await _videoPlayerControllerPreview!.initialize();
+      if (mounted) setState(() {});
+      _videoPlayerControllerPreview!.setLooping(true);
+    } catch (e) {
+      developer.log("Error inicializando VideoPlayer preview para edición: $e, URL: $url", name: "EditWidget.Video");
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+          const SnackBar(content: Text('Error al cargar la vista previa del video.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _seleccionarMedia(ImageSource source, {bool isVideo = false}) async {
+    XFile? pickedFile;
+    try {
+      if (isVideo) {
+        pickedFile = await _picker.pickVideo(source: source);
+      } else {
+        pickedFile = await _picker.pickImage(source: source, imageQuality: 70);
+      }
+
+      if (pickedFile != null) {
+        _nuevoMedioBytesPreview = null;
+        if (!isVideo && kIsWeb) {
+          _nuevoMedioBytesPreview = await pickedFile.readAsBytes();
+        }
+
+        if (mounted) {
+          setState(() {
+            // Para subir a Storage, siempre usamos pickedFile.path (en web es una blob URL, en móvil es una ruta de archivo)
+            // _nuevoMedioFile se usa para la preview en móvil/escritorio con Image.file
+            // y también para pasarlo a putFile (que maneja la diferencia web/móvil).
+            _nuevoMedioFile = File(pickedFile!.path); // Esto es principalmente para la preview en móvil y para la lógica de subida.
+
+            _esNuevoMedioVideo = isVideo;
+            _videoPlayerControllerPreview?.dispose();
+            _videoPlayerControllerPreview = null;
+            if (isVideo) {
+              // Para video, pickedFile.path es la ruta (o blob URL en web)
+              _initializeVideoPlayerPreview(pickedFile.path, isFile: true);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      developer.log("Error seleccionando media para editar: $e", name: "EditWidget.Picker");
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+          SnackBar(content: Text('Error al seleccionar: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _guardarCambios() async {
+    if (_isUploading) return;
+    setState(() => _isUploading = true);
+
+    String nuevoCaption = _captionController.text.trim();
+    Map<String, dynamic> datosParaActualizar = {};
+    bool hayCambios = false;
+
+    if (nuevoCaption != widget.captionActual) {
+      datosParaActualizar['caption'] = nuevoCaption;
+      hayCambios = true;
+    }
+
+    String? mediaUrlParaActualizar = widget.mediaUrlActual;
+    bool esVideoParaActualizar = widget.esVideoActual;
+
+    if (_nuevoMedioFile != null) { // Si se seleccionó un nuevo medio (móvil/web)
+      hayCambios = true;
+      try {
+        String fileName = 'publicaciones/${widget.publicacionId}/media_${DateTime.now().millisecondsSinceEpoch}.${_nuevoMedioFile!.path.split('.').last}';
+
+        UploadTask uploadTask;
+        if (kIsWeb) {
+          // Para web, necesitamos los bytes si es una imagen, o el blob si es video.
+          // image_picker nos da XFile, y _nuevoMedioFile es File(XFile.path).
+          // putFile para web puede tomar el path (que es una blob URL).
+          // Si es imagen y tenemos bytes, podemos usar putData.
+          if (!_esNuevoMedioVideo && _nuevoMedioBytesPreview != null) {
+            uploadTask = FirebaseStorage.instance.ref(fileName).putData(_nuevoMedioBytesPreview!);
+          } else {
+            // Para video en web o imagen sin bytes (aunque deberíamos tenerlos), intentamos con putFile y la blob URL
+            uploadTask = FirebaseStorage.instance.ref(fileName).putFile(
+                _nuevoMedioFile!,
+                SettableMetadata(contentType: _esNuevoMedioVideo ? 'video/${_nuevoMedioFile!.path.split('.').last}' : 'image/${_nuevoMedioFile!.path.split('.').last}')
+            );
+          }
+        } else { // Móvil / Escritorio
+          uploadTask = FirebaseStorage.instance.ref(fileName).putFile(_nuevoMedioFile!);
+        }
+
+        TaskSnapshot snapshot = await uploadTask;
+        mediaUrlParaActualizar = await snapshot.ref.getDownloadURL();
+        esVideoParaActualizar = _esNuevoMedioVideo;
+
+        datosParaActualizar['imagenUrl'] = mediaUrlParaActualizar;
+        datosParaActualizar['esVideo'] = esVideoParaActualizar;
+
+        if (widget.mediaUrlActual != null && widget.mediaUrlActual!.isNotEmpty && widget.mediaUrlActual != mediaUrlParaActualizar) {
+          try {
+            if (widget.mediaUrlActual!.startsWith('https://firebasestorage.googleapis.com')) {
+              await FirebaseStorage.instance.refFromURL(widget.mediaUrlActual!).delete();
+              developer.log('Medio antiguo eliminado de Storage: ${widget.mediaUrlActual}', name: "EditWidget.DeleteOldStorage");
+            }
+          } catch (e) {
+            developer.log('Error eliminando medio antiguo de Storage: $e', name: "EditWidget.DeleteOldStorage", error: e);
+          }
+        }
+      } catch (e) {
+        developer.log('Error subiendo nuevo medio: $e', name: "EditWidget.Upload", error: e);
+        if (mounted) {
+          ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+            SnackBar(content: Text('Error al subir el nuevo medio: ${e.toString()}')),
+          );
+        }
+        setState(() => _isUploading = false);
+        return;
+      }
+    }
+
+    if (hayCambios) {
+      try {
+        datosParaActualizar['fechaActualizacion'] = FieldValue.serverTimestamp();
+        await FirebaseFirestore.instance.collection('publicaciones').doc(widget.publicacionId).update(datosParaActualizar);
+        if (mounted) {
+          ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+            const SnackBar(content: Text('Publicación actualizada exitosamente'), backgroundColor: Colors.green),
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        developer.log('Error actualizando publicación: $e', name: "EditWidget.FirestoreUpdate", error: e);
+        if (mounted) {
+          ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+            SnackBar(content: Text('Error al actualizar la publicación: ${e.toString()}')),
+          );
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+          const SnackBar(content: Text('No se realizaron cambios.')),
+        );
+      }
+      if (mounted) Navigator.of(context).pop();
+    }
+    if (mounted) {
+      setState(() => _isUploading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _captionController.dispose();
+    _videoPlayerControllerPreview?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      heightFactor: 0.9,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Editar Publicación', style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.white)),
+            backgroundColor: const Color(0xff4ec8dd),
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            ],
+          ),
+          body: Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    const Text(
+                      'Editar contenido:',
+                      style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    const SizedBox(height: 15),
+
+                    _buildMediaPreview(),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.image, color: Colors.white),
+                          label: const Text('Cambiar Foto', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')),
+                          onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: false),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff4ec8dd), padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                        ),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.videocam, color: Colors.white),
+                          label: const Text('Cambiar Video', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')),
+                          onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: true),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff4ec8dd), padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    TextFormField(
+                      controller: _captionController,
+                      style: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black),
+                      decoration: InputDecoration(
+                        labelText: 'Descripción (Caption)',
+                        labelStyle: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black54),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.8),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 30),
+
+                    _isUploading
+                        ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))))
+                        : ElevatedButton(
+                      onPressed: _guardarCambios,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff4ec8dd),
+                        padding: const EdgeInsets.symmetric(vertical: 15.0),
+                        textStyle: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      child: const Text('Guardar Cambios', style: TextStyle(color: Colors.white)),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaPreview() {
+    // Si hay un nuevo archivo de video seleccionado
+    if (_nuevoMedioFile != null && _esNuevoMedioVideo) {
+      if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
+        return AspectRatio(
+          aspectRatio: _videoPlayerControllerPreview!.value.aspectRatio > 0 ? _videoPlayerControllerPreview!.value.aspectRatio : 16/9,
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              VideoPlayer(_videoPlayerControllerPreview!),
+              _buildPlayPauseOverlayPreview(_videoPlayerControllerPreview!)
+            ],
+          ),
+        );
+      } else {
+        return Container(height: 200, color: Colors.black, child: const Center(child: CircularProgressIndicator()));
+      }
+    }
+    // Si hay un nuevo archivo de imagen seleccionado
+    else if (_nuevoMedioFile != null && !_esNuevoMedioVideo) {
+      if (kIsWeb && _nuevoMedioBytesPreview != null) {
+        return Image.memory(_nuevoMedioBytesPreview!, height: 200, fit: BoxFit.contain);
+      } else if (!kIsWeb) {
+        return Image.file(_nuevoMedioFile!, height: 200, fit: BoxFit.contain);
+      } else {
+        return Container(height: 200, color: Colors.grey[300], child: const Center(child: Text("Cargando previsualización...")));
+      }
+    }
+    // Si hay un video actual y no se ha seleccionado uno nuevo
+    else if (widget.mediaUrlActual != null && widget.esVideoActual) {
+      if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
+        return AspectRatio(
+          aspectRatio: _videoPlayerControllerPreview!.value.aspectRatio > 0 ? _videoPlayerControllerPreview!.value.aspectRatio : 16/9,
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              VideoPlayer(_videoPlayerControllerPreview!),
+              _buildPlayPauseOverlayPreview(_videoPlayerControllerPreview!)
+            ],
+          ),
+        );
+      } else if (widget.mediaUrlActual!.isNotEmpty) {
+        return Container(height: 200, color: Colors.black, child: const Center(child: Text("Cargando video...", style: TextStyle(color: Colors.white))));
+      }
+    }
+    // Si hay una imagen actual y no se ha seleccionado una nueva
+    else if (widget.mediaUrlActual != null && !widget.esVideoActual) {
+      return CachedNetworkImage(
+        imageUrl: widget.mediaUrlActual!,
+        height: 200,
+        fit: BoxFit.contain,
+        placeholder: (context, url) => Container(height: 200, color: Colors.grey[300], child: const Center(child: CircularProgressIndicator())),
+        errorWidget: (context, url, error) => Container(height: 200, color: Colors.grey[300], child: const Icon(Icons.broken_image, size: 50)),
+      );
+    }
+    return Container(
+      height: 150,
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Center(
+        child: Text(
+          'No hay medio seleccionado.\nPresiona "Cambiar Foto" o "Cambiar Video".',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontFamily: 'Comic Sans MS'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayPauseOverlayPreview(VideoPlayerController controller) {
+    return GestureDetector(
+      onTap: () {
+        if (!controller.value.isInitialized) return;
+        setState(() {
+          if (controller.value.isPlaying) {
+            controller.pause();
+          } else {
+            controller.play();
+          }
+        });
+      },
+      child: AnimatedOpacity(
+        opacity: controller.value.isPlaying && controller.value.isInitialized ? 0.0 : 1.0,
+        duration: const Duration(milliseconds: 300),
+        child: Container(
+          color: Colors.black26,
+          child: Center(
+            child: Icon(
+              controller.value.isPlaying ? Icons.pause_circle_outline : Icons.play_circle_outline,
+              color: Colors.white,
+              size: 60.0,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+// --- CLASE _VideoPlayerWidget ---
 class _VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
   const _VideoPlayerWidget({Key? key, required this.videoUrl}) : super(key: key);
@@ -857,7 +1361,34 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+    _initializePlayer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _VideoPlayerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.videoUrl != oldWidget.videoUrl) {
+      // Si la URL del video cambia, reinicializar el controlador
+      _controller.dispose(); // Liberar el controlador antiguo
+      _initializePlayer();   // Inicializar con la nueva URL
+    }
+  }
+
+
+  void _initializePlayer() {
+    Uri? uri = Uri.tryParse(widget.videoUrl);
+    if (uri == null || (!uri.isAbsolute && !kIsWeb)) { // En web, una ruta relativa puede ser una blob url
+      developer.log("URL de video inválida o no absoluta para VideoPlayer: ${widget.videoUrl}", name: "VideoPlayer");
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+        });
+      }
+      _initializeVideoPlayerFuture = Future.error("URL inválida");
+      return;
+    }
+
+    _controller = VideoPlayerController.networkUrl(uri);
     _initializeVideoPlayerFuture = _controller.initialize().then((_) {
       if (mounted) {
         setState(() {});
@@ -898,7 +1429,7 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           }
 
           final videoAspectRatio = _controller.value.aspectRatio;
-          final validAspectRatio = (videoAspectRatio > 0) ? videoAspectRatio : 16/9;
+          final validAspectRatio = (videoAspectRatio > 0 && videoAspectRatio.isFinite) ? videoAspectRatio : 16/9;
 
           return AspectRatio(
             aspectRatio: validAspectRatio,

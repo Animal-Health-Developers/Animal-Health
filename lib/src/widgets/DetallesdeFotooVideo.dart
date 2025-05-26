@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import './Home.dart'; // Ocultar Home para evitar conflicto con la clase Home de este archivo si existiera
+// Asegúrate de que la importación de Home sea la correcta y que
+// EditarPublicacionWidget sea accesible (puede que necesites moverlo
+// a un archivo separado si no está ya en Home.dart o un archivo común).
+import './Home.dart' hide Home; // Ocultar Home para evitar conflicto
+import 'package:animal_health/src/widgets/Home.dart' as home_widgets; // Alias para acceder a EditarPublicacionWidget
+
 import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
 import './PerfilPublico.dart';
@@ -13,9 +18,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:developer' as developer;
-import './CompartirPublicacion.dart'; // Importar CompartirPublicacion
+import './CompartirPublicacion.dart';
+import 'package:firebase_storage/firebase_storage.dart'; // Para eliminar de Storage
 
-// --- VideoPlayerWidget (sin cambios, se asume que está aquí o importado) ---
+// --- VideoPlayerWidget ---
+// (Ya la tienes definida, asegúrate que sea la misma versión que en Home.dart)
 class _VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
   const _VideoPlayerWidget({Key? key, required this.videoUrl}) : super(key: key);
@@ -32,13 +39,38 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+    _initializePlayer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _VideoPlayerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.videoUrl != oldWidget.videoUrl) {
+      _controller.dispose();
+      _initializePlayer();
+    }
+  }
+
+  void _initializePlayer() {
+    Uri? uri = Uri.tryParse(widget.videoUrl);
+    if (uri == null || !uri.isAbsolute) {
+      developer.log("URL de video inválida o no absoluta para VideoPlayer: ${widget.videoUrl}", name: "VideoPlayerWidget.Init");
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+        });
+      }
+      _initializeVideoPlayerFuture = Future.error("URL inválida");
+      return;
+    }
+
+    _controller = VideoPlayerController.networkUrl(uri);
     _initializeVideoPlayerFuture = _controller.initialize().then((_) {
       if (mounted) {
         setState(() {});
       }
     }).catchError((error) {
-      developer.log("Error inicializando VideoPlayer: $error, URL: ${widget.videoUrl}");
+      developer.log("Error inicializando VideoPlayer: $error, URL: ${widget.videoUrl}", name: "VideoPlayerWidget.Init");
       if (mounted) {
         setState(() {
           _hasError = true;
@@ -47,6 +79,7 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
     });
     _controller.setLooping(true);
   }
+
 
   @override
   void dispose() {
@@ -73,7 +106,8 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
           }
 
           final videoAspectRatio = _controller.value.aspectRatio;
-          final validAspectRatio = (videoAspectRatio > 0) ? videoAspectRatio : 16/9;
+          final validAspectRatio = (videoAspectRatio > 0 && videoAspectRatio.isFinite) ? videoAspectRatio : 16/9;
+
 
           return AspectRatio(
             aspectRatio: validAspectRatio,
@@ -153,9 +187,9 @@ class DetallesdeFotooVideo extends StatefulWidget {
   final String? mediaUrl;
   final bool isVideo;
   final String? caption;
-  final String? ownerUserId;
-  final String? ownerUserName;
-  final String? ownerUserProfilePic;
+  final String? ownerUserId; // ID del dueño de la publicación
+  final String? ownerUserName; // Nombre del dueño de la publicación
+  final String? ownerUserProfilePic; // Foto de perfil del dueño de la publicación
 
   DetallesdeFotooVideo({
     required Key key,
@@ -237,7 +271,90 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
       }
     }
   }
-  // --- FIN FUNCIONES COPIADAS ---
+
+  // --- NUEVO: MÉTODOS DE EDICIÓN Y ELIMINACIÓN ADAPTADOS DE HOME ---
+  Future<void> _eliminarPublicacion(String publicacionId) async {
+    bool confirmar = await showDialog(
+      context: context, // Usar el contexto de _DetallesdeFotooVideoState
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('Confirmar Eliminación'),
+          content: const Text('¿Estás seguro de que deseas eliminar esta publicación? Esta acción no se puede deshacer.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(ctx).pop(false);
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Eliminar'),
+              onPressed: () {
+                Navigator.of(ctx).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+
+    if (!confirmar) return;
+
+    try {
+      DocumentSnapshot postDoc = await _firestore.collection('publicaciones').doc(publicacionId).get();
+      if (postDoc.exists) {
+        final data = postDoc.data() as Map<String, dynamic>;
+        final String? mediaUrlToDelete = data['imagenUrl'] as String?; // Asumiendo que este es el campo
+        if (mediaUrlToDelete != null && mediaUrlToDelete.isNotEmpty) {
+          // Solo intentar eliminar de Storage si es una URL de Firebase Storage
+          if (mediaUrlToDelete.startsWith('https://firebasestorage.googleapis.com')) {
+            try {
+              await FirebaseStorage.instance.refFromURL(mediaUrlToDelete).delete();
+              developer.log('Medio eliminado de Storage: $mediaUrlToDelete', name: "Detalles.DeleteStorage");
+            } catch (storageError) {
+              developer.log('Error eliminando medio de Storage: $storageError. URL: $mediaUrlToDelete', name: "Detalles.DeleteStorage", error: storageError);
+            }
+          }
+        }
+      }
+
+      await _firestore.collection('publicaciones').doc(publicacionId).delete();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación eliminada correctamente'), backgroundColor: Colors.green));
+        Navigator.of(context).pop(); // Volver a la pantalla anterior después de eliminar
+      }
+    } catch (e) {
+      developer.log('Error al eliminar publicación: $e', error: e, name: "Detalles.Delete");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al eliminar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'), backgroundColor: Colors.red));
+      }
+    }
+  }
+
+  Future<void> _mostrarDialogoEditarPublicacion(DocumentSnapshot publicacionDoc) async {
+    // Asegurarse de que EditarPublicacionWidget es importado o accesible
+    // Si está en Home.dart, puedes usar un alias como se muestra en los imports.
+    // Si se movió a su propio archivo, importa ese archivo directamente.
+    await showModalBottomSheet(
+      context: context, // Usar el contexto de _DetallesdeFotooVideoState
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext modalContext) { // Usar un nuevo contexto para el builder del modal
+        return home_widgets.EditarPublicacionWidget( // Usando el alias
+          key: Key('edit_detail_${publicacionDoc.id}'),
+          publicacionId: publicacionDoc.id,
+          captionActual: publicacionDoc['caption'] as String? ?? '',
+          mediaUrlActual: publicacionDoc['imagenUrl'] as String?,
+          esVideoActual: (publicacionDoc['esVideo'] as bool?) ?? false,
+          parentContext: context, // Pasar el contexto de _DetallesdeFotooVideoState para los SnackBars
+        );
+      },
+    );
+  }
+  // --- FIN NUEVOS MÉTODOS ---
+
 
   Future<void> _addComment() async {
     final User? currentUser = _auth.currentUser;
@@ -275,7 +392,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Actualizar contador de comentarios en el documento principal de la publicación
       await _firestore
           .collection('publicaciones')
           .doc(widget.publicationId)
@@ -305,6 +421,8 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
   Widget build(BuildContext context) {
     final bool hasValidMedia = widget.mediaUrl != null && widget.mediaUrl!.isNotEmpty;
     final currentUserId = _auth.currentUser?.uid;
+    final bool isOwnPost = currentUserId != null && widget.ownerUserId == currentUserId;
+
 
     return Scaffold(
       backgroundColor: const Color(0xff000000),
@@ -320,18 +438,16 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
             margin: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
 
-          // --- WIDGETS DE NAVEGACIÓN SUPERIOR (Logo, Atrás, Ayuda, Perfil, Config, Lista Animales, Tienda) ---
-          // ... (tu código existente para estos botones, sin cambios) ...
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
-            child: PageLink( // Permite volver a Home al tocar el logo
+            child: PageLink(
               links: [
                 PageLinkInfo(
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key('HomeFromDetails')),
+                  pageBuilder: () => home_widgets.Home(key: Key('HomeFromDetails')), // Usando el alias si es necesario
                 ),
               ],
               child: Container(
@@ -348,11 +464,10 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
             ),
           ),
 
-          // Botón de "Atrás" (Volver)
           Pinned.fromPins(
             Pin(size: 52.9, start: 9.1),
             Pin(size: 50.0, start: 49.0),
-            child: GestureDetector( // Usamos GestureDetector para Navigator.pop
+            child: GestureDetector(
               onTap: () {
                 Navigator.pop(context);
               },
@@ -367,7 +482,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
             ),
           ),
 
-          // Botón de ayuda (igual que en Home)
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
@@ -391,7 +505,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
             ),
           ),
 
-          // Botón de perfil del usuario actual (igual que en Home)
           Pinned.fromPins(
             Pin(size: 60.0, start: 13.0),
             Pin(size: 60.0, start: 115.0),
@@ -442,7 +555,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
             ),
           ),
 
-          // Botón de configuración (igual que en Home)
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
@@ -466,7 +578,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
             ),
           ),
 
-          // Botón de lista de animales
           Pinned.fromPins(
             Pin(size: 60.1, start: 13.0),
             Pin(size: 60.0, start: 180.0),
@@ -491,7 +602,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
             ),
           ),
 
-          // Botón de tienda
           Pinned.fromPins(
             Pin(size: 58.5, end: 7.6),
             Pin(size: 60.0, start: 115.0),
@@ -515,7 +625,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
               ),
             ),
           ),
-          // --- FIN WIDGETS DE NAVEGACIÓN SUPERIOR ---
 
           Positioned(
             top: 250.0,
@@ -530,10 +639,9 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        // Contenedor para la foto/video y su info
                         Container(
                           padding: const EdgeInsets.all(8.0),
-                          margin: const EdgeInsets.only(bottom: 10.0), // Reducido margen inferior
+                          margin: const EdgeInsets.only(bottom: 10.0),
                           decoration: BoxDecoration(
                             color: const Color(0xe3a0f4fe),
                             borderRadius: BorderRadius.circular(9.0),
@@ -542,7 +650,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Info del publicador
                               Row(
                                 children: [
                                   CircleAvatar(
@@ -556,19 +663,51 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                                         : null,
                                   ),
                                   const SizedBox(width: 10),
-                                  Text(
-                                    widget.ownerUserName ?? 'Usuario',
-                                    style: const TextStyle(
-                                      fontFamily: 'Comic Sans MS',
-                                      fontSize: 18,
-                                      color: Color(0xff000000),
-                                      fontWeight: FontWeight.w700,
+                                  Expanded( // Para que el nombre no se desborde y el PopupMenuButton se alinee a la derecha
+                                    child: Text(
+                                      widget.ownerUserName ?? 'Usuario',
+                                      style: const TextStyle(
+                                        fontFamily: 'Comic Sans MS',
+                                        fontSize: 18,
+                                        color: Color(0xff000000),
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
+                                  // --- NUEVO: PopupMenuButton para editar/eliminar ---
+                                  if (isOwnPost)
+                                    PopupMenuButton<String>(
+                                      icon: const Icon(Icons.more_vert, color: Colors.black),
+                                      onSelected: (value) async { // Marcar como async
+                                        if (value == 'eliminar') {
+                                          _eliminarPublicacion(widget.publicationId);
+                                        } else if (value == 'editar') {
+                                          // Necesitamos el DocumentSnapshot de la publicación para pasarlo
+                                          // al diálogo de edición. Lo obtenemos aquí.
+                                          DocumentSnapshot publicacionDoc = await _firestore
+                                              .collection('publicaciones')
+                                              .doc(widget.publicationId)
+                                              .get();
+                                          if (publicacionDoc.exists) {
+                                            _mostrarDialogoEditarPublicacion(publicacionDoc);
+                                          } else {
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('Error: No se encontró la publicación para editar.')),
+                                              );
+                                            }
+                                          }
+                                        }
+                                      },
+                                      itemBuilder: (BuildContext context) => [
+                                        const PopupMenuItem<String>(value: 'editar', child: Text('Editar publicación')),
+                                        const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar publicación')),
+                                      ],
+                                    ),
+                                  // --- FIN PopupMenuButton ---
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              // Caption
                               if (widget.caption != null && widget.caption!.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -581,7 +720,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                                     ),
                                   ),
                                 ),
-                              // Media (Foto o Video)
                               if (hasValidMedia)
                                 SizedBox(
                                   width: double.infinity,
@@ -613,12 +751,10 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                                   child: const Center(child: Text('Contenido no disponible', style: TextStyle(fontFamily: 'Comic Sans MS'))),
                                 ),
 
-                              // --- BOTONES DE ACCIÓN (LIKE, COMMENT, SHARE, SAVE) ---
                               StreamBuilder<DocumentSnapshot>(
                                   stream: _firestore.collection('publicaciones').doc(widget.publicationId).snapshots(),
                                   builder: (context, snapshot) {
                                     if (!snapshot.hasData) {
-                                      // Muestra placeholders o nada mientras cargan los datos
                                       return const Padding(
                                         padding: EdgeInsets.symmetric(vertical: 8.0),
                                         child: Center(child: SizedBox(height: 40, width:40, child: CircularProgressIndicator(strokeWidth: 2))),
@@ -626,17 +762,15 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                                     }
                                     final publicacionData = snapshot.data;
                                     if (publicacionData == null || !publicacionData.exists) {
-                                      return const SizedBox.shrink(); // No mostrar nada si la publicación no existe
+                                      return const SizedBox.shrink();
                                     }
                                     return _buildActionButtons(publicacionData, currentUserId);
                                   }
                               ),
-                              // --- FIN BOTONES DE ACCIÓN ---
                             ],
                           ),
                         ),
 
-                        // Sección de Comentarios
                         const Text(
                           'Comentarios:',
                           style: TextStyle(
@@ -664,53 +798,48 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
   Widget _buildActionButtons(DocumentSnapshot publicacion, String? currentUserId) {
     final likes = publicacion['likes'] as int? ?? 0;
     final likedBy = List<String>.from(publicacion['likedBy'] as List<dynamic>? ?? []);
-    // Obtener contador de comentarios del documento principal de la publicación
     final comentariosCount = publicacion['comentarios'] as int? ?? 0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 8.0), // Ajustado el padding horizontal
+      padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          // Botón de Like
           GestureDetector(
             onTap: () => _toggleLike(widget.publicationId, currentUserId, likedBy),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/images/like.png', width: 40, height: 40), // Tamaño reducido
+                Image.asset('assets/images/like.png', width: 40, height: 40),
                 const SizedBox(width: 4),
                 Text(
                   likes.toString(),
-                  style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black), // Tamaño reducido
+                  style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black),
                 ),
               ],
             ),
           ),
-          // Botón de Comentarios (solo muestra contador)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset('assets/images/comments.png', width: 40, height: 40), // Tamaño reducido
+              Image.asset('assets/images/comments.png', width: 40, height: 40),
               const SizedBox(width: 4),
               Text(
-                comentariosCount.toString(), // Usa el contador del documento principal
-                style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black), // Tamaño reducido
+                comentariosCount.toString(),
+                style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black),
               ),
             ],
           ),
-          // Botón de Compartir
           GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => CompartirPublicacion(
-                    key: Key('CompartirDesdeDetalles_${widget.publicationId}'), publicationId: '',
-                    // Asegúrate que CompartirPublicacion acepte estos parámetros
-                    // publicationId: widget.publicationId,
-                    // mediaUrl: widget.mediaUrl,
-                    // caption: widget.caption,
+                    key: Key('CompartirDesdeDetalles_${widget.publicationId}'),
+                    publicationId: widget.publicationId, // Pasar el ID correcto
+                    mediaUrl: widget.mediaUrl,
+                    caption: widget.caption,
                   ),
                 ),
               );
@@ -718,23 +847,18 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/images/share.png', width: 40, height: 40), // Tamaño reducido
+                Image.asset('assets/images/share.png', width: 40, height: 40),
                 const SizedBox(width: 4),
-                // Opcional: Texto "SHARE" si cabe y se desea
-                // const Text('SHARE', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14)),
               ],
             ),
           ),
-          // Botón de Guardar
           GestureDetector(
             onTap: () => _guardarPublicacion(widget.publicationId),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/images/save.png', width: 40, height: 40), // Tamaño reducido
+                Image.asset('assets/images/save.png', width: 40, height: 40),
                 const SizedBox(width: 4),
-                // Opcional: Texto "Guardar" si cabe y se desea
-                // const Text('Guardar', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14)),
               ],
             ),
           ),
