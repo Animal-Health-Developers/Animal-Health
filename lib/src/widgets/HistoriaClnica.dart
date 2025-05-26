@@ -15,7 +15,7 @@ import './CarnetdeVacunacin.dart';
 
 class HistoriaClnica extends StatelessWidget {
   const HistoriaClnica({
-    required Key key,
+    required Key key, required String animalId,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -127,7 +127,7 @@ class HistoriaClnica extends StatelessWidget {
               links: [
                 PageLinkInfo(
                   duration: 0.3,
-                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'),),
+                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'), animalId: '',),
                 ),
               ],
               child: Container(
@@ -315,7 +315,7 @@ class HistoriaClnica extends StatelessWidget {
                             transition: LinkTransition.Fade,
                             ease: Curves.easeOut,
                             duration: 0.3,
-                            pageBuilder: () => CarnetdeVacunacin(key: Key('CarnetdeVacunacin'),),
+                            pageBuilder: () => CarnetdeVacunacin(key: Key('CarnetdeVacunacin'), animalId: '',),
                           ),
                         ],
                         child: Container(
@@ -361,7 +361,7 @@ class HistoriaClnica extends StatelessWidget {
                         transition: LinkTransition.Fade,
                         ease: Curves.easeOut,
                         duration: 0.3,
-                        pageBuilder: () => CarnetdeVacunacin(key: Key('CarnetdeVacunacin'),),
+                        pageBuilder: () => CarnetdeVacunacin(key: Key('CarnetdeVacunacin'), animalId: '',),
                       ),
                     ],
                     child: Container(

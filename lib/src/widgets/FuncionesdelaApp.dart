@@ -1,597 +1,363 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
+import 'package:adobe_xd/page_link.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+// Imports de Navegación y Servicios
 import '../services/auth_service.dart';
 import './Home.dart';
-import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
 import './EditarPerfildeAnimal.dart';
 import './VisitasalVeterinario.dart';
-import 'dart:ui' as ui;
 import './CarnetdeVacunacin.dart';
 import './Tratamientomedico.dart';
 import './HistoriaClnica.dart';
 import './IndicedeMasaCoporal.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import '../models/animal.dart'; // Importar el modelo Animal
 
-class FuncionesdelaApp extends StatelessWidget {
+// --- Clase FuncionesdelaApp ---
+class FuncionesdelaApp extends StatefulWidget {
+  final String animalId;
+
   const FuncionesdelaApp({
     required Key key,
+    required this.animalId,
   }) : super(key: key);
+
+  @override
+  _FuncionesdelaAppState createState() => _FuncionesdelaAppState();
+}
+
+// --- Estado de FuncionesdelaApp ---
+class _FuncionesdelaAppState extends State<FuncionesdelaApp> {
+
+  // --- Widget Builder para Botones de Función ---
+  Widget _buildFunctionButton({
+    required String assetImagePath,
+    required String label,
+    required VoidCallback onTap,
+    double imageWidth = 100.0,
+    double imageHeight = 100.0,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 178.0,
+            height: 130.0,
+            padding: const EdgeInsets.only(top: 10),
+            decoration: BoxDecoration(
+              color: const Color(0x994ec8dd),
+              borderRadius: BorderRadius.circular(20.0),
+              border: Border.all(width: 1.0, color: const Color(0xff707070)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0x29000000),
+                  offset: Offset(0, 3),
+                  blurRadius: 6,
+                ),
+              ],
+            ),
+            child: Center(
+              child: Image.asset(
+                assetImagePath,
+                width: imageWidth,
+                height: imageHeight,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Comic Sans MS',
+              fontSize: 15,
+              color: Color(0xff000000),
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Método Build Principal ---
   @override
   Widget build(BuildContext context) {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    // Ajustar estos valores para bajar la foto y el contenido
+    // El logo está en start: 42.0 y tiene un alto de 73.0. Así que termina en 42 + 73 = 115
+    const double logoBottomY = 115.0;
+    const double spaceAfterLogo = 25.0; // Espacio deseado entre el logo y la foto del animal
+    const double animalProfilePhotoTop = logoBottomY + spaceAfterLogo; // Nuevo top para la foto
+    const double animalProfilePhotoHeight = 90.0; // Altura de la foto
+    const double animalNameHeight = 20.0; // Altura aproximada para el nombre
+    const double spaceAfterAnimalProfile = 15.0; // Espacio entre nombre del animal y título de funciones
+
+    const double titleFunctionsTop = animalProfilePhotoTop + animalProfilePhotoHeight + animalNameHeight + spaceAfterAnimalProfile;
+
+
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
+          // --- Fondo de Pantalla ---
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
-          Align(
-            alignment: Alignment(-0.267, -0.494),
-            child: SizedBox(
-              width: 1.0,
-              height: 1.0,
-              child: SvgPicture.string(
-                _svg_a7p9a8,
-                allowDrawingOutsideViewBox: true,
-              ),
-            ),
-          ),
+          // --- Logo de la App (Navega a Home) ---
           Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
+            Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0),
             child: PageLink(
               links: [
                 PageLinkInfo(
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
+                  pageBuilder: () => Home(key: const Key('Home_From_Funciones')),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/logo.png'),
-                    fit: BoxFit.cover,
-                  ),
+                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
                   borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
+                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
                 ),
               ),
             ),
           ),
+          // --- Botón de Retroceso ---
           Pinned.fromPins(
-            Pin(size: 50.0, start: -7.5),
-            Pin(size: 1.0, start: 128.0),
-            child: SvgPicture.string(
-              _svg_i3j02g,
-              allowDrawingOutsideViewBox: true,
-              fit: BoxFit.fill,
+            Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0),
+            child: InkWell(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
             ),
           ),
+          // --- Botón de Ayuda ---
           Pinned.fromPins(
-            Pin(size: 52.9, start: 9.1),
-            Pin(size: 50.0, start: 49.0),
+            Pin(size: 40.5, end: 15.0), Pin(size: 50.0, start: 49.0),
             child: PageLink(
-              links: [
-                PageLinkInfo(),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/back.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda')))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
             ),
           ),
+          // --- Iconos Laterales (Configuración y Lista General de Animales) ---
           Pinned.fromPins(
-            Pin(size: 40.5, middle: 0.8328),
-            Pin(size: 50.0, start: 49.0),
+            Pin(size: 47.2, end: 15.0), Pin(size: 50.0, start: 110.0), // Mantenerlos relativos al top o ajustar si es necesario
             child: PageLink(
               links: [
                 PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
+                  pageBuilder: () => Configuraciones(key: const Key('Settings_From_Funciones'), authService: AuthService()),
                 ),
               ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment(0.0, -0.621),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => EditarPerfildeAnimal(key: Key('EditarPerfildeAnimalesdeCompaia'), animalId: '',),
-                ),
-              ],
-              child: Container(
-                width: 90.0,
-                height: 90.0,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/kitty.jpg'),
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius: BorderRadius.circular(25.0),
-                ),
-              ),
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
             ),
           ),
           Pinned.fromPins(
-            Pin(start: 15.0, end: 19.0),
-            Pin(size: 585.0, end: 49.0),
-            child: Stack(
-              children: <Widget>[
-                Pinned.fromPins(
-                  Pin(size: 178.0, start: 0.0),
-                  Pin(size: 163.0, start: 52.0),
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                      child: PageLink(
-                        links: [
-                          PageLinkInfo(
-                            transition: LinkTransition.Fade,
-                            ease: Curves.easeOut,
-                            duration: 0.3,
-                            pageBuilder: () => VisitasalVeterinario(key: Key('VisitasalVeterinario'),),
+            Pin(size: 60.1, start: 15.0), Pin(size: 60.0, start: 110.0), // Mantenerlos relativos al top o ajustar
+            child: PageLink(
+              links: [
+                PageLinkInfo(
+                  pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_From_Funciones')),
+                ),
+              ],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+            ),
+          ),
+
+          // --- Foto de Perfil del Animal Específico ---
+          // Usaremos Positioned en lugar de Align para un control más preciso del 'top'
+          Positioned(
+            top: animalProfilePhotoTop, // Nueva posición calculada
+            left: 0, // Para que el Column interior pueda centrar su contenido
+            right: 0,
+            child: currentUser != null && widget.animalId.isNotEmpty
+                ? StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(currentUser.uid)
+                  .collection('animals')
+                  .doc(widget.animalId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.grey[300], child: CircularProgressIndicator(strokeWidth: 2.0, valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))));
+                }
+                if (snapshot.hasError) {
+                  print("Error obteniendo datos del animal: ${snapshot.error}");
+                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.red[100], child: Icon(Icons.error_outline, size: 50, color: Colors.red[700])));
+                }
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  print("Documento del animal (ID: ${widget.animalId}) no encontrado.");
+                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.grey[200], child: Icon(Icons.pets, size: 50, color: Colors.grey[400])));
+                }
+
+                Animal animalData;
+                try {
+                  animalData = Animal.fromFirestore(snapshot.data!);
+                } catch (e) {
+                  print("Error al deserializar datos del animal (ID: ${widget.animalId}): $e. Data: ${snapshot.data!.data()}");
+                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.orange[100], child: Icon(Icons.report_problem_outlined, size: 50, color: Colors.orange[700])));
+                }
+
+                return Center( // Centrar el Column que contiene la foto y el nombre
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditarPerfildeAnimal(
+                            key: Key('EditarPerfilDesdeFunciones_${widget.animalId}'),
+                            animalId: widget.animalId,
                           ),
-                        ],
-                        child: Container(
+                        ),
+                      );
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 90.0, height: 90.0,
                           decoration: BoxDecoration(
-                            color: const Color(0x5e4ec8dd),
-                            borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xff707070)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0x29000000),
-                                offset: Offset(0, 3),
-                                blurRadius: 6,
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(25.0),
+                              border: Border.all(color: Colors.white, width: 2.5),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: Offset(0,3))]
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(22.5),
+                            child: (animalData.fotoPerfilUrl.isNotEmpty)
+                                ? CachedNetworkImage(
+                                imageUrl: animalData.fotoPerfilUrl, fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                                errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
+                                : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                          ),
+                        ),
+                        if (animalData.nombre.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              animalData.nombre,
+                              style: TextStyle(
+                                  fontFamily: 'Comic Sans MS',
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [Shadow(blurRadius: 1.0, color: Colors.black.withOpacity(0.5), offset: Offset(1.0,1.0))]
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
+                      ],
                     ),
                   ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 178.0, end: 0.0),
-                  Pin(size: 163.0, start: 52.0),
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                      child: PageLink(
-                        links: [
-                          PageLinkInfo(
-                            transition: LinkTransition.Fade,
-                            ease: Curves.easeOut,
-                            duration: 0.3,
-                            pageBuilder: () => CarnetdeVacunacin(key: Key('CarnetdeVacunacin'),),
-                          ),
-                        ],
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0x5e4ec8dd),
-                            borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xff707070)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0x29000000),
-                                offset: Offset(0, 3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                );
+              },
+            )
+                : Center( // Placeholder si no hay usuario o animalId
+                child: Tooltip(
+                    message: currentUser == null ? "Usuario no autenticado" : "ID de animal no válido",
+                    child: CircleAvatar(radius: 45, backgroundColor: Colors.grey[200], child: Icon(Icons.error_outline, size: 50, color: Colors.grey[400]))
+                )
+            ),
+          ),
+
+          // --- Contenido Principal: Botones de Funciones ---
+          Positioned(
+            top: titleFunctionsTop, // Nueva posición calculada para el título y la cuadrícula
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Column(
+              children: [
+                // --- Título "Funciones de Animal Health" ---
+                Container(
+                  width: 300.0,
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  margin: const EdgeInsets.only(bottom: 25.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xe3a0f4fe),
+                    borderRadius: BorderRadius.circular(10.0),
+                    border: Border.all(width: 1.0, color: const Color(0xe3000000)),
                   ),
-                ),
-                Align(
-                  alignment: Alignment(-1.0, 0.118),
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                      child: PageLink(
-                        links: [
-                          PageLinkInfo(
-                            transition: LinkTransition.Fade,
-                            ease: Curves.easeOut,
-                            duration: 0.3,
-                            pageBuilder: () => Tratamientomedico(key: Key('Tratamientomedico'),),
-                          ),
-                        ],
-                        child: Container(
-                          width: 178.0,
-                          height: 163.0,
-                          decoration: BoxDecoration(
-                            color: const Color(0x5e4ec8dd),
-                            borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xff707070)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0x29000000),
-                                offset: Offset(0, 3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(1.0, 0.118),
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                      child: PageLink(
-                        links: [
-                          PageLinkInfo(
-                            transition: LinkTransition.Fade,
-                            ease: Curves.easeOut,
-                            duration: 0.3,
-                            pageBuilder: () => HistoriaClnica(key: Key('HistoriaClnica'),),
-                          ),
-                        ],
-                        child: Container(
-                          width: 178.0,
-                          height: 163.0,
-                          decoration: BoxDecoration(
-                            color: const Color(0x5e4ec8dd),
-                            borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xff707070)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0x29000000),
-                                offset: Offset(0, 3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 154.0, start: 14.5),
-                  Pin(size: 21.0, middle: 0.3245),
-                  child: Text(
-                    'Visitas al Veterinario',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 15,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                    ),
-                    textHeightBehavior:
-                        TextHeightBehavior(applyHeightToFirstAscent: false),
-                    textAlign: TextAlign.center,
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 156.0, end: 9.0),
-                  Pin(size: 21.0, middle: 0.3245),
-                  child: Text(
-                    'Carnet de Vacunación',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 15,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                    ),
-                    textHeightBehavior:
-                        TextHeightBehavior(applyHeightToFirstAscent: false),
-                    textAlign: TextAlign.center,
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 100.0, start: 39.0),
-                  Pin(size: 21.0, middle: 0.6543),
-                  child: Text(
-                    'Medicamentos',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 15,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                    ),
-                    textHeightBehavior:
-                        TextHeightBehavior(applyHeightToFirstAscent: false),
-                    textAlign: TextAlign.center,
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 110.0, end: 34.0),
-                  Pin(size: 21.0, middle: 0.6543),
-                  child: Text(
-                    'Historia Clínica',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 15,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                    ),
-                    textHeightBehavior:
-                        TextHeightBehavior(applyHeightToFirstAscent: false),
-                    textAlign: TextAlign.center,
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 121.7, start: 28.6),
-                  Pin(size: 120.0, start: 61.0),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => VisitasalVeterinario(key: Key('VisitasalVeterinario'),),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: const AssetImage('assets/images/visitasveterinario.png'),
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.bottomLeft,
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                      child: PageLink(
-                        links: [
-                          PageLinkInfo(
-                            transition: LinkTransition.Fade,
-                            ease: Curves.easeOut,
-                            duration: 0.3,
-                            pageBuilder: () => IndicedeMasaCoporal(key: Key('IndicedeMasaCoporal'),),
-                          ),
-                        ],
-                        child: Container(
-                          width: 178.0,
-                          height: 163.0,
-                          decoration: BoxDecoration(
-                            color: const Color(0x5e4ec8dd),
-                            borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xff707070)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0x29000000),
-                                offset: Offset(0, 3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 112.0, start: 33.0),
-                  Pin(size: 21.0, end: 10.0),
-                  child: Text(
-                    'Indice de Masa',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 15,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                    ),
-                    textHeightBehavior:
-                        TextHeightBehavior(applyHeightToFirstAscent: false),
-                    textAlign: TextAlign.center,
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 122.5, start: 30.2),
-                  Pin(size: 120.0, end: 34.0),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => IndicedeMasaCoporal(key: Key('IndicedeMasaCoporal'),),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: const AssetImage('assets/images/indicedemasa.png'),
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 118.9, start: 31.6),
-                  Pin(size: 120.0, middle: 0.5355),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => Tratamientomedico(key: Key('Tratamientomedico'),),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: const AssetImage('assets/images/medicamentos.png'),
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 100.1, end: 41.0),
-                  Pin(size: 120.0, middle: 0.5355),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => HistoriaClnica(key: Key('HistoriaClnica'),),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: const AssetImage('assets/images/historiaclinica.png'),
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(start: 43.0, end: 39.0),
-                  Pin(size: 35.0, start: 0.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xe3a0f4fe),
-                      borderRadius: BorderRadius.circular(10.0),
-                      border: Border.all(
-                          width: 1.0, color: const Color(0xe3000000)),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 266.0, end: 50.0),
-                  Pin(size: 28.0, start: 4.0),
-                  child: Text(
+                  child: const Text(
                     'Funciones de Animal Health',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Color(0xff000000), fontWeight: FontWeight.w700),
                     textAlign: TextAlign.center,
-                    softWrap: false,
                   ),
                 ),
-                Pinned.fromPins(
-                  Pin(size: 113.1, end: 32.4),
-                  Pin(size: 120.0, start: 63.0),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => CarnetdeVacunacin(key: Key('CarnetdeVacunacin'),),
+                // --- Cuadrícula de Botones de Función ---
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    childAspectRatio: 178 / (130 + 21 + 16),
+                    mainAxisSpacing: 20.0,
+                    crossAxisSpacing: 20.0,
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    children: <Widget>[
+                      _buildFunctionButton(
+                        assetImagePath: 'assets/images/visitasveterinario.png',
+                        label: 'Visitas al Veterinario',
+                        onTap: () {
+                          if (widget.animalId.isNotEmpty) {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => VisitasalVeterinario(key: const Key('VisitasVet'), animalId: widget.animalId)));
+                          }
+                        },
+                      ),
+                      _buildFunctionButton(
+                        assetImagePath: 'assets/images/carnetvacunacion.png',
+                        label: 'Carnet de Vacunación',
+                        onTap: () {
+                          if (widget.animalId.isNotEmpty) {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => CarnetdeVacunacin(key: const Key('CarnetVac'), animalId: widget.animalId)));
+                          }
+                        },
+                      ),
+                      _buildFunctionButton(
+                        assetImagePath: 'assets/images/medicamentos.png',
+                        label: 'Medicamentos',
+                        onTap: () {
+                          if (widget.animalId.isNotEmpty) {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => Tratamientomedico(key: const Key('TratMed'), animalId: widget.animalId)));
+                          }
+                        },
+                      ),
+                      _buildFunctionButton(
+                        assetImagePath: 'assets/images/historiaclinica.png',
+                        label: 'Historia Clínica',
+                        onTap: () {
+                          if (widget.animalId.isNotEmpty) {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => HistoriaClnica(key: const Key('HistClin'), animalId: widget.animalId)));
+                          }
+                        },
+                      ),
+                      _buildFunctionButton(
+                        assetImagePath: 'assets/images/indicedemasa.png',
+                        label: 'Índice de Masa',
+                        onTap: () {
+                          if (widget.animalId.isNotEmpty) {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => IndicedeMasaCoporal(key: const Key('IMC'), animalId: widget.animalId)));
+                          }
+                        },
                       ),
                     ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: const AssetImage('assets/images/carnetvacunacion.png'),
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               ],
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 47.2, end: 7.6),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 60.1, end: 7.6),
-            Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/listaanimales.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
             ),
           ),
         ],
@@ -599,8 +365,3 @@ class FuncionesdelaApp extends StatelessWidget {
     );
   }
 }
-
-const String _svg_a7p9a8 =
-    '<svg viewBox="150.6 225.5 1.0 1.0" ><path transform="translate(0.0, -105.0)" d="M 150.5888214111328 330.5046081542969" fill="none" stroke="#4ec8dd" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
-const String _svg_i3j02g =
-    '<svg viewBox="-7.5 128.0 50.0 1.0" ><path transform="translate(-55.49, 74.01)" d="M 48.65689086914062 53.9924201965332 C 48.2294921875 53.9924201965332 47.98928833007812 53.9924201965332 47.98928833007812 53.9924201965332 C 47.98928833007812 53.9924201965332 48.2294921875 53.9924201965332 48.65689086914062 53.9924201965332 L 62.29214477539062 53.99241638183594 C 63.1807861328125 53.99241638183594 64.62149047851562 53.99241638183594 65.51007080078125 53.99241638183594 C 66.39871215820312 53.99241638183594 66.39871215820312 53.99241638183594 65.51007080078125 53.99241638183594 L 55.75177001953125 53.9924201965332 L 95.71670532226562 53.9924201965332 C 96.97183227539062 53.9924201965332 97.98928833007812 53.9924201965332 97.98928833007812 53.9924201965332 C 97.98928833007812 53.9924201965332 96.97183227539062 53.9924201965332 95.71670532226562 53.9924201965332 L 55.75177001953125 53.9924201965332 L 65.51007080078125 53.99242401123047 C 66.39871215820312 53.99242401123047 66.39871215820312 53.99242401123047 65.51007080078125 53.99242401123047 C 64.62149047851562 53.99242401123047 63.1807861328125 53.99242401123047 62.29220581054688 53.99242401123047 L 48.65689086914062 53.9924201965332 Z" fill="#fafafa" stroke="none" stroke-width="12" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';

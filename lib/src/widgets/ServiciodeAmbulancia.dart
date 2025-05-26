@@ -92,7 +92,6 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
   String? _historiaClinicaFileName;
   bool _isUploadingHistoria = false;
 
-  late List<AmbulanceServiceField> _ambulanceFields;
 
   @override
   void initState() {
@@ -101,35 +100,6 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
   }
 
   void _initializeFieldsAndLoadData() {
-    _ambulanceFields = [
-      AmbulanceServiceField(label: 'Nombre del Animal', iconAsset: 'assets/images/nombreanimal.png', keyPrefix: 'NombreAnimal'),
-      AmbulanceServiceField(label: 'Edad', iconAsset: 'assets/images/edad.png', keyPrefix: 'Edad'),
-      AmbulanceServiceField(label: 'Especie', iconAsset: 'assets/images/especie.png', keyPrefix: 'Especie'),
-      AmbulanceServiceField(label: 'Raza', iconAsset: 'assets/images/raza.png', keyPrefix: 'Raza'),
-      AmbulanceServiceField(label: 'Peso', iconAsset: 'assets/images/peso.png', keyPrefix: 'Peso'),
-      AmbulanceServiceField(label: 'Ancho del Animal', iconAsset: 'assets/images/ancho.png', keyPrefix: 'AnchoAnimal'),
-      AmbulanceServiceField(label: 'Largo del Animal', iconAsset: 'assets/images/largo.png', keyPrefix: 'LargoAnimal'),
-      AmbulanceServiceField(
-        label: 'Problema / Motivo',
-        iconAsset: 'assets/images/motivoconsulta.png',
-        keyPrefix: 'Problema',
-        isDropdown: true,
-        dropdownItems: _healthProblems,
-      ),
-      AmbulanceServiceField(
-        label: 'Ubicación de Recogida',
-        iconAsset: 'assets/images/ubicacion.png',
-        keyPrefix: 'Ubicacion',
-        isLocation: true,
-      ),
-      AmbulanceServiceField(
-        label: 'Información de Contacto',
-        iconAsset: 'assets/images/infocontacto.png',
-        keyPrefix: 'InfoContacto',
-        isContactInfo: true,
-      ),
-      AmbulanceServiceField(label: 'Adjuntar Historia Clínica', iconAsset: 'assets/images/adjuntarhistoria.png', keyPrefix: 'HistoriaClinica'),
-    ];
     _fetchUserLocation();
     _fetchContactInfo();
   }

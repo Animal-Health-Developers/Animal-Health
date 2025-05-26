@@ -153,7 +153,7 @@ class VisualizaciondeHistoriaClnica extends StatelessWidget {
               links: [
                 PageLinkInfo(
                   duration: 0.3,
-                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'),),
+                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'), animalId: '',),
                 ),
               ],
               child: Container(

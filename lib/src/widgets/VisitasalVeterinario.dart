@@ -12,7 +12,7 @@ import './ListadeAnimales.dart';
 
 class VisitasalVeterinario extends StatelessWidget {
   const VisitasalVeterinario({
-    required Key key,
+    required Key key, required String animalId,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -124,7 +124,7 @@ class VisitasalVeterinario extends StatelessWidget {
               links: [
                 PageLinkInfo(
                   duration: 0.3,
-                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'),),
+                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'), animalId: '',),
                 ),
               ],
               child: Container(

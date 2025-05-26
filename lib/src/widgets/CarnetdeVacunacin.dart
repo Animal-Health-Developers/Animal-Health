@@ -12,7 +12,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
 class CarnetdeVacunacin extends StatelessWidget {
   CarnetdeVacunacin({
-    required Key key,
+    required Key key, required String animalId,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -417,7 +417,7 @@ class CarnetdeVacunacin extends StatelessWidget {
               links: [
                 PageLinkInfo(
                   duration: 0.3,
-                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'),),
+                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'), animalId: '',),
                 ),
               ],
               child: Container(

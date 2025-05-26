@@ -512,12 +512,14 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
             },
             backgroundColor: Colors.grey[200],
             child: isAsset ? null : ( // Placeholder para NetworkImage si falla la carga principal
-                (CachedNetworkImageProvider(profilePicUrl) as CachedNetworkImageProvider)
+                (CachedNetworkImageProvider(profilePicUrl))
                     .obtainKey(const ImageConfiguration())
                     .then((resolvedKey) {}) // Intenta cargarla
                     .catchError((Object error, StackTrace stackTrace) { // Si falla
                   developer.log('Fallback a icono por error en backgroundImage: $profilePicUrl');
+                  // ignore: invalid_return_type_for_catch_error
                   return const Icon(Icons.person_outline, size: 30, color: Colors.grey);
+                // ignore: unnecessary_null_comparison
                 }) == null ? const Icon(Icons.person_outline, size: 30, color: Colors.grey) : null
             ),
           ),

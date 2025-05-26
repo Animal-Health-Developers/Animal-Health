@@ -304,7 +304,7 @@ class CrearVacuna extends StatelessWidget {
                                                     ease: Curves.easeOut,
                                                     duration: 0.3,
                                                     pageBuilder: () =>
-                                                        CarnetdeVacunacin(key: Key('CarnetdeVacunacin'),),//ICONO AGREGAR VACUNA
+                                                        CarnetdeVacunacin(key: Key('CarnetdeVacunacin'), animalId: '',),//ICONO AGREGAR VACUNA
                                                   ),
                                                 ],
                                                 child: Container(
@@ -448,7 +448,7 @@ class CrearVacuna extends StatelessWidget {
               links: [
                 PageLinkInfo(
                   duration: 0.3,
-                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'),),
+                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'), animalId: '',),
                 ),
               ],
               child: Container(

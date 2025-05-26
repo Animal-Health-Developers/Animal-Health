@@ -551,12 +551,14 @@ class _ContactosState extends State<Contactos> {
             },
             backgroundColor: Colors.grey[200],
             child: isAsset ? null : (
-                (CachedNetworkImageProvider(contact.profilePicUrl) as CachedNetworkImageProvider)
+                (CachedNetworkImageProvider(contact.profilePicUrl))
                     .obtainKey(const ImageConfiguration())
                     .then((resolvedKey) {})
                     .catchError((Object error, StackTrace stackTrace) {
                   developer.log('Fallback a icono por error en backgroundImage de contacto: ${contact.profilePicUrl}');
+                  // ignore: invalid_return_type_for_catch_error
                   return const Icon(Icons.person_outline, size: 30, color: Colors.grey);
+                // ignore: unnecessary_null_comparison
                 }) == null ? const Icon(Icons.person_outline, size: 30, color: Colors.grey) : null
             ),
           ),

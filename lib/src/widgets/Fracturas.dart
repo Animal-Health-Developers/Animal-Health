@@ -214,7 +214,7 @@ class _FracturasState extends State<Fracturas> {
           ),
           Pinned.fromPins(
             Pin(size: 307.0, middle: 0.5),
-            Pin(size: 45.0, start: 135.0),
+            Pin(size: 45.0, start: 150.0),
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xffffffff),
@@ -245,7 +245,7 @@ class _FracturasState extends State<Fracturas> {
           if (currentUserAuth != null)
             Pinned.fromPins(
               Pin(size: 60.0, start: 6.0),
-              Pin(size: 60.0, start: 115.0), // Ajustar posición si es necesario
+              Pin(size: 60.0, middle: 0.1947), // Ajustar posición si es necesario
               child: StreamBuilder<DocumentSnapshot>(
                 stream: FirebaseFirestore.instance.collection('users').doc(currentUserAuth.uid).snapshots(),
                 builder: (context, snapshot) {
@@ -444,7 +444,7 @@ class _FracturasState extends State<Fracturas> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => SolucionAEMERGENCIAS(key: const Key('SolucionAEMERGENCIAS_Fracturas'))),
+                              MaterialPageRoute(builder: (context) => SolucionAEMERGENCIAS(key: const Key('SolucionAEMERGENCIAS_Fracturas'), descripcionDelProblema: '',)),
                             );
                           },
                           child: const Text('Ver Soluciones'),

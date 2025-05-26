@@ -1,8 +1,14 @@
 import 'package:animal_health/src/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Imports de Navegación
+import './Home.dart';
 import './Ayuda.dart';
 import './PerfilPublico.dart';
 import './ListadeAnimales.dart';
@@ -12,11 +18,11 @@ import './AgregarMetodosdePago.dart';
 import './Idiomas.dart';
 import './AnimalHealth.dart';
 import './Suscripcion.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
+// --- Clase Configuraciones ---
 class Configuraciones extends StatefulWidget {
   const Configuraciones({required Key key, required this.authService})
-    : super(key: key);
+      : super(key: key);
 
   final AuthService authService;
 
@@ -24,542 +30,330 @@ class Configuraciones extends StatefulWidget {
   _ConfiguracionesState createState() => _ConfiguracionesState();
 }
 
+// --- Estado de Configuraciones ---
 class _ConfiguracionesState extends State<Configuraciones> {
+  // --- Variables de Estado ---
   bool _audioVisualAccessibility = false;
+  static const String _accessibilityPrefKey = 'audioVisualAccessibilityEnabled';
 
-  Future<void> _logout() async {
-    try {
-      await widget.authService.cerrarSesion();
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder:
-              (context) => AnimalHealth(
-                key: Key('AnimalHealth'),
-                authService: widget.authService,
-                onLoginSuccess: () {},
-              ),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cerrar sesión: ${e.toString()}')),
-      );
+  // --- Ciclo de Vida: initState ---
+  @override
+  void initState() {
+    super.initState();
+    _loadAccessibilityPreference();
+  }
+
+  // --- Métodos para Preferencias de Accesibilidad ---
+  Future<void> _loadAccessibilityPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _audioVisualAccessibility = prefs.getBool(_accessibilityPrefKey) ?? false;
+      });
     }
   }
 
+  Future<void> _saveAccessibilityPreference(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_accessibilityPrefKey, value);
+  }
+
+  // --- Método para Cerrar Sesión ---
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await widget.authService.cerrarSesion();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => AnimalHealth(
+            key: const Key('AnimalHealth_Login'),
+            authService: widget.authService,
+            onLoginSuccess: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => Home(key: const Key('Home_After_Relogin'))),
+              );
+            },
+          ),
+        ),
+            (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cerrar sesión: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  // --- Widget Builder para Opciones de Configuración ---
+  Widget _buildConfigOption({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    final bool isAccessibilityModeActive = _audioVisualAccessibility;
+    final Color cardBackgroundColor = isAccessibilityModeActive
+        ? Colors.black.withOpacity(0.85)
+        : const Color(0xffffffff).withOpacity(0.92);
+    final Color textColor = isAccessibilityModeActive
+        ? Colors.yellowAccent.shade700
+        : const Color(0xff222222);
+    final Color iconColor = isAccessibilityModeActive
+        ? Colors.yellowAccent.shade700
+        : const Color(0xff4ec8dd);
+
+    return Card(
+      elevation: 3.0,
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      color: cardBackgroundColor,
+      child: ListTile(
+        leading: Icon(icon, color: iconColor, size: 28),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontFamily: 'Comic Sans MS',
+            fontSize: isAccessibilityModeActive ? 20 : 18,
+            color: textColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        trailing: trailing ?? Icon(Icons.arrow_forward_ios, color: isAccessibilityModeActive ? Colors.yellowAccent.withOpacity(0.7) : Colors.grey, size: 18),
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+      ),
+    );
+  }
+
+  // --- Método Build Principal ---
   @override
   Widget build(BuildContext context) {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    const double topOffsetForContent = 130.0;
+
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
+          // --- Fondo de Pantalla ---
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage(
-                  'assets/images/Animal Health Fondo de Pantalla.png',
-                ),
+                image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
+          // --- Logo de la App (Navega a Home) ---
           Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/settingsbutton.png'),
-                  fit: BoxFit.fill,
-                ),
-                borderRadius: BorderRadius.circular(44.0),
-                border: Border.all(width: 1.0, color: const Color(0xff070707)),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 50.0, start: -7.5),
-            Pin(size: 1.0, start: 128.0),
-            child: SvgPicture.string(
-              _svg_i3j02g,
-              allowDrawingOutsideViewBox: true,
-              fit: BoxFit.fill,
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
+            Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0),
             child: PageLink(
               links: [
                 PageLinkInfo(
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home')),
+                  pageBuilder: () => Home(key: const Key('Home_From_Settings_Logo')),
                 ),
               ],
               child: Container(
                 decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/logo.png'),
-                    fit: BoxFit.cover,
-                  ),
+                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
                   borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(
-                    width: 1.0,
-                    color: const Color(0xff000000),
-                  ),
+                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
                 ),
               ),
             ),
           ),
+          // --- Botón de Retroceso ---
           Pinned.fromPins(
-            Pin(size: 52.9, start: 9.1),
-            Pin(size: 50.0, start: 49.0),
+            Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0),
+            child: InkWell(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+            ),
+          ),
+          // --- Botón de Ayuda ---
+          Pinned.fromPins(
+            Pin(size: 40.5, end: 15.0), Pin(size: 50.0, start: 49.0),
             child: PageLink(
-              links: [PageLinkInfo()],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/back.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+              links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda')))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
             ),
           ),
-          Pinned.fromPins(
-            Pin(size: 40.5, middle: 0.8328),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('Ayuda')),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 60.0, start: 13.0),
-            Pin(size: 60.0, start: 115.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => PerfilPublico(key: Key('PerfilPublico')),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/perfilusuario.jpeg'),
-                    fit: BoxFit.fill,
-                  ),
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 47.2, end: 7.6),
-            Pin(size: 50.0, start: 49.0),
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/images/settingsbutton.png'),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 60.1, end: 7.6),
-            Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder:
-                      () => ListadeAnimales(key: Key('ListadeAnimales')),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/listaanimales.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 37.0, end: 37.0),
-            Pin(size: 543.0, middle: 0.5931),
-            child: Stack(
-              children: <Widget>[
-                Pinned.fromPins(
-                  Pin(start: 27.0, end: 27.0),
-                  Pin(size: 49.0, start: 0.0),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => PRIVACIDAD(key: Key('PRIVACIDAD')),
+          // --- Contenido Principal de Configuraciones ---
+          Positioned(
+            top: topOffsetForContent,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Column(
+              children: [
+                // --- Título de la Pantalla con Icono ---
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: Row( // Usar Row para alinear icono y texto
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/settingsbutton.png', // Icono de settings
+                        width: 35, // Ajustar tamaño según sea necesario
+                        height: 35,
+                      ),
+                      const SizedBox(width: 10), // Espacio entre icono y texto
+                      Text(
+                        'Configuraciones',
+                        style: TextStyle(
+                          fontFamily: 'Comic Sans MS',
+                          fontSize: 24,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          shadows: [Shadow(blurRadius: 2.0, color: Colors.black.withOpacity(0.5), offset: Offset(1.0, 1.0))],
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                          width: 1.0,
-                          color: const Color(0xff000000),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
-                Pinned.fromPins(
-                  Pin(size: 98.0, middle: 0.5),
-                  Pin(size: 28.0, start: 11.0),
-                  child: Text(
-                    'Privacidad',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    textAlign: TextAlign.center,
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(start: 27.0, end: 27.0),
-                  Pin(size: 49.0, middle: 0.332),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder:
-                            () => EditarinfodeUsuario(
-                              key: Key('EditarinfodeUsuario'),
-                              authService: widget.authService,
-                              onUpdateSuccess: () {},
+                // --- Lista de Opciones de Configuración (Scrollable) ---
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: Column(
+                      children: <Widget>[
+                        // --- Información del Usuario (Foto, Nombre, Email) ---
+                        if (currentUser != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+                            child: Row(
+                              children: [
+                                StreamBuilder<DocumentSnapshot>(
+                                  stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
+                                  builder: (context, snapshot) {
+                                    String? profilePhotoUrl;
+                                    if (snapshot.hasData && snapshot.data!.exists) {
+                                      final userData = snapshot.data!.data() as Map<String, dynamic>;
+                                      profilePhotoUrl = userData['profilePhotoUrl'] as String?;
+                                    }
+                                    return Container(
+                                      width: 70,
+                                      height: 70,
+                                      decoration: BoxDecoration(
+                                          color: Colors.grey[300],
+                                          borderRadius: BorderRadius.circular(12.0),
+                                          border: Border.all(color: Colors.white, width: 2.0),
+                                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), spreadRadius: 1, blurRadius: 3, offset: Offset(0, 2))]
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10.0),
+                                        child: (profilePhotoUrl != null && profilePhotoUrl.isNotEmpty)
+                                            ? CachedNetworkImage(
+                                          imageUrl: profilePhotoUrl, fit: BoxFit.cover,
+                                          placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                                          errorWidget: (context, url, error) => Icon(Icons.person, size: 40, color: Colors.grey[600]),
+                                        )
+                                            : Icon(Icons.person, size: 40, color: Colors.grey[600]),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(width: 15),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        currentUser.displayName ?? currentUser.email ?? 'Usuario',
+                                        style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (currentUser.email != null)
+                                        Text(
+                                          currentUser.email!,
+                                          style: TextStyle(fontFamily: 'Arial', fontSize: 14, color: Colors.black87),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                          width: 1.0,
-                          color: const Color(0xff000000),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(0.0, -0.322),
-                  child: SizedBox(
-                    width: 202.0,
-                    height: 28.0,
-                    child: Text(
-                      'Información Personal',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 20,
-                        color: const Color(0xff000000),
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                      softWrap: false,
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(start: 27.0, end: 27.0),
-                  Pin(size: 49.0, middle: 0.498),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder:
-                            () => AgregarMetodosdePago(
-                              key: Key('AgregarMetodosdePago'),
-                            ),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                          width: 1.0,
-                          color: const Color(0xff000000),
+                        const SizedBox(height: 5),
+                        // --- Opciones de Configuración Individuales ---
+                        _buildConfigOption(
+                          icon: Icons.shield_outlined,
+                          title: 'Privacidad',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PRIVACIDAD(key: const Key('PRIVACIDAD')))),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(0.0, -0.002),
-                  child: SizedBox(
-                    width: 164.0,
-                    height: 28.0,
-                    child: Text(
-                      'Métodos de Pago',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 20,
-                        color: const Color(0xff000000),
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                      softWrap: false,
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(start: 27.0, end: 27.0),
-                  Pin(size: 49.0, middle: 0.666),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => Idiomas(key: Key('Idiomas')),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                          width: 1.0,
-                          color: const Color(0xff000000),
+                        _buildConfigOption(
+                          icon: Icons.workspace_premium_outlined,
+                          title: 'Suscripción',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Suscripcion(key: const Key('Suscripcion')))),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(0.0, 0.318),
-                  child: SizedBox(
-                    width: 66.0,
-                    height: 28.0,
-                    child: Text(
-                      'Idioma',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 20,
-                        color: const Color(0xff000000),
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                      softWrap: false,
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(start: 27.0, end: 27.0),
-                  Pin(size: 49.0, end: 0.0),
-                  child: GestureDetector(
-                    onTap: _logout,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                          width: 1.0,
-                          color: const Color(0xff000000),
+                        _buildConfigOption(
+                          icon: Icons.manage_accounts_outlined,
+                          title: 'Información Personal',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => EditarinfodeUsuario(key: const Key('EditarinfodeUsuario'), authService: widget.authService, onUpdateSuccess: (){}))),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(size: 134.0, middle: 0.5),
-                  Pin(size: 28.0, end: 10.0),
-                  child: Text(
-                    'Cerrar Sesion',
-                    style: TextStyle(
-                      fontFamily: 'Comic Sans MS',
-                      fontSize: 20,
-                      color: const Color(0xff000000),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    textAlign: TextAlign.center,
-                    softWrap: false,
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(start: 27.0, end: 27.0),
-                  Pin(size: 49.0, middle: 0.166),
-                  child: PageLink(
-                    links: [
-                      PageLinkInfo(
-                        transition: LinkTransition.Fade,
-                        ease: Curves.easeOut,
-                        duration: 0.3,
-                        pageBuilder: () => Suscripcion(key: Key('Suscripcion')),
-                      ),
-                    ],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xff4ec8dd),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                          width: 1.0,
-                          color: const Color(0xff000000),
+                        _buildConfigOption(
+                          icon: Icons.credit_card,
+                          title: 'Métodos de Pago',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AgregarMetodosdePago(key: const Key('AgregarMetodosdePago')))),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xff080808),
-                            offset: Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment(0.0, -0.639),
-                  child: SizedBox(
-                    width: 108.0,
-                    height: 28.0,
-                    child: Text(
-                      'Suscripción',
-                      style: TextStyle(
-                        fontFamily: 'Comic Sans MS',
-                        fontSize: 20,
-                        color: const Color(0xff000000),
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.center,
-                      softWrap: false,
-                    ),
-                  ),
-                ),
-                Pinned.fromPins(
-                  Pin(start: 0.0, end: 0.0),
-                  Pin(size: 49.0, middle: 0.834),
-                  child: Stack(
-                    children: <Widget>[
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xff4ec8dd),
-                          borderRadius: BorderRadius.circular(15.0),
-                          border: Border.all(
-                            width: 1.0,
-                            color: const Color(0xff000000),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xff080808),
-                              offset: Offset(0, 3),
-                              blurRadius: 6,
-                            ),
-                          ],
+                        _buildConfigOption(
+                          icon: Icons.translate_outlined,
+                          title: 'Idioma',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Idiomas(key: const Key('Idiomas')))),
                         ),
-                      ),
-                      Positioned(
-                        left: 12.0,
-                        top: 10.0,
-                        child: SizedBox(
-                          width: 238.0,
-                          child: Text(
-                            'Discapacidad Audiovisual',
-                            style: TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 20,
-                              color: const Color(0xff000000),
-                              fontWeight: FontWeight.w700,
-                            ),
-                            textAlign: TextAlign.center,
-                            softWrap: false,
+                        _buildConfigOption(
+                          icon: _audioVisualAccessibility ? Icons.hearing_disabled_outlined : Icons.hearing_outlined,
+                          title: 'Accesibilidad Audiovisual',
+                          trailing: Switch(
+                            value: _audioVisualAccessibility,
+                            onChanged: (bool value) {
+                              setState(() {
+                                _audioVisualAccessibility = value;
+                                _saveAccessibilityPreference(value);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Modo accesibilidad ${value ? "activado" : "desactivado"}.')),
+                                );
+                              });
+                            },
+                            activeTrackColor: Colors.blue.withOpacity(0.5),
+                            activeColor: Colors.blueAccent,
+                            inactiveThumbColor: Colors.blueGrey.shade600,
+                            inactiveTrackColor: Colors.grey.shade400,
                           ),
-                        ),
-                      ),
-                      Positioned(
-                        right: 15.0,
-                        top: 5.0,
-                        child: Switch(
-                          value: _audioVisualAccessibility,
-                          onChanged: (bool value) {
+                          onTap: () {
                             setState(() {
-                              _audioVisualAccessibility = value;
-                              // Aquí falta implemetar el metodo y la logica para activa y desactivar
-                              //el modo de asistencia para personas con dispaciad audiovisual
+                              _audioVisualAccessibility = !_audioVisualAccessibility;
+                              _saveAccessibilityPreference(_audioVisualAccessibility);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Modo accesibilidad ${ _audioVisualAccessibility ? "activado" : "desactivado"}.')),
+                              );
                             });
                           },
-                          activeTrackColor: Colors.lightGreenAccent,
-                          activeColor: Colors.lightGreen,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 25),
+                        // --- Botón de Cerrar Sesión ---
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.exit_to_app, color: Colors.white),
+                            label: const Text('Cerrar Sesión', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Colors.white)),
+                            onPressed: () => _logout(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade700,
+                              padding: const EdgeInsets.symmetric(vertical: 14.0),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                              minimumSize: const Size(double.infinity, 50),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -570,6 +364,3 @@ class _ConfiguracionesState extends State<Configuraciones> {
     );
   }
 }
-
-const String _svg_i3j02g =
-    '<svg viewBox="-7.5 128.0 50.0 1.0" ><path transform="translate(-55.49, 74.01)" d="M 48.65689086914062 53.9924201965332 C 48.2294921875 53.9924201965332 47.98928833007812 53.9924201965332 47.98928833007812 53.9924201965332 C 47.98928833007812 53.9924201965332 48.2294921875 53.9924201965332 48.65689086914062 53.9924201965332 L 62.29214477539062 53.99241638183594 C 63.1807861328125 53.99241638183594 64.62149047851562 53.99241638183594 65.51007080078125 53.99241638183594 C 66.39871215820312 53.99241638183594 66.39871215820312 53.99241638183594 65.51007080078125 53.99241638183594 L 55.75177001953125 53.9924201965332 L 95.71670532226562 53.9924201965332 C 96.97183227539062 53.9924201965332 97.98928833007812 53.9924201965332 97.98928833007812 53.9924201965332 C 97.98928833007812 53.9924201965332 96.97183227539062 53.9924201965332 95.71670532226562 53.9924201965332 L 55.75177001953125 53.9924201965332 L 65.51007080078125 53.99242401123047 C 66.39871215820312 53.99242401123047 66.39871215820312 53.99242401123047 65.51007080078125 53.99242401123047 C 64.62149047851562 53.99242401123047 63.1807861328125 53.99242401123047 62.29220581054688 53.99242401123047 L 48.65689086914062 53.9924201965332 Z" fill="#fafafa" stroke="none" stroke-width="12" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';

@@ -1,3 +1,4 @@
+// home.dart
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import '../services/auth_service.dart';
@@ -11,31 +12,27 @@ import './CuidadosyRecomendaciones.dart';
 import './Emergencias.dart';
 import './Comunidad.dart';
 import './Crearpublicaciones.dart';
-import './DetallesdeFotooVideo.dart';
+import './DetallesdeFotooVideo.dart'; // Asegúrate que la ruta sea correcta
 import './CompartirPublicacion.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
-import 'dart:developer' as developer;
-import 'package:google_generative_ai/google_generative_ai.dart'; // Importar Gemini
-// import 'dart:convert'; // Para json.decode en _fetchImageFromUnsplash (si se usa)
-// Para _fetchImageFromUnsplash (si se usa)
+import 'dart:developer' as developer; // Importante para los logs
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 // --- CONFIGURACIÓN DE API KEYS ---
-
 const String GEMINI_API_KEY_HOME = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3nenc'; // TU API KEY DE GEMINI AQUÍ
 // ---------------------------------
 
-
-class Home extends StatefulWidget { // Convertido a StatefulWidget
+class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
 
   @override
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> { // Estado para Home
+class _HomeState extends State<Home> {
   final TextEditingController _searchController = TextEditingController();
   GenerativeModel? _geminiModel;
   bool _isSearching = false;
@@ -52,9 +49,9 @@ class _HomeState extends State<Home> { // Estado para Home
         model: 'gemini-pro',
         apiKey: GEMINI_API_KEY_HOME,
       );
-      developer.log("Modelo Gemini inicializado en Home.");
+      developer.log("Modelo Gemini inicializado en Home.", name: "Home.Gemini");
     } else {
-      developer.log("API Key de Gemini no configurada en Home. La búsqueda con IA no funcionará.");
+      developer.log("API Key de Gemini no configurada en Home. La búsqueda con IA no funcionará.", name: "Home.Gemini");
     }
   }
 
@@ -70,7 +67,7 @@ class _HomeState extends State<Home> { // Estado para Home
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('La búsqueda con IA no está disponible en este momento.')),
       );
-      developer.log("Intento de búsqueda pero el modelo Gemini no está inicializado.");
+      developer.log("Intento de búsqueda pero el modelo Gemini no está inicializado.", name: "Home.Search");
       return;
     }
 
@@ -83,7 +80,7 @@ class _HomeState extends State<Home> { // Estado para Home
       final content = [Content.text(prompt)];
       final response = await _geminiModel!.generateContent(content).timeout(const Duration(seconds: 20));
 
-      developer.log("Respuesta de Gemini para búsqueda '$query': ${response.text}");
+      developer.log("Respuesta de Gemini para búsqueda '$query': ${response.text}", name: "Home.Search");
 
       if (mounted) {
         showDialog(
@@ -105,7 +102,7 @@ class _HomeState extends State<Home> { // Estado para Home
         );
       }
     } catch (e) {
-      developer.log("Error al buscar con Gemini: $e");
+      developer.log("Error al buscar con Gemini: $e", error: e, name: "Home.Search");
       String errorMessage = "Hubo un problema al realizar la búsqueda con IA.";
       if (e is GenerativeAIException && e.message.contains('API key not valid')) {
         errorMessage = "Error: La API Key de Gemini no es válida. Por favor, verifica la configuración.";
@@ -133,24 +130,22 @@ class _HomeState extends State<Home> { // Estado para Home
     super.dispose();
   }
 
-  // Método para construir los items de la barra de navegación
   Widget _buildNavigationButtonItem({
     required String imagePath,
     bool isHighlighted = false,
-    double? fixedWidth, // Para mantener los anchos originales
+    double? fixedWidth,
     double height = 60.0,
   }) {
     double itemWidth;
     if (fixedWidth != null) {
       itemWidth = fixedWidth;
     } else {
-      // Fallback si no se provee ancho específico, aunque se recomienda hacerlo
       if (imagePath.contains('noticias')) itemWidth = 54.3;
       else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
-      else itemWidth = 60.0; // Default
+      else itemWidth = 60.0;
     }
 
     return Container(
@@ -159,7 +154,7 @@ class _HomeState extends State<Home> { // Estado para Home
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage(imagePath),
-          fit: BoxFit.fill, // Mantenemos BoxFit.fill como en el original
+          fit: BoxFit.fill,
         ),
         boxShadow: isHighlighted
             ? const [BoxShadow(color: Color(0xff9ff1fb), offset: Offset(0, 3), blurRadius: 6)]
@@ -174,7 +169,6 @@ class _HomeState extends State<Home> { // Estado para Home
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
-          // Fondo de pantalla
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -185,8 +179,6 @@ class _HomeState extends State<Home> { // Estado para Home
               ),
             ),
           ),
-
-          // Logo
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
@@ -201,8 +193,6 @@ class _HomeState extends State<Home> { // Estado para Home
               ),
             ),
           ),
-
-          // Botón de ayuda
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
@@ -225,11 +215,9 @@ class _HomeState extends State<Home> { // Estado para Home
               ),
             ),
           ),
-
-          // Barra de búsqueda
           Pinned.fromPins(
             Pin(size: 307.0, middle: 0.5),
-            Pin(size: 45.0, start: 150), // Ajustado start en lugar de middle para más control
+            Pin(size: 45.0, start: 150),
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xffffffff),
@@ -297,12 +285,9 @@ class _HomeState extends State<Home> { // Estado para Home
               ),
             ),
           ),
-
-
-          // Botón de perfil
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
-            Pin(size: 60.0, middle: 0.1947), // Este middle es relativo a la altura disponible
+            Pin(size: 60.0, middle: 0.1947),
             child: StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('users')
@@ -338,7 +323,7 @@ class _HomeState extends State<Home> { // Estado para Home
                             ),
                           ),
                           errorWidget: (context, url, error) {
-                            developer.log('Error CachedNetworkImage (Perfil): $error, URL: $url');
+                            developer.log('Error CachedNetworkImage (Perfil): $error, URL: $url', name: "Home.ProfilePic");
                             return const Center(child: Icon(Icons.person, size: 30, color: Colors.grey));
                           })
                           : const Center(child: Icon(Icons.person, size: 30, color: Colors.grey)),
@@ -348,8 +333,6 @@ class _HomeState extends State<Home> { // Estado para Home
               },
             ),
           ),
-
-          // Botón de configuración
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
@@ -369,11 +352,9 @@ class _HomeState extends State<Home> { // Estado para Home
               ),
             ),
           ),
-
-          // Botón de tienda
           Pinned.fromPins(
             Pin(size: 58.5, end: 2.0),
-            Pin(size: 60.0, start: 105.0), // Ajustar este valor si es necesario
+            Pin(size: 60.0, start: 105.0),
             child: PageLink(
               links: [
                 PageLinkInfo(
@@ -390,8 +371,6 @@ class _HomeState extends State<Home> { // Estado para Home
               ),
             ),
           ),
-
-          // Botón de lista de animales
           Pinned.fromPins(
             Pin(size: 60.1, start: 6.0),
             Pin(size: 60.0, start: 44.0),
@@ -411,25 +390,20 @@ class _HomeState extends State<Home> { // Estado para Home
               ),
             ),
           ),
-
-          // --- NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
           Positioned(
-            top: 200.0, // Posición vertical fija desde la parte superior
-            left: 16.0,  // Margen izquierdo para la fila
-            right: 16.0, // Margen derecho para la fila
-            height: 60.0, // Altura de los botones
+            top: 200.0,
+            left: 16.0,
+            right: 16.0,
+            height: 60.0,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribuye el espacio entre los botones
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                // Botón de noticias (resaltado) - sin PageLink según el original
                 _buildNavigationButtonItem(
                   imagePath: 'assets/images/noticias.png',
                   isHighlighted: true,
                   fixedWidth: 54.3,
                 ),
-
-                // Botón de cuidados y recomendaciones
                 PageLink(
                   links: [
                     PageLinkInfo(
@@ -444,8 +418,6 @@ class _HomeState extends State<Home> { // Estado para Home
                     fixedWidth: 63.0,
                   ),
                 ),
-
-                // Botón de emergencias
                 PageLink(
                   links: [
                     PageLinkInfo(
@@ -460,8 +432,6 @@ class _HomeState extends State<Home> { // Estado para Home
                     fixedWidth: 65.0,
                   ),
                 ),
-
-                // Botón de comunidad
                 PageLink(
                   links: [
                     PageLinkInfo(
@@ -476,8 +446,6 @@ class _HomeState extends State<Home> { // Estado para Home
                     fixedWidth: 67.0,
                   ),
                 ),
-
-                // Botón de crear publicación
                 PageLink(
                   links: [
                     PageLinkInfo(
@@ -495,12 +463,9 @@ class _HomeState extends State<Home> { // Estado para Home
               ],
             ),
           ),
-          // --- FIN DE NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
-
-          // Lista de publicaciones
           Pinned.fromPins(
             Pin(start: 16.0, end: 16.0),
-            Pin(start: 270.0, end: 0.0), // Ajustado start para estar debajo de los botones de navegación
+            Pin(start: 270.0, end: 0.0),
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance.collection('publicaciones').orderBy('fecha', descending: true).snapshots(),
               builder: (context, snapshot) {
@@ -508,7 +473,7 @@ class _HomeState extends State<Home> { // Estado para Home
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  developer.log('Error en StreamBuilder (publicaciones): ${snapshot.error}');
+                  developer.log('Error en StreamBuilder (publicaciones): ${snapshot.error}', name: "Home.PubStream", error: snapshot.error);
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -516,11 +481,10 @@ class _HomeState extends State<Home> { // Estado para Home
                 }
                 return MediaQuery.removePadding(
                   context: context,
-                  removeBottom: true, // Importante si hay elementos fijos abajo
-                  removeTop: true, // Importante ya que estamos usando Pinned para posicionar
+                  removeBottom: true,
+                  removeTop: true,
                   child: ListView.builder(
-                    padding: EdgeInsets.zero, // Asegurar que no haya padding extra
-                    // physics: const ClampingScrollPhysics(), // Puede ser útil
+                    padding: EdgeInsets.zero,
                     itemCount: snapshot.data!.docs.length,
                     itemBuilder: (context, index) {
                       var publicacion = snapshot.data!.docs[index];
@@ -544,7 +508,7 @@ class _HomeState extends State<Home> { // Estado para Home
     final postOwnerId = publicacion['usuarioId'] as String?;
     final isOwnPost = currentUserId != null && postOwnerId == currentUserId;
     final likes = publicacion['likes'] as int? ?? 0;
-    final likedBy = List<String>.from(publicacion['likedBy'] as List<dynamic>? ?? []); // Asegurar tipo
+    final likedBy = List<String>.from(publicacion['likedBy'] as List<dynamic>? ?? []);
 
     return Container(
       margin: const EdgeInsets.only(top: 10.0),
@@ -557,7 +521,6 @@ class _HomeState extends State<Home> { // Estado para Home
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Encabezado de la publicación
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -568,43 +531,28 @@ class _HomeState extends State<Home> { // Estado para Home
                       transition: LinkTransition.Fade,
                       ease: Curves.easeOut,
                       duration: 0.3,
-                      pageBuilder:
-                          () => PerfilPublico(key: const Key('PerfilPublico')), // TODO: Pasar el userId del publicador
+                      pageBuilder: () => PerfilPublico(key: const Key('PerfilPublicoOwner'), /* userId: postOwnerId */),
                     ),
                   ],
                   child: StreamBuilder<DocumentSnapshot>(
-                    stream:
-                    FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(publicacion['usuarioId'])
-                        .snapshots(),
+                    stream: FirebaseFirestore.instance.collection('users').doc(publicacion['usuarioId']).snapshots(),
                     builder: (context, userSnapshot) {
                       if (userSnapshot.connectionState == ConnectionState.waiting) {
                         return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
                       }
                       if (userSnapshot.hasError) {
-                        developer.log('Error cargando datos de usuario para publicación: ${userSnapshot.error}');
+                        developer.log('Error cargando datos de usuario para publicación: ${userSnapshot.error}', name: "Home.PubUserStream", error: userSnapshot.error);
                         return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: Icon(Icons.error, color: Colors.white));
                       }
                       if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
                         return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: Icon(Icons.person, color: Colors.white));
                       }
-
-                      final profilePhotoUrl =
-                      userSnapshot.data?['profilePhotoUrl'] as String?;
-
+                      final profilePhotoUrl = userSnapshot.data?['profilePhotoUrl'] as String?;
                       return CircleAvatar(
                         radius: 20,
                         backgroundColor: Colors.grey[200],
-                        backgroundImage:
-                        profilePhotoUrl != null &&
-                            profilePhotoUrl.isNotEmpty
-                            ? NetworkImage(profilePhotoUrl) // CachedNetworkImage podría ser una opción aquí también
-                            : null,
-                        child:
-                        profilePhotoUrl == null || profilePhotoUrl.isEmpty
-                            ? const Icon(Icons.person, color: Colors.white)
-                            : null,
+                        backgroundImage: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty ? NetworkImage(profilePhotoUrl) : null,
+                        child: profilePhotoUrl == null || profilePhotoUrl.isEmpty ? const Icon(Icons.person, color: Colors.white) : null,
                       );
                     },
                   ),
@@ -616,33 +564,18 @@ class _HomeState extends State<Home> { // Estado para Home
                     children: [
                       Text(
                         publicacion['usuarioNombre'] ?? 'Usuario Anónimo',
-                        style: const TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       Row(
                         children: [
-                          Image.asset(
-                            'assets/images/publico.png',
-                            width: 15,
-                            height: 15,
-                          ),
+                          Image.asset('assets/images/publico.png', width: 15, height: 15),
                           const SizedBox(width: 5),
-                          Text(
-                            publicacion['tipoPublicacion'] ?? 'Público',
-                            style: const TextStyle(
-                              fontFamily: 'Comic Sans MS',
-                              fontSize: 14,
-                            ),
-                          ),
+                          Text(publicacion['tipoPublicacion'] ?? 'Público', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14)),
                         ],
                       ),
                     ],
                   ),
                 ),
-
                 if (isOwnPost)
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.black),
@@ -650,142 +583,107 @@ class _HomeState extends State<Home> { // Estado para Home
                       if (value == 'eliminar') {
                         _eliminarPublicacion(publicacion.id, context);
                       } else if (value == 'editar') {
-                        // TODO: Implementar edición o mostrar mensaje
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Funcionalidad de edición en desarrollo',
-                            ),
-                          ),
+                          const SnackBar(content: Text('Funcionalidad de edición en desarrollo')),
                         );
                       }
                     },
-                    itemBuilder:
-                        (BuildContext context) => [
-                      const PopupMenuItem<String>(
-                        value: 'editar',
-                        child: Text('Editar publicación'),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'eliminar',
-                        child: Text('Eliminar publicación'),
-                      ),
+                    itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem<String>(value: 'editar', child: Text('Editar publicación')),
+                      const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar publicación')),
                     ],
                   ),
               ],
             ),
           ),
-
-          // Contenido multimedia
           if (hasValidMedia)
-            SizedBox( // Se asegura que el contenido multimedia no desborde
-              width: double.infinity, // Ocupa el ancho disponible en la tarjeta
-              child:
-              isVideo
-                  ? _VideoPlayerWidget(videoUrl: mediaUrl!) // Aseguramos que mediaUrl no es null aquí
-                  : _buildImageWidget(mediaUrl!, context), // Aseguramos que mediaUrl no es null aquí
+            SizedBox(
+              width: double.infinity,
+              child: isVideo
+                  ? _VideoPlayerWidget(videoUrl: mediaUrl!)
+                  : _buildImageWidget(mediaUrl!, context),
             )
           else
-            _buildNoImageWidget(), // Placeholder si no hay media
-
-          // Caption
+            _buildNoImageWidget(),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
               publicacion['caption'] ?? '',
-              style: const TextStyle(
-                fontFamily: 'Comic Sans MS',
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 15, fontWeight: FontWeight.w700),
             ),
           ),
-
-          // Acciones (Like, Comment, Share, Save)
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 GestureDetector(
-                  onTap:
-                      () => _toggleLike(
-                    publicacion.id,
-                    currentUserId,
-                    likedBy,
-                    context,
-                  ),
+                  onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, context),
                   child: Row(
                     children: [
-                      Image.asset(
-                        'assets/images/like.png',
-                        width: 40,
-                        height: 40,
-                      ),
+                      Image.asset('assets/images/like.png', width: 40, height: 40),
                       const SizedBox(width: 5),
-                      Text(
-                        likes.toString(),
-                        style: const TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 16,
-                          color: Colors.black,
-                        ),
-                      ),
+                      Text(likes.toString(), style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: Colors.black)),
                     ],
                   ),
                 ),
-
+                // ***** CAMBIO IMPORTANTE AQUÍ PARA NAVEGAR A DETALLES *****
                 PageLink(
                   links: [
                     PageLinkInfo(
                       transition: LinkTransition.Fade,
                       ease: Curves.easeOut,
                       duration: 0.3,
-                      pageBuilder:
-                          () => DetallesdeFotooVideo(
-                        key: const Key('DetallesdeFotooVideo'),
-                        // TODO: Pasar datos de la publicación
-                        // publicationId: publicacion.id,
-                        // mediaUrl: mediaUrl,
-                        // isVideo: isVideo,
-                        // caption: publicacion['caption'],
-                        // userName: publicacion['usuarioNombre'],
-                        // userProfilePic: (userSnapshot.data?['profilePhotoUrl'] as String?), // Necesitarías obtener esto de alguna manera
-                      ),
+                      pageBuilder: () {
+                        String? pubId = publicacion.id;
+                        developer.log("Navegando a Detalles: publicationId = '$pubId'", name: "Home.Navigation");
+                        if (pubId == null || pubId.isEmpty) {
+                          developer.log("ERROR en Home: El ID de la publicación es nulo o vacío ANTES de navegar a Detalles.", name: "Home.Navigation");
+                          // Podrías devolver un widget de error aquí o no permitir la navegación,
+                          // pero la guarda en DetallesdeFotooVideo se encargará
+                        }
+
+                        // Obtener ownerUserProfilePic de forma segura
+                        String? ownerProfilePic;
+                        final pubData = publicacion.data() as Map<String, dynamic>?; // Cast a Map
+                        if (pubData != null && pubData.containsKey('usuarioFotoUrl')) {
+                          ownerProfilePic = pubData['usuarioFotoUrl'] as String?;
+                        } else if (pubData != null && pubData.containsKey('profilePhotoUrl')) { // Fallback por si el campo se llama diferente
+                          ownerProfilePic = pubData['profilePhotoUrl'] as String?;
+                        }
+                        // developer.log("Owner Profile Pic para detalles: $ownerProfilePic", name: "Home.Navigation");
+
+
+                        return DetallesdeFotooVideo(
+                          key: Key('Detalles_${pubId ?? "ID_NULO"}'),
+                          publicationId: pubId ?? "", // Pasar string vacío si es nulo para el constructor
+                          mediaUrl: mediaUrl,
+                          isVideo: isVideo,
+                          caption: publicacion['caption'] as String?,
+                          ownerUserId: publicacion['usuarioId'] as String?,
+                          ownerUserName: publicacion['usuarioNombre'] as String?,
+                          ownerUserProfilePic: ownerProfilePic,
+                        );
+                      },
                     ),
                   ],
                   child: Row(
                     children: [
-                      Image.asset(
-                        'assets/images/comments.png',
-                        width: 40,
-                        height: 40,
-                      ),
+                      Image.asset('assets/images/comments.png', width: 40, height: 40),
                       const SizedBox(width: 5),
-                      Text(
-                        (publicacion['comentarios'] as int? ?? 0).toString(),
-                        style: const TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 16,
-                        ),
-                      ),
+                      Text((publicacion['comentarios'] as int? ?? 0).toString(), style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
                     ],
                   ),
                 ),
-
+                // ***** FIN DEL CAMBIO IMPORTANTE *****
                 PageLink(
                   links: [
                     PageLinkInfo(
                       transition: LinkTransition.Fade,
                       ease: Curves.easeOut,
                       duration: 0.3,
-                      pageBuilder:
-                          () => CompartirPublicacion(
-                        key: const Key('CompartirPublicacion'),
-                        // TODO: Pasar datos de la publicación
+                      pageBuilder: () => CompartirPublicacion(
+                        key: const Key('CompartirPublicacion'), publicationId: '',
                         // publicationId: publicacion.id,
                         // mediaUrl: mediaUrl,
                         // caption: publicacion['caption'],
@@ -794,40 +692,19 @@ class _HomeState extends State<Home> { // Estado para Home
                   ],
                   child: Row(
                     children: [
-                      Image.asset(
-                        'assets/images/share.png',
-                        width: 40,
-                        height: 40,
-                      ),
+                      Image.asset('assets/images/share.png', width: 40, height: 40),
                       const SizedBox(width: 5),
-                      const Text(
-                        'SHARE',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 16,
-                        ),
-                      ),
+                      const Text('SHARE', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
                     ],
                   ),
                 ),
-
                 GestureDetector(
                   onTap: () => _guardarPublicacion(publicacion.id, context),
                   child: Row(
                     children: [
-                      Image.asset(
-                        'assets/images/save.png',
-                        width: 40,
-                        height: 40,
-                      ),
+                      Image.asset('assets/images/save.png', width: 40, height: 40),
                       const SizedBox(width: 5),
-                      const Text(
-                        'Guardar',
-                        style: TextStyle(
-                          fontFamily: 'Comic Sans MS',
-                          fontSize: 16,
-                        ),
-                      ),
+                      const Text('Guardar', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
                     ],
                   ),
                 ),
@@ -841,23 +718,19 @@ class _HomeState extends State<Home> { // Estado para Home
 
   Widget _buildImageWidget(String imageUrl, BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8.0), //Consistente con el contenedor de la publicación
+      borderRadius: BorderRadius.circular(8.0),
       child: CachedNetworkImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
-        // El ancho se tomará del SizedBox padre en _buildPublicacionItem
-        // width: MediaQuery.of(context).size.width - 32, // -32 por los márgenes del Pinned y del Container
-        height: 300, // Altura fija para la imagen
+        height: 300,
         placeholder: (context, url) => const Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(
-              Color(0xff4ec8dd),
-            ),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)),
           ),
         ),
         errorWidget: (context, url, error) {
-          developer.log('Error CachedNetworkImage (Publicación): $error, URL: $url');
-          return _buildImageErrorWidget(); // Simplificado: usar directamente el widget de error
+          developer.log('Error CachedNetworkImage (Publicación): $error, URL: $url', name: "Home.Image", error: error);
+          return _buildImageErrorWidget();
         },
       ),
     );
@@ -866,22 +739,14 @@ class _HomeState extends State<Home> { // Estado para Home
   Widget _buildImageErrorWidget() {
     return Container(
       width: double.infinity,
-      height: 200, // Coincide con _buildNoImageWidget
+      height: 200,
       color: Colors.grey[200],
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.error_outline, color: Colors.red, size: 50),
           SizedBox(height: 10),
-          Text(
-            'Error al cargar el contenido',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 16,
-              color: Colors.red,
-            ),
-          ),
+          Text('Error al cargar el contenido', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: Colors.red)),
         ],
       ),
     );
@@ -897,15 +762,7 @@ class _HomeState extends State<Home> { // Estado para Home
         children: [
           Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
           SizedBox(height: 10),
-          Text(
-            'Contenido no disponible',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Comic Sans MS',
-              fontSize: 16,
-              color: Colors.grey,
-            ),
-          ),
+          Text('Contenido no disponible', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: Colors.grey)),
         ],
       ),
     );
@@ -923,12 +780,10 @@ class _HomeState extends State<Home> { // Estado para Home
       await FirebaseFirestore.instance.runTransaction((transaction) async {
         final postSnapshot = await transaction.get(postRef);
         if (!postSnapshot.exists) {
-          developer.log('Error: Publicación no encontrada para dar like: $postId');
+          developer.log('Error: Publicación no encontrada para dar like: $postId', name: "Home.Like");
           throw Exception("Publicación no encontrada.");
         }
-        // Asegurar que likedBy es una lista de Strings
         List<String> currentLikedBy = List<String>.from(postSnapshot.data()?['likedBy'] as List<dynamic>? ?? []);
-
         final bool isLiked = currentLikedBy.contains(userId);
         List<String> newLikedBy;
         if (isLiked) {
@@ -939,7 +794,7 @@ class _HomeState extends State<Home> { // Estado para Home
         transaction.update(postRef, {'likes': newLikedBy.length, 'likedBy': newLikedBy});
       });
     } catch (e) {
-      developer.log('Error al actualizar like: $e');
+      developer.log('Error al actualizar like: $e', error: e, name: "Home.Like");
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al actualizar like: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...')));
       }
@@ -963,7 +818,7 @@ class _HomeState extends State<Home> { // Estado para Home
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación guardada correctamente'), backgroundColor: Colors.green));
       }
     } catch (e) {
-      developer.log('Error al guardar publicación: $e');
+      developer.log('Error al guardar publicación: $e', error: e, name: "Home.Save");
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'), backgroundColor: Colors.red));
       }
@@ -977,7 +832,7 @@ class _HomeState extends State<Home> { // Estado para Home
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación eliminada correctamente'), backgroundColor: Colors.green));
       }
     } catch (e) {
-      developer.log('Error al eliminar publicación: $e');
+      developer.log('Error al eliminar publicación: $e', error: e, name: "Home.Delete");
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al eliminar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'), backgroundColor: Colors.red));
       }
@@ -985,6 +840,7 @@ class _HomeState extends State<Home> { // Estado para Home
   }
 }
 
+// _VideoPlayerWidget (sin cambios, se asume que está aquí o importado)
 class _VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
   const _VideoPlayerWidget({Key? key, required this.videoUrl}) : super(key: key);
@@ -1004,18 +860,17 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
     _initializeVideoPlayerFuture = _controller.initialize().then((_) {
       if (mounted) {
-        // Asegurar que el estado se actualice solo si el widget está montado
         setState(() {});
       }
     }).catchError((error) {
-      developer.log("Error inicializando VideoPlayer: $error, URL: ${widget.videoUrl}");
+      developer.log("Error inicializando VideoPlayer: $error, URL: ${widget.videoUrl}", name: "VideoPlayer", error: error);
       if (mounted) {
         setState(() {
           _hasError = true;
         });
       }
     });
-    _controller.setLooping(true); // Opcional: si quieres que el video se repita
+    _controller.setLooping(true);
   }
 
   @override
@@ -1035,18 +890,15 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done && !_hasError) {
           if (_controller.value.hasError) {
-            developer.log("Error en VideoPlayerController: ${_controller.value.errorDescription}, URL: ${widget.videoUrl}");
+            developer.log("Error en VideoPlayerController: ${_controller.value.errorDescription}, URL: ${widget.videoUrl}", name: "VideoPlayer", error: _controller.value.errorDescription);
             return _buildVideoErrorWidget();
           }
           if (!_controller.value.isInitialized) {
-            // Muestra un indicador de carga si aún no está inicializado después de 'done'.
             return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))));
           }
 
           final videoAspectRatio = _controller.value.aspectRatio;
-          // Se asegura que el AspectRatio sea válido
           final validAspectRatio = (videoAspectRatio > 0) ? videoAspectRatio : 16/9;
-
 
           return AspectRatio(
             aspectRatio: validAspectRatio,
@@ -1059,10 +911,10 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
             ),
           );
         } else if (snapshot.hasError || _hasError) {
-          developer.log("Error en FutureBuilder de VideoPlayer: ${snapshot.error}, URL: ${widget.videoUrl}");
+          developer.log("Error en FutureBuilder de VideoPlayer: ${snapshot.error}, URL: ${widget.videoUrl}", name: "VideoPlayer", error: snapshot.error);
           return _buildVideoErrorWidget();
         }
-        else { // ConnectionState.waiting or active
+        else {
           return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))));
         }
       },
@@ -1085,7 +937,7 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         opacity: _controller.value.isPlaying && _controller.value.isInitialized ? 0.0 : 1.0,
         duration: const Duration(milliseconds: 300),
         child: Container(
-          color: Colors.black26, // Fondo semitransparente para el botón
+          color: Colors.black26,
           child: Center(
             child: Icon(
               _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
@@ -1101,8 +953,8 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   Widget _buildVideoErrorWidget() {
     return Container(
       width: double.infinity,
-      height: 200, // Altura estándar para errores de media
-      color: Colors.black, // Fondo oscuro para errores de video
+      height: 200,
+      color: Colors.black,
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

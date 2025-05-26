@@ -247,7 +247,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
       }
 
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final userData = userDoc.data() as Map<String, dynamic>? ?? {};
+      final userData = userDoc.data() ?? {};
 
       await FirebaseFirestore.instance.collection('publicaciones').add({
         'usuarioId': user.uid,

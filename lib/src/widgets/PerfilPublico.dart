@@ -801,7 +801,7 @@ class PerfilPublico extends StatelessWidget {
                                                                   .easeOut,
                                                               duration: 0.3,
                                                               pageBuilder: () =>
-                                                                  DetallesdeFotooVideo(key: Key('DetallesdeFotooVideo'),),
+                                                                  DetallesdeFotooVideo(key: Key('DetallesdeFotooVideo'), publicationId: '',),
                                                             ),
                                                           ],
                                                           child: Container(
@@ -856,7 +856,7 @@ class PerfilPublico extends StatelessWidget {
                                                                   .easeOut,
                                                               duration: 0.3,
                                                               pageBuilder: () =>
-                                                                  CompartirPublicacion(key: Key('CompartirPublicacion'),),
+                                                                  CompartirPublicacion(key: Key('CompartirPublicacion'), publicationId: '',),
                                                             ),
                                                           ],
                                                           child: Container(
@@ -920,7 +920,7 @@ class PerfilPublico extends StatelessWidget {
                                                         ease: Curves.easeOut,
                                                         duration: 0.3,
                                                         pageBuilder: () =>
-                                                            DetallesdeFotooVideo(key: Key('DetallesdeFotooVideo'),),
+                                                            DetallesdeFotooVideo(key: Key('DetallesdeFotooVideo'), publicationId: '',),
                                                       ),
                                                     ],
                                                     child: Container(
