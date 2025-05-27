@@ -1,1050 +1,852 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:adobe_xd/pinned.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart'; // Para formatear fechas
 import '../services/auth_service.dart';
-import './Home.dart';
+import './Home.dart'; // Para PageLink a Home
 import 'package:adobe_xd/page_link.dart';
+import 'package:adobe_xd/pinned.dart';
 import './Ayuda.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import './Crearpublicaciondesdeperfil.dart';
 import './DetallesdeFotooVideo.dart';
 import './CompartirPublicacion.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:developer' as developer;
+import 'package:video_player/video_player.dart';
 
-class PerfilPublico extends StatelessWidget {
-  PerfilPublico({
-    required Key key,
-  }) : super(key: key);
+
+// --- Constantes de Estilo ---
+const String _fontFamily = 'Comic Sans MS';
+const Color _primaryTextColor = Color(0xff000000);
+const Color _buttonBackgroundColor = Color(0xff54d1e0);
+const Color _tabBackgroundColor = Color(0xe3a0f4fe);
+const Color _infoTabActiveColor = Color(0xff54d1e0);
+const Color _infoTabInactiveColor = Color(0xff947b93);
+const Color _boxShadowColor = Color(0xff080808);
+const Color _scaffoldBgColorModal = Color(0xff4ec8dd);
+
+class PerfilPublico extends StatefulWidget {
+  const PerfilPublico({Key? key}) : super(key: key);
+
+  @override
+  _PerfilPublicoState createState() => _PerfilPublicoState();
+}
+
+class _PerfilPublicoState extends State<PerfilPublico> {
+  final AuthService _authService = AuthService();
+
+  Future<void> _mostrarDialogoEditarPerfilUsuario(BuildContext pageContext, String userId, Map<String, dynamic> currentUserData) async {
+    await showModalBottomSheet(
+      context: pageContext,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext modalBuildContext) {
+        return _EditarPerfilUsuarioModalWidget(
+          key: Key('edit_profile_modal_$userId'),
+          userId: userId,
+          currentUserData: currentUserData,
+          parentContextForSnackbars: pageContext,
+        );
+      },
+    );
+  }
+
+  // --- FUNCIÓN PARA MOSTRAR IMAGEN DE PERFIL EN GRANDE ---
+  void _showProfileImageDialog(BuildContext context, String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      // Opcional: mostrar un mensaje si no hay imagen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay imagen de perfil para mostrar.', style: TextStyle(fontFamily: _fontFamily))),
+      );
+      return;
+    }
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent, // Para que no haya fondo blanco detrás de la imagen si tiene bordes redondeados
+          insetPadding: const EdgeInsets.all(10), // Margen alrededor del diálogo
+          child: GestureDetector( // Para cerrar el diálogo al tocar fuera de la imagen (o en la imagen misma)
+            onTap: () => Navigator.of(context).pop(),
+            child: InteractiveViewer( // Permite hacer zoom y pan
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.contain, // Para que la imagen se ajuste sin recortar
+                placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))),
+                errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, size: 100, color: Colors.grey)),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+  Future<void> _toggleLike(String postId, String? userId, List<String> likedBy, BuildContext contextForSnackBar) async {
+    if (userId == null) {
+      if (contextForSnackBar.mounted) {
+        ScaffoldMessenger.of(contextForSnackBar).showSnackBar(
+          const SnackBar(content: Text('Debes iniciar sesión para dar like', style: TextStyle(fontFamily: _fontFamily))),
+        );
+      }
+      return;
+    }
+    try {
+      final postRef = FirebaseFirestore.instance.collection('publicaciones').doc(postId);
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final postSnapshot = await transaction.get(postRef);
+        if (!postSnapshot.exists) {
+          developer.log('Error: Publicación no encontrada para dar like: $postId', name: "PerfilPublico.Like");
+          throw Exception("Publicación no encontrada.");
+        }
+        List<String> currentLikedBy = List<String>.from(postSnapshot.data()?['likedBy'] as List<dynamic>? ?? []);
+        final bool isLiked = currentLikedBy.contains(userId);
+        List<String> newLikedByList;
+        if (isLiked) {
+          newLikedByList = currentLikedBy.where((id) => id != userId).toList();
+        } else {
+          newLikedByList = [...currentLikedBy, userId];
+        }
+        transaction.update(postRef, {'likes': newLikedByList.length, 'likedBy': newLikedByList});
+      });
+    } catch (e) {
+      developer.log('Error al actualizar like: $e', error: e, name: "PerfilPublico.Like");
+      if (contextForSnackBar.mounted) {
+        ScaffoldMessenger.of(contextForSnackBar).showSnackBar(SnackBar(content: Text('Error al actualizar like...', style: TextStyle(fontFamily: _fontFamily))));
+      }
+    }
+  }
+
+  Future<void> _guardarPublicacion(String publicacionId, BuildContext contextForSnackBar) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        if (contextForSnackBar.mounted) {
+          ScaffoldMessenger.of(contextForSnackBar).showSnackBar(const SnackBar(content: Text('Debes iniciar sesión para guardar', style: TextStyle(fontFamily: _fontFamily))));
+        }
+        return;
+      }
+      final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid).collection('publicacionesGuardadas').doc(publicacionId);
+      final doc = await docRef.get();
+
+      if (doc.exists) {
+        await docRef.delete();
+        if (contextForSnackBar.mounted) {
+          ScaffoldMessenger.of(contextForSnackBar).showSnackBar(const SnackBar(content: Text('Publicación eliminada de guardados', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.orangeAccent));
+        }
+      } else {
+        await docRef.set({
+          'publicacionId': publicacionId,
+          'fechaGuardado': FieldValue.serverTimestamp(),
+        });
+        if (contextForSnackBar.mounted) {
+          ScaffoldMessenger.of(contextForSnackBar).showSnackBar(const SnackBar(content: Text('Publicación guardada', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green));
+        }
+      }
+    } catch (e) {
+      developer.log('Error al guardar/desguardar publicación: $e', error: e, name: "PerfilPublico.SaveToggle");
+      if (contextForSnackBar.mounted) {
+        ScaffoldMessenger.of(contextForSnackBar).showSnackBar(SnackBar(content: Text('Error al procesar guardado...', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red));
+      }
+    }
+  }
+
+  Future<void> _eliminarPublicacion(String publicacionId, BuildContext contextForDialogsAndSnackbars, String? mediaUrlToDelete) async {
+    bool confirmar = await showDialog<bool>(
+      context: contextForDialogsAndSnackbars,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          backgroundColor: _tabBackgroundColor,
+          title: const Text('Confirmar Eliminación', style: TextStyle(fontFamily: _fontFamily, color: _primaryTextColor)),
+          content: const Text('¿Estás seguro de que deseas eliminar esta publicación? Esta acción no se puede deshacer.', style: TextStyle(fontFamily: _fontFamily, color: _primaryTextColor)),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar', style: TextStyle(fontFamily: _fontFamily, color: _buttonBackgroundColor)),
+              onPressed: () => Navigator.of(ctx).pop(false),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(backgroundColor: Colors.red[400]),
+              child: const Text('Eliminar', style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
+              onPressed: () => Navigator.of(ctx).pop(true),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+
+    if (!confirmar) return;
+
+    try {
+      if (mediaUrlToDelete != null && mediaUrlToDelete.isNotEmpty) {
+        if (mediaUrlToDelete.startsWith('https://firebasestorage.googleapis.com')) {
+          try {
+            await FirebaseStorage.instance.refFromURL(mediaUrlToDelete).delete();
+            developer.log('Medio eliminado de Storage: $mediaUrlToDelete', name: "PerfilPublico.DeleteStorage");
+          } catch (storageError) {
+            developer.log('Error eliminando medio de Storage (puede ser normal si ya no existe): $storageError. URL: $mediaUrlToDelete', name: "PerfilPublico.DeleteStorage", error: storageError);
+          }
+        }
+      }
+      await FirebaseFirestore.instance.collection('publicaciones').doc(publicacionId).delete();
+      if (contextForDialogsAndSnackbars.mounted) {
+        ScaffoldMessenger.of(contextForDialogsAndSnackbars).showSnackBar(const SnackBar(content: Text('Publicación eliminada', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green));
+      }
+    } catch (e) {
+      developer.log('Error al eliminar publicación: $e', error: e, name: "PerfilPublico.Delete");
+      if (contextForDialogsAndSnackbars.mounted) {
+        ScaffoldMessenger.of(contextForDialogsAndSnackbars).showSnackBar(SnackBar(content: Text('Error al eliminar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red));
+      }
+    }
+  }
+
+
+  Future<void> _mostrarDialogoEditarPublicacionIndividual(DocumentSnapshot publicacion, BuildContext contextForModals) async {
+    final String publicacionId = publicacion.id;
+    final pubData = publicacion.data() as Map<String, dynamic>;
+    final String? captionActual = pubData['caption'] as String?;
+    final String? mediaUrlActual = pubData['imagenUrl'] as String?;
+    final bool esVideoActual = (pubData['esVideo'] as bool?) ?? false;
+
+    await showModalBottomSheet(
+      context: contextForModals,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext modalContext) {
+        return EditarPublicacionIndividualWidget(
+          key: Key('edit_pub_perfil_indiv_${publicacionId}'),
+          publicacionId: publicacionId,
+          captionActual: captionActual ?? '',
+          mediaUrlActual: mediaUrlActual,
+          esVideoActual: esVideoActual,
+          parentContext: contextForModals,
+        );
+      },
+    );
+  }
+
+  int _calculateAge(DateTime birthDate) {
+    DateTime currentDate = DateTime.now();
+    int age = currentDate.year - birthDate.year;
+    if (currentDate.month < birthDate.month ||
+        (currentDate.month == birthDate.month && currentDate.day < birthDate.day)) {
+      age--;
+    }
+    return age;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xff4ec8dd),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Usuario no autenticado.', style: TextStyle(fontFamily: _fontFamily, fontSize: 18, color: Colors.white)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                  }
+                },
+                child: const Text('Ir a Inicio', style: TextStyle(fontFamily: _fontFamily)),
+              )
+            ],
           ),
-          Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/logo.png'),
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
-                ),
-              ),
+        ),
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
+      builder: (context, userSnapshot) {
+        if (userSnapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(backgroundColor: Color(0xff4ec8dd), body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))));
+        }
+        if (userSnapshot.hasError) {
+          developer.log("Error cargando datos del usuario: ${userSnapshot.error}", name:"PerfilPublico.UserStream");
+          return Scaffold(
+            backgroundColor: const Color(0xff4ec8dd),
+            body: Center(
+              child: Text('Error al cargar el perfil: ${userSnapshot.error}', style: const TextStyle(fontFamily: _fontFamily, fontSize: 18, color: Colors.white)),
             ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 52.9, start: 9.1),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/back.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+          );
+        }
+        if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+          developer.log("Usuario no encontrado en Firestore: ${currentUser.uid}", name:"PerfilPublico.UserStream");
+          return Scaffold(
+            backgroundColor: const Color(0xff4ec8dd),
+            body: Center(
+              child: Text('No se encontraron datos para este usuario.', style: const TextStyle(fontFamily: _fontFamily, fontSize: 18, color: Colors.white)),
             ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 40.5, middle: 0.8328),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
+          );
+        }
+
+        final userData = userSnapshot.data!.data()!;
+        final profilePhotoUrl = userData['profilePhotoUrl'] as String?;
+        final userName = userData['nombreUsuario'] ?? userData['name'] ?? 'Usuario';
+        final viveEn = userData['ciudad'] ?? 'No especificado';
+        final deDonde = userData['ciudadOrigen'] ?? 'No especificado';
+        final preferencias = userData['preferenciasUsuario'] ?? 'Todos';
+        final genero = userData['genero'] ?? 'No especificado';
+
+        String edadString = 'N/A';
+        if (userData['fechaNacimiento'] != null && userData['fechaNacimiento'] is Timestamp) {
+          DateTime birthDate = (userData['fechaNacimiento'] as Timestamp).toDate();
+          edadString = _calculateAge(birthDate).toString();
+        } else if (userData['edad'] != null) {
+          edadString = userData['edad'].toString();
+        }
+
+
+        return Scaffold(
+          body: Stack(
+            children: <Widget>[
+              Positioned.fill(
+                child: Image.asset('assets/images/Animal Health Fondo de Pantalla.png', fit: BoxFit.cover),
               ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 47.2, end: 7.6),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
-                  ),
+
+              Pinned.fromPins(
+                Pin(size: 52.9, start: 9.0),
+                Pin(size: 50.0, start: 40.0),
+                child: PageLink(
+                  links: [PageLinkInfo(pageBuilder: () {
+                    if (Navigator.canPop(context)) { Navigator.of(context).pop(); return Container();}
+                    else { return Home(key: const Key('Home_FromPerfil_Back_AppBar')); }
+                  })],
+                  child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
                 ),
               ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 60.1, end: 7.6),
-            Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/listaanimales.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 412.0, middle: 0.5),
-            Pin(start: 180.0, end: 0.0),
-            child: SingleChildScrollView(
-              primary: false,
-              child: SizedBox(
-                width: 412.0,
-                height: 2383.0,
-                child: Stack(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                      child: SingleChildScrollView(
-                        primary: false,
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 20,
-                          runSpacing: 20,
-                          children: [{}].map((itemData) {
-                            return SizedBox(
-                              width: 412.0,
-                              height: 2383.0,
-                              child: Stack(
-                                children: <Widget>[
-                                  Pinned.fromPins(
-                                    Pin(start: 1.0, end: 0.0),
-                                    Pin(size: 65.0, start: 266.0),
-                                    child: Stack(
-                                      children: <Widget>[
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xe3a0f4fe),
-                                            borderRadius:
-                                                BorderRadius.circular(9.0),
-                                            border: Border.all(
-                                                width: 1.0,
-                                                color: const Color(0xe3000000)),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 135.8, start: 11.9),
-                                          Pin(size: 30.0, middle: 0.5),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xff54d1e0),
-                                              borderRadius:
-                                                  BorderRadius.circular(8.0),
-                                              border: Border.all(
-                                                  width: 1.0,
-                                                  color:
-                                                      const Color(0xff000000)),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color:
-                                                      const Color(0xff080808),
-                                                  offset: Offset(0, 3),
-                                                  blurRadius: 6,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 115.0, start: 21.6),
-                                          Pin(size: 28.0, middle: 0.473),
-                                          child: Text(
-                                            'Información',
-                                            style: TextStyle(
-                                              fontFamily: 'Comic Sans MS',
-                                              fontSize: 20,
-                                              color: const Color(0xff000000),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(0.084, 0.0),
-                                          child: SizedBox(
-                                            width: 100.0,
-                                            height: 30.0,
-                                            child: SvgPicture.string(
-                                              _svg_ymtv88,
-                                              allowDrawingOutsideViewBox: true,
-                                            ),
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(0.084, -0.054),
-                                          child: SizedBox(
-                                            width: 87.0,
-                                            height: 28.0,
-                                            child: Text(
-                                              'Historias',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 112.0, end: 11.9),
-                                          Pin(size: 30.0, middle: 0.5),
-                                          child: SvgPicture.string(
-                                            _svg_wctb2,
-                                            allowDrawingOutsideViewBox: true,
-                                            fit: BoxFit.fill,
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 100.0, end: 16.9),
-                                          Pin(size: 28.0, middle: 0.473),
-                                          child: Text(
-                                            'Comunidad',
-                                            style: TextStyle(
-                                              fontFamily: 'Comic Sans MS',
-                                              fontSize: 20,
-                                              color: const Color(0xff000000),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(start: 12.0, end: 10.0),
-                                    Pin(size: 253.0, start: 0.0),
-                                    child: Stack(
-                                      children: <Widget>[
-                                        Align(
-                                          alignment: Alignment.bottomLeft,
-                                          child: PageLink(
-                                            links: [
-                                              PageLinkInfo(
-                                                transition: LinkTransition.Fade,
-                                                ease: Curves.easeOut,
-                                                duration: 0.3,
-                                                pageBuilder: () =>
-                                                    Crearpublicaciondesdeperfil(key: Key('Crearpublicaciondesdeperfil'),),
-                                              ),
-                                            ],
-                                            child: Container(
-                                              width: 179.0,
-                                              height: 40.0,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xff54d1e0),
-                                                borderRadius:
-                                                    BorderRadius.circular(7.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color:
-                                                        const Color(0xff080808),
-                                                    offset: Offset(0, 3),
-                                                    blurRadius: 6,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 165.0, start: 7.0),
-                                          Pin(size: 28.0, end: 6.0),
-                                          child: Text(
-                                            'Crear Publicación',
-                                            style: TextStyle(
-                                              fontFamily: 'Comic Sans MS',
-                                              fontSize: 20,
-                                              color: const Color(0xff000000),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment.bottomRight,
-                                          child: Container(
-                                            width: 179.0,
-                                            height: 40.0,
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xff54d1e0),
-                                              borderRadius:
-                                                  BorderRadius.circular(7.0),
-                                              border: Border.all(
-                                                  width: 1.0,
-                                                  color:
-                                                      const Color(0xff000000)),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color:
-                                                      const Color(0xff080808),
-                                                  offset: Offset(0, 3),
-                                                  blurRadius: 6,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 121.0, end: 27.0),
-                                          Pin(size: 28.0, end: 6.0),
-                                          child: Text(
-                                            'Editar Perfil',
-                                            style: TextStyle(
-                                              fontFamily: 'Comic Sans MS',
-                                              fontSize: 20,
-                                              color: const Color(0xff000000),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment.topCenter,
-                                          child: Container(
-                                            width: 150.0,
-                                            height: 150.0,
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: const AssetImage('assets/images/perfilusuario.jpeg'),
-                                                fit: BoxFit.fill,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(25.0),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(start: 65.7, end: 65.7),
-                                          Pin(size: 35.0, middle: 0.7523),
-                                          child: SvgPicture.string(
-                                            _svg_z0u8a,
-                                            allowDrawingOutsideViewBox: true,
-                                            fit: BoxFit.fill,
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(0.034, 0.493),
-                                          child: SizedBox(
-                                            width: 187.0,
-                                            height: 28.0,
-                                            child: Text(
-                                              'Nombre de Usuario',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Pinned.fromPins(
-                                    Pin(start: 0.0, end: 0.0),
-                                    Pin(size: 237.0, start: 336.0),
-                                    child: Stack(
-                                      children: <Widget>[
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xe3a0f4fe),
-                                            borderRadius:
-                                                BorderRadius.circular(9.0),
-                                            border: Border.all(
-                                                width: 1.0,
-                                                color: const Color(0xe3000000)),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 129.0, middle: 0.2647),
-                                          Pin(size: 24.0, start: 13.0),
-                                          child: Text.rich(
-                                            TextSpan(
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 17,
-                                                color: const Color(0xff000000),
-                                              ),
-                                              children: [
-                                                TextSpan(
-                                                  text: 'Vive en ',
-                                                ),
-                                                TextSpan(
-                                                  text: 'Medellín',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            textHeightBehavior:
-                                                TextHeightBehavior(
-                                                    applyHeightToFirstAscent:
-                                                        false),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(-0.529, -0.441),
-                                          child: SizedBox(
-                                            width: 94.0,
-                                            height: 24.0,
-                                            child: Text.rich(
-                                              TextSpan(
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 17,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                ),
-                                                children: [
-                                                  TextSpan(
-                                                    text: 'De ',
-                                                  ),
-                                                  TextSpan(
-                                                    text: 'Medellín',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              textHeightBehavior:
-                                                  TextHeightBehavior(
-                                                      applyHeightToFirstAscent:
-                                                          false),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(-0.435, -0.005),
-                                          child: SizedBox(
-                                            width: 147.0,
-                                            height: 24.0,
-                                            child: Text.rich(
-                                              TextSpan(
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 17,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                ),
-                                                children: [
-                                                  TextSpan(
-                                                    text: 'Prefencias: ',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                                  ),
-                                                  TextSpan(
-                                                    text: 'Todos',
-                                                  ),
-                                                ],
-                                              ),
-                                              textHeightBehavior:
-                                                  TextHeightBehavior(
-                                                      applyHeightToFirstAscent:
-                                                          false),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment(-0.447, 0.432),
-                                          child: SizedBox(
-                                            width: 141.0,
-                                            height: 24.0,
-                                            child: Text.rich(
-                                              TextSpan(
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 17,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                ),
-                                                children: [
-                                                  TextSpan(
-                                                    text: 'Género ',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                                  ),
-                                                  TextSpan(
-                                                    text: 'Masculino',
-                                                  ),
-                                                ],
-                                              ),
-                                              textHeightBehavior:
-                                                  TextHeightBehavior(
-                                                      applyHeightToFirstAscent:
-                                                          false),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 112.0, middle: 0.2497),
-                                          Pin(size: 24.0, end: 14.0),
-                                          child: Text.rich(
-                                            TextSpan(
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 17,
-                                                color: const Color(0xff000000),
-                                              ),
-                                              children: [
-                                                TextSpan(
-                                                  text: 'Edad ',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                                TextSpan(
-                                                  text: '33 Años',
-                                                ),
-                                              ],
-                                            ),
-                                            textHeightBehavior:
-                                                TextHeightBehavior(
-                                                    applyHeightToFirstAscent:
-                                                        false),
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 37.9, start: 20.6),
-                                          Pin(size: 40.0, middle: 0.2614),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: const AssetImage('assets/images/de.png'),
-                                                fit: BoxFit.fill,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 45.5, start: 17.4),
-                                          Pin(size: 40.0, start: 5.0),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: const AssetImage('assets/images/viveen.png'),
-                                                fit: BoxFit.fill,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 45.6, start: 17.2),
-                                          Pin(size: 40.0, middle: 0.4975),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: const AssetImage('assets/images/preferencias.png'),
-                                                fit: BoxFit.fill,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 35.8, start: 21.7),
-                                          Pin(size: 40.0, middle: 0.7411),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: const AssetImage('assets/images/genero.png'),
-                                                fit: BoxFit.fill,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Pinned.fromPins(
-                                          Pin(size: 41.2, start: 19.6),
-                                          Pin(size: 40.0, end: 6.0),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: const AssetImage('assets/images/edadusuario.png'),
-                                                fit: BoxFit.fill,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.fromLTRB(
-                                        0.0, 582.0, 0.0, 0.0),
-                                    child: SingleChildScrollView(
-                                      primary: false,
-                                      child: Wrap(
-                                        alignment: WrapAlignment.center,
-                                        spacing: 20,
-                                        runSpacing: 10,
-                                        children: [{}, {}, {}].map((itemData) {
-                                          return SizedBox(
-                                            width: 412.0,
-                                            height: 588.0,
-                                            child: Stack(
-                                              children: <Widget>[
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        const Color(0xe3a0f4fe),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            9.0),
-                                                    border: Border.all(
-                                                        width: 1.0,
-                                                        color: const Color(
-                                                            0xe3000000)),
-                                                  ),
-                                                ),
-                                                Pinned.fromPins(
-                                                  Pin(start: 5.7, end: 5.7),
-                                                  Pin(size: 40.5, end: 6.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 37.0,
-                                                            start: 40.1),
-                                                        Pin(
-                                                            size: 28.0,
-                                                            end: 6.0),
-                                                        child: Stack(
-                                                          children: <Widget>[
-                                                            SizedBox.expand(
-                                                                child: Text(
-                                                              '777',
-                                                              style: TextStyle(
-                                                                fontFamily:
-                                                                    'Comic Sans MS',
-                                                                fontSize: 20,
-                                                                color: const Color(
-                                                                    0xff000000),
-                                                                height: 1.2,
-                                                              ),
-                                                              textHeightBehavior:
-                                                                  TextHeightBehavior(
-                                                                      applyHeightToFirstAscent:
-                                                                          false),
-                                                              softWrap: false,
-                                                            )),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 54.0,
-                                                            end: 45.4),
-                                                        Pin(
-                                                            size: 28.0,
-                                                            end: 6.0),
-                                                        child: Stack(
-                                                          children: <Widget>[
-                                                            SizedBox.expand(
-                                                                child: Text(
-                                                              'SAVE',
-                                                              style: TextStyle(
-                                                                fontFamily:
-                                                                    'Comic Sans MS',
-                                                                fontSize: 20,
-                                                                color: const Color(
-                                                                    0xff000000),
-                                                                height: 1.2,
-                                                              ),
-                                                              textHeightBehavior:
-                                                                  TextHeightBehavior(
-                                                                      applyHeightToFirstAscent:
-                                                                          false),
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .right,
-                                                              softWrap: false,
-                                                            )),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 21.0,
-                                                            middle: 0.3455),
-                                                        Pin(
-                                                            size: 28.0,
-                                                            end: 6.0),
-                                                        child: Stack(
-                                                          children: <Widget>[
-                                                            SizedBox.expand(
-                                                                child: Text(
-                                                              '13',
-                                                              style: TextStyle(
-                                                                fontFamily:
-                                                                    'Comic Sans MS',
-                                                                fontSize: 20,
-                                                                color: const Color(
-                                                                    0xff000000),
-                                                                height: 1.2,
-                                                              ),
-                                                              textHeightBehavior:
-                                                                  TextHeightBehavior(
-                                                                      applyHeightToFirstAscent:
-                                                                          false),
-                                                              softWrap: false,
-                                                            )),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 36.1,
-                                                            start: 0.0),
-                                                        Pin(
-                                                            start: 0.0,
-                                                            end: 0.5),
-                                                        child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            image:
-                                                                DecorationImage(
-                                                              image:
-                                                                  const AssetImage(
-                                                                      'assets/images/like.png'),
-                                                              fit: BoxFit.fill,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 37.8,
-                                                            middle: 0.2513),
-                                                        Pin(
-                                                            start: 0.5,
-                                                            end: 0.0),
-                                                        child: PageLink(
-                                                          links: [
-                                                            PageLinkInfo(
-                                                              transition:
-                                                                  LinkTransition
-                                                                      .Fade,
-                                                              ease: Curves
-                                                                  .easeOut,
-                                                              duration: 0.3,
-                                                              pageBuilder: () =>
-                                                                  DetallesdeFotooVideo(key: Key('DetallesdeFotooVideo'), publicationId: '',),
-                                                            ),
-                                                          ],
-                                                          child: Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              image:
-                                                                  DecorationImage(
-                                                                image:
-                                                                    const AssetImage(
-                                                                        'assets/images/comments.png'),
-                                                                fit:
-                                                                    BoxFit.fill,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 40.4,
-                                                            end: 0.0),
-                                                        Pin(
-                                                            start: 0.5,
-                                                            end: 0.0),
-                                                        child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            image:
-                                                                DecorationImage(
-                                                              image:
-                                                                  const AssetImage(
-                                                                      'assets/images/save.png'),
-                                                              fit: BoxFit.fill,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 35.0,
-                                                            middle: 0.7171),
-                                                        Pin(
-                                                            start: 0.5,
-                                                            end: 0.0),
-                                                        child: PageLink(
-                                                          links: [
-                                                            PageLinkInfo(
-                                                              transition:
-                                                                  LinkTransition
-                                                                      .Fade,
-                                                              ease: Curves
-                                                                  .easeOut,
-                                                              duration: 0.3,
-                                                              pageBuilder: () =>
-                                                                  CompartirPublicacion(key: Key('CompartirPublicacion'), publicationId: '',),
-                                                            ),
-                                                          ],
-                                                          child: Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              image:
-                                                                  DecorationImage(
-                                                                image:
-                                                                    const AssetImage(
-                                                                        'assets/images/share.png'),
-                                                                fit:
-                                                                    BoxFit.fill,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 69.0,
-                                                            middle: 0.5735),
-                                                        Pin(
-                                                            size: 28.0,
-                                                            end: 6.0),
-                                                        child: Stack(
-                                                          children: <Widget>[
-                                                            SizedBox.expand(
-                                                                child: Text(
-                                                              'SHARE',
-                                                              style: TextStyle(
-                                                                fontFamily:
-                                                                    'Comic Sans MS',
-                                                                fontSize: 20,
-                                                                color: const Color(
-                                                                    0xff000000),
-                                                                height: 1.2,
-                                                              ),
-                                                              textHeightBehavior:
-                                                                  TextHeightBehavior(
-                                                                      applyHeightToFirstAscent:
-                                                                          false),
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .right,
-                                                              softWrap: false,
-                                                            )),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                Pinned.fromPins(
-                                                  Pin(start: 36.0, end: 36.0),
-                                                  Pin(size: 439.0, end: 50.0),
-                                                  child: PageLink(
-                                                    links: [
-                                                      PageLinkInfo(
-                                                        transition:
-                                                            LinkTransition.Fade,
-                                                        ease: Curves.easeOut,
-                                                        duration: 0.3,
-                                                        pageBuilder: () =>
-                                                            DetallesdeFotooVideo(key: Key('DetallesdeFotooVideo'), publicationId: '',),
-                                                      ),
-                                                    ],
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        image: DecorationImage(
-                                                          image:
-                                                              const AssetImage(
-                                                                  'assets/images/imagenpublicacion.jpg'),
-                                                          fit: BoxFit.fill,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Pinned.fromPins(
-                                                  Pin(start: 7.0, end: 0.0),
-                                                  Pin(size: 87.0, start: 6.0),
-                                                  child: Stack(
-                                                    children: <Widget>[
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 187.0,
-                                                            start: 47.0),
-                                                        Pin(
-                                                            size: 28.0,
-                                                            start: 3.0),
-                                                        child: Text(
-                                                          'Nombre de Usuario',
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Comic Sans MS',
-                                                            fontSize: 20,
-                                                            color: const Color(
-                                                                0xff000000),
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                          softWrap: false,
-                                                        ),
-                                                      ),
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            start: 13.0,
-                                                            end: 0.0),
-                                                        Pin(
-                                                            size: 42.0,
-                                                            end: 0.0),
-                                                        child: Text(
-                                                          'Kitty estrenando sus nuevas orejeras que compramos \n#Amazon',
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Comic Sans MS',
-                                                            fontSize: 15,
-                                                            color: const Color(
-                                                                0xff000000),
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                          softWrap: false,
-                                                        ),
-                                                      ),
-                                                      Align(
-                                                        alignment:
-                                                            Alignment.topLeft,
-                                                        child: Container(
-                                                          width: 40.0,
-                                                          height: 40.0,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            image:
-                                                                DecorationImage(
-                                                              image:
-                                                                  const AssetImage(
-                                                                      'assets/images/perfilusuario.jpeg'),
-                                                              fit: BoxFit.fill,
-                                                            ),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        5.0),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Pinned.fromPins(
-                                                        Pin(
-                                                            size: 33.6,
-                                                            middle: 0.6641),
-                                                        Pin(
-                                                            size: 30.0,
-                                                            start: 2.0),
-                                                        child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            image:
-                                                                DecorationImage(
-                                                              image:
-                                                                  const AssetImage(
-                                                                      'assets/images/comunidad.png'),
-                                                              fit: BoxFit.fill,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }).toList(),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
+
+              Pinned.fromPins(
+                  Pin(size: 74.0, middle: 0.5),
+                  Pin(size: 73.0, start: 42.0),
+                  child: PageLink(
+                    links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Home(key: const Key('Home_FromPerfil_Logo_AppBar')))],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                        borderRadius: BorderRadius.circular(15.0),
+                        border: Border.all(width: 1.0, color: const Color(0xff000000)),
                       ),
                     ),
+                  )
+              ),
+
+              Pinned.fromPins(
+                Pin(size: 40.5, middle: 0.8328),
+                Pin(size: 50.0, start: 49.0),
+                child: PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Ayuda(key: const Key('Ayuda_FromPerfil_AppBar')),
+                    ),
                   ],
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage('assets/images/help.png'),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
                 ),
               ),
+
+              Pinned.fromPins(
+                Pin(size: 47.2, end: 7.6),
+                Pin(size: 50.0, start: 49.0),
+                child: PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => Configuraciones(key: const Key('Settings_FromPerfil_AppBar'), authService: _authService),
+                    ),
+                  ],
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill),
+                    ),
+                  ),
+                ),
+              ),
+
+              Pinned.fromPins(
+                Pin(size: 60.1, start: 6.0),
+                Pin(size: 60.0, start: 44.0),
+                child: PageLink(
+                  links: [
+                    PageLinkInfo(
+                      transition: LinkTransition.Fade,
+                      ease: Curves.easeOut,
+                      duration: 0.3,
+                      pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimales_FromPerfil_AppBar')),
+                    ),
+                  ],
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill),
+                    ),
+                  ),
+                ),
+              ),
+
+              Positioned(
+                top: 120.0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
+                  child: Column(
+                    children: <Widget>[
+                      _buildProfileHeader(context, profilePhotoUrl, userName, userData, currentUser.uid),
+                      const SizedBox(height: 20),
+                      _buildInfoTabs(context),
+                      const SizedBox(height: 5),
+                      _buildUserInfoDetails(viveEn, deDonde, preferencias, genero, edadString),
+                      const SizedBox(height: 20),
+                      _buildUserPublicationsSection(context, currentUser.uid, userData),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
+  Widget _buildProfileHeader(BuildContext context, String? profilePhotoUrl, String userName, Map<String, dynamic> currentUserData, String currentUserId) {
+    return Column(children: <Widget>[
+      // --- MODIFICADO: GestureDetector para la foto de perfil ---
+      GestureDetector(
+        onTap: () => _showProfileImageDialog(context, profilePhotoUrl),
+        child: Container(
+          width: 150.0,
+          height: 150.0,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25.0),
+              border: Border.all(color: _primaryTextColor, width: 1.0),
+              color: Colors.grey[300]
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24.0),
+            child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
+                ? CachedNetworkImage(
+                imageUrl: profilePhotoUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))),
+                errorWidget: (context, url, error) => const Icon(Icons.person, size: 80, color: Colors.grey)
+            )
+                : const Icon(Icons.person, size: 80, color: Colors.grey),
+          ),
+        ),
+      ),
+      // --- FIN MODIFICADO ---
+      const SizedBox(height: 12.0),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(color: _tabBackgroundColor.withOpacity(0.89), borderRadius: BorderRadius.circular(10.0), border: Border.all(color: _primaryTextColor.withOpacity(0.89), width: 1.0)),
+        child: Text(userName, style: const TextStyle(fontFamily: _fontFamily, fontSize: 20, color: _primaryTextColor, fontWeight: FontWeight.w700), softWrap: false),
+      ),
+      const SizedBox(height: 18.0),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: <Widget>[
+        SizedBox(width: 179.0, height: 40.0,
+          child: PageLink(
+            links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Crearpublicaciondesdeperfil(key: const Key('Crearpublicaciondesdeperfil')))],
+            child: Container(
+              decoration: BoxDecoration(color: _buttonBackgroundColor, borderRadius: BorderRadius.circular(7.0), border: Border.all(width: 1.0, color: _primaryTextColor),
+                  boxShadow: const [BoxShadow(color: _boxShadowColor, offset: Offset(0, 3), blurRadius: 6)]),
+              child: const Center(child: Text('Crear Publicación', style: TextStyle(fontFamily: _fontFamily, fontSize: 20, color: _primaryTextColor, fontWeight: FontWeight.w700), softWrap: false)),
             ),
+          ),
+        ),
+        _buildActionButton(context, text: 'Editar Perfil', onTapAction: () => _mostrarDialogoEditarPerfilUsuario(context, currentUserId, currentUserData)),
+      ]),
+    ]);
+  }
+
+  Widget _buildActionButton(BuildContext context, {required String text, required VoidCallback onTapAction}) {
+    return SizedBox(width: 179.0, height: 40.0,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _buttonBackgroundColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7.0), side: const BorderSide(width: 1.0, color: _primaryTextColor)),
+          elevation: 6, shadowColor: _boxShadowColor,
+        ),
+        onPressed: onTapAction,
+        child: Text(text, style: const TextStyle(fontFamily: _fontFamily, fontSize: 20, color: _primaryTextColor, fontWeight: FontWeight.w700), softWrap: false),
+      ),
+    );
+  }
+
+  Widget _buildInfoTabs(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 17.5, horizontal: 10),
+      decoration: BoxDecoration(color: _tabBackgroundColor, borderRadius: BorderRadius.circular(9.0), border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: <Widget>[
+        _buildTabButton(text: 'Información', isActive: true),
+        _buildTabButton(text: 'Historias', isActive: false),
+        _buildTabButton(text: 'Comunidad', isActive: false, activeColor: _infoTabInactiveColor),
+      ]),
+    );
+  }
+
+  Widget _buildTabButton({required String text, bool isActive = false, Color? activeColor}) {
+    final Color bgColor = isActive ? (activeColor ?? _infoTabActiveColor) : (text == 'Comunidad' ? _infoTabInactiveColor : _buttonBackgroundColor.withOpacity(0.5));
+    BoxDecoration decoration;
+    if (text == 'Información' && isActive) {
+      decoration = BoxDecoration(color: _infoTabActiveColor, borderRadius: BorderRadius.circular(8.0), border: Border.all(width: 1.0, color: _primaryTextColor),
+          boxShadow: const [BoxShadow(color: _boxShadowColor, offset: Offset(0,3), blurRadius: 6)]);
+    } else {
+      decoration = BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(8.0), border: Border.all(color: _primaryTextColor, width: 1.0));
+    }
+    return Container(width: (text == 'Comunidad' || text == 'Información') ? 115.0 : 100.0, height: 30.0, decoration: decoration,
+      child: Center(child: Text(text, style: const TextStyle(fontFamily: _fontFamily, fontSize: 20, color: _primaryTextColor, fontWeight: FontWeight.w700), softWrap: false)),
+    );
+  }
+
+  Widget _buildUserInfoDetails(String viveEn, String deDonde, String preferencias, String genero, String edad) {
+    return Container(
+      padding: const EdgeInsets.all(15.0),
+      decoration: BoxDecoration(color: _tabBackgroundColor, borderRadius: BorderRadius.circular(9.0), border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))),
+      child: Column(children: <Widget>[
+        _buildProfileStatItem(iconAsset: 'assets/images/viveen.png', label: 'Vive en', value: viveEn),
+        _buildProfileStatItem(iconAsset: 'assets/images/de.png', label: 'De', value: deDonde),
+        _buildProfileStatItem(iconAsset: 'assets/images/preferencias.png', label: 'Preferencias:', value: preferencias),
+        _buildProfileStatItem(iconAsset: 'assets/images/genero.png', label: 'Género', value: genero),
+        _buildProfileStatItem(iconAsset: 'assets/images/edadusuario.png', label: 'Edad', value: '$edad Años'),
+      ]),
+    );
+  }
+
+  Widget _buildProfileStatItem({required String iconAsset, required String label, required String value}) {
+    double iconWidth = (iconAsset.contains('viveen') || iconAsset.contains('preferencias')) ? 45.5 : (iconAsset.contains('edad')) ? 41.2 : (iconAsset.contains('de')) ? 37.9 : 35.8;
+    return Padding(padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(children: <Widget>[
+        Image.asset(iconAsset, width: iconWidth, height: 40.0, fit: BoxFit.fill),
+        const SizedBox(width: 15.0),
+        Expanded(child: RichText(
+            text: TextSpan(style: const TextStyle(fontFamily: _fontFamily, fontSize: 17, color: _primaryTextColor),
+                children: [TextSpan(text: '$label '), TextSpan(text: value, style: const TextStyle(fontWeight: FontWeight.w700))]))),
+      ]),
+    );
+  }
+
+  Widget _buildUserPublicationsSection(BuildContext context, String userId, Map<String, dynamic> ownerUserData) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('publicaciones')
+          .where('usuarioId', isEqualTo: userId)
+          .orderBy('fecha', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)));
+        }
+        if (snapshot.hasError) {
+          developer.log("Error cargando publicaciones del perfil: ${snapshot.error}", name:"PerfilPublico.PubStream", error: snapshot.error);
+          return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                  'Error al cargar publicaciones.\nPor favor, asegúrate de que el índice de Firestore necesario esté creado.\nDetalle: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontFamily: _fontFamily, color: Colors.redAccent)
+              )
+          );
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(30.0),
+            child: Center(
+              child: Text(
+                'Aún no tienes publicaciones.\n¡Anímate a compartir algo!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontFamily: _fontFamily, fontSize: 18, color: _primaryTextColor),
+              ),
+            ),
+          );
+        }
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: snapshot.data!.docs.length,
+          itemBuilder: (itemBuilderContext, index) {
+            var publicacion = snapshot.data!.docs[index];
+            return _buildPublicacionItemEstiloHome(publicacion, itemBuilderContext, ownerUserData);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPublicacionItemEstiloHome(DocumentSnapshot publicacion, BuildContext itemContext, Map<String, dynamic> postOwnerUserDataFromProfile) {
+    final pubData = publicacion.data() as Map<String, dynamic>;
+    final mediaUrl = pubData['imagenUrl'] as String?;
+    final isVideo = (pubData['esVideo'] as bool?) ?? false;
+    final hasValidMedia = mediaUrl != null && mediaUrl.isNotEmpty;
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+    final String postOwnerId = currentUserId!;
+    final String postOwnerName = postOwnerUserDataFromProfile['nombreUsuario'] ?? postOwnerUserDataFromProfile['name'] ?? 'Usuario';
+    final String? postOwnerProfilePicUrl = postOwnerUserDataFromProfile['profilePhotoUrl'];
+
+    final likes = pubData['likes'] as int? ?? 0;
+    final likedBy = List<String>.from(pubData['likedBy'] as List<dynamic>? ?? []);
+    final commentsCount = (pubData['comentariosCount'] as int?) ?? (pubData['comentarios'] as int?) ?? 0;
+    final String tipoPublicacion = pubData['tipoPublicacion'] ?? 'Público';
+
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15.0),
+      decoration: BoxDecoration(
+          color: _tabBackgroundColor,
+          borderRadius: BorderRadius.circular(9.0),
+          border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage: postOwnerProfilePicUrl != null && postOwnerProfilePicUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(postOwnerProfilePicUrl)
+                      : null,
+                  child: (postOwnerProfilePicUrl == null || postOwnerProfilePicUrl.isEmpty)
+                      ? const Icon(Icons.person, color: Colors.grey)
+                      : null,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        postOwnerName,
+                        style: const TextStyle(fontFamily: _fontFamily, fontSize: 17, fontWeight: FontWeight.bold, color: _primaryTextColor),
+                      ),
+                      Row(
+                        children: [
+                          Image.asset('assets/images/publico.png', width: 15, height: 15),
+                          const SizedBox(width: 5),
+                          Text(
+                            tipoPublicacion,
+                            style: TextStyle(fontFamily: _fontFamily, fontSize: 14, color: Colors.grey[700]),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.black54),
+                  color: Colors.white.withOpacity(0.95),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  onSelected: (value) {
+                    if (value == 'eliminar') {
+                      _eliminarPublicacion(publicacion.id, itemContext, mediaUrl);
+                    } else if (value == 'editar') {
+                      _mostrarDialogoEditarPublicacionIndividual(publicacion, itemContext);
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => [
+                    const PopupMenuItem<String>(value: 'editar', child: Text('Editar', style: TextStyle(fontFamily: _fontFamily, color: _primaryTextColor))),
+                    const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar', style: TextStyle(fontFamily: _fontFamily, color: Colors.red))),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (hasValidMedia)
+            GestureDetector(
+              onTap: () => Navigator.push(itemContext, MaterialPageRoute(builder: (_) => DetallesdeFotooVideo(
+                key: Key('Detalles_Pub_Perfil_${publicacion.id}'),
+                publicationId: publicacion.id,
+                mediaUrl: mediaUrl,
+                isVideo: isVideo,
+                caption: pubData['caption'] as String?,
+                ownerUserId: postOwnerId,
+                ownerUserName: postOwnerName,
+                ownerUserProfilePic: postOwnerProfilePicUrl,
+              ))),
+              child: Container(
+                width: double.infinity,
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(itemContext).size.height * 0.55),
+                color: Colors.grey[200],
+                child: isVideo
+                    ? _VideoPlayerWidgetFromHome(key: Key('video_pub_perfil_${publicacion.id}_${DateTime.now().millisecondsSinceEpoch}'), videoUrl: mediaUrl!)
+                    : CachedNetworkImage(
+                    imageUrl: mediaUrl!,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))),
+                    errorWidget: (context, url, error) {
+                      developer.log("Error CachedNetworkImage (Perfil Pub): $error, URL: $url", name: "PerfilPublico.PubImage", error: error);
+                      return _buildMediaErrorWidget('la imagen');
+                    }
+                ),
+              ),
+            )
+          else
+            _buildMediaErrorWidget('contenido multimedia no disponible'),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: Text(
+              pubData['caption'] ?? '',
+              style: const TextStyle(fontFamily: _fontFamily, fontSize: 15, color: _primaryTextColor, fontWeight: FontWeight.w700),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Divider(height: 1, color: Colors.grey.withOpacity(0.5), indent: 10, endIndent: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildPostActionEstiloHome(
+                    iconAsset: 'assets/images/like.png',
+                    label: likes.toString(),
+                    isLiked: likedBy.contains(currentUserId),
+                    onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, itemContext)
+                ),
+                _buildPostActionEstiloHome(
+                    iconAsset: 'assets/images/comments.png',
+                    label: commentsCount.toString(),
+                    onTap: () => Navigator.push(itemContext, MaterialPageRoute(builder: (_) => DetallesdeFotooVideo(
+                      key: Key('Detalles_Comments_Perfil_${publicacion.id}'),
+                      publicationId: publicacion.id,
+                      mediaUrl: mediaUrl,
+                      isVideo: isVideo,
+                      caption: pubData['caption'] as String?,
+                      ownerUserId: postOwnerId,
+                      ownerUserName: postOwnerName,
+                      ownerUserProfilePic: postOwnerProfilePicUrl,
+                    )))
+                ),
+                _buildPostActionEstiloHome(
+                    iconAsset: 'assets/images/share.png',
+                    label: 'SHARE',
+                    onTap: () => Navigator.push(itemContext, MaterialPageRoute(builder: (_) => CompartirPublicacion(
+                      key: Key('Compartir_Perfil_${publicacion.id}'),
+                      publicationId: publicacion.id,
+                      mediaUrl: mediaUrl,
+                      caption: pubData['caption'] as String?,
+                    )))
+                ),
+                StreamBuilder<DocumentSnapshot>(
+                    stream: FirebaseFirestore.instance.collection('users').doc(currentUserId).collection('publicacionesGuardadas').doc(publicacion.id).snapshots(),
+                    builder: (context, snapshotSaved) {
+                      bool isSaved = snapshotSaved.hasData && snapshotSaved.data!.exists;
+                      return _buildPostActionEstiloHome(
+                          iconAsset: isSaved ? 'assets/images/saved_filled.png' : 'assets/images/save.png',
+                          label: isSaved ? 'SAVED' : 'SAVE',
+                          isSavedStyle: isSaved,
+                          onTap: () => _guardarPublicacion(publicacion.id, itemContext)
+                      );
+                    }
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPostActionEstiloHome({required String iconAsset, required String label, bool isLiked = false, bool isSavedStyle = false, required VoidCallback onTap}) {
+    double iconSize = 30.0;
+    if (iconAsset.contains('like')) iconSize = 32.0;
+
+    // --- MODIFICACIÓN PARA EL BOTÓN DE LIKE ---
+    Color? activeColor;
+    bool isThisTheLikeButton = iconAsset.contains('like');
+
+    if (isThisTheLikeButton) {
+      // Para el botón de like, nunca cambia de color.
+      // 'activeColor' permanece null, por lo que usa el estilo por defecto.
+      activeColor = null;
+    } else {
+      // Para otros botones (ej. botón de guardar)
+      // El color del botón de guardar cambia si 'isSavedStyle' es true.
+      if (isSavedStyle) {
+        activeColor = _buttonBackgroundColor;
+      } else {
+        // Por defecto para el botón de guardar no activo, o para los botones de comentario/compartir
+        activeColor = null;
+      }
+    }
+    // --- FIN DE LA MODIFICACIÓN ---
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(iconAsset, width: iconSize, height: iconSize, fit: BoxFit.contain, color: activeColor),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(fontFamily: _fontFamily, fontSize: 16, color: activeColor ?? _primaryTextColor)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaErrorWidget(String typeMessage) {
+    IconData iconData = Icons.image_not_supported_outlined;
+    String message = 'Error al cargar $typeMessage';
+    if (typeMessage.contains('no disponible')) {
+      message = 'Contenido no disponible';
+    } else if (typeMessage.contains('video')) {
+      iconData = Icons.videocam_off_outlined;
+    }
+
+    return Container(
+      width: double.infinity,
+      height: 200,
+      color: Colors.grey[200],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(iconData, size: 50, color: Colors.grey[500]),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontFamily: _fontFamily, fontSize: 16, color: Colors.grey[600]),
           ),
         ],
       ),
@@ -1052,9 +854,891 @@ class PerfilPublico extends StatelessWidget {
   }
 }
 
-const String _svg_ymtv88 =
-    '<svg viewBox="168.6 463.5 100.0 30.0" ><path transform="translate(168.6, 463.5)" d="M 8 0 L 92 0 C 96.41828155517578 0 100 3.581721782684326 100 8 L 100 22 C 100 26.41827774047852 96.41828155517578 30 92 30 L 8 30 C 3.581721782684326 30 0 26.41827774047852 0 22 L 0 8 C 0 3.581721782684326 3.581721782684326 0 8 0 Z" fill="#54d1e0" stroke="#000000" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
-const String _svg_wctb2 =
-    '<svg viewBox="287.1 463.5 112.0 30.0" ><path transform="translate(287.14, 463.5)" d="M 8 0 L 104 0 C 108.4182815551758 0 112 3.581721782684326 112 8 L 112 22 C 112 26.41827774047852 108.4182815551758 30 104 30 L 8 30 C 3.581721782684326 30 0 26.41827774047852 0 22 L 0 8 C 0 3.581721782684326 3.581721782684326 0 8 0 Z" fill="#947b93" stroke="#000000" stroke-width="1" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
-const String _svg_z0u8a =
-    '<svg viewBox="76.7 344.0 258.6 35.0" ><path transform="translate(76.72, 344.0)" d="M 11.29102420806885 0 L 247.2734222412109 0 C 253.50927734375 0 258.564453125 4.477152347564697 258.564453125 10 L 258.564453125 25 C 258.564453125 30.52284812927246 253.50927734375 35 247.2734222412109 35 L 11.29102420806885 35 C 5.055163383483887 35 0 30.52284812927246 0 25 L 0 10 C 0 4.477152347564697 5.055163383483887 0 11.29102420806885 0 Z" fill="#a0f4fe" fill-opacity="0.89" stroke="#000000" stroke-width="1" stroke-opacity="0.89" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';
+// --- MODAL PARA EDITAR PERFIL ---
+class _EditarPerfilUsuarioModalWidget extends StatefulWidget {
+  final String userId; final Map<String, dynamic> currentUserData; final BuildContext parentContextForSnackbars;
+  const _EditarPerfilUsuarioModalWidget({Key? key, required this.userId, required this.currentUserData, required this.parentContextForSnackbars}) : super(key: key);
+  @override
+  __EditarPerfilUsuarioModalWidgetState createState() => __EditarPerfilUsuarioModalWidgetState();
+}
+class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioModalWidget> {
+  late TextEditingController _userNameController;
+  late TextEditingController _cityController;
+  late TextEditingController _originCityController;
+  late TextEditingController _preferencesController;
+  DateTime? _selectedBirthDate;
+  late TextEditingController _birthDateDisplayController;
+
+
+  String? _selectedGender;
+  File? _newProfileImageFile;
+  Uint8List? _newProfileImageBytesPreview;
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
+  final _formKey = GlobalKey<FormState>();
+  final List<String> _genderOptions = ['Masculino', 'Femenino', 'Otro', 'Prefiero no decirlo'];
+
+  @override
+  void initState() {
+    super.initState();
+    _userNameController = TextEditingController(text: widget.currentUserData['nombreUsuario'] ?? widget.currentUserData['name'] ?? '');
+    _cityController = TextEditingController(text: widget.currentUserData['ciudad'] ?? '');
+    _originCityController = TextEditingController(text: widget.currentUserData['ciudadOrigen'] ?? '');
+    _preferencesController = TextEditingController(text: widget.currentUserData['preferenciasUsuario'] ?? '');
+    _selectedGender = widget.currentUserData['genero'];
+    if (_selectedGender != null && !_genderOptions.contains(_selectedGender)) _selectedGender = null;
+
+    _birthDateDisplayController = TextEditingController();
+    if (widget.currentUserData['fechaNacimiento'] != null && widget.currentUserData['fechaNacimiento'] is Timestamp) {
+      _selectedBirthDate = (widget.currentUserData['fechaNacimiento'] as Timestamp).toDate();
+      _birthDateDisplayController.text = DateFormat('dd/MM/yyyy', 'es_ES').format(_selectedBirthDate!);
+    }
+  }
+
+  Future<void> _selectProfileImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70, maxWidth: 800, maxHeight: 800);
+      if (pickedFile != null) {
+        _newProfileImageBytesPreview = null;
+        if (kIsWeb) _newProfileImageBytesPreview = await pickedFile.readAsBytes();
+        if (mounted) setState(() => _newProfileImageFile = File(pickedFile.path));
+      }
+    } catch (e) {
+      developer.log("Error seleccionando imagen de perfil: $e", name: "EditarPerfilModal.Picker", error: e);
+      if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al seleccionar imagen: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))));
+    }
+  }
+
+  Future<void> _selectBirthDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedBirthDate ?? DateTime.now().subtract(const Duration(days: 365 * 18)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      locale: const Locale('es', 'ES'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: _buttonBackgroundColor,
+              onPrimary: Colors.white,
+              surface: _tabBackgroundColor, // Un color claro para el fondo del picker
+              onSurface: _primaryTextColor,
+            ),
+            dialogBackgroundColor: Colors.white, // Fondo del diálogo que contiene el picker
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                  foregroundColor: _buttonBackgroundColor, // Color de los botones OK/CANCELAR
+                  textStyle: const TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.bold)
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedBirthDate) {
+      setState(() {
+        _selectedBirthDate = picked;
+        _birthDateDisplayController.text = DateFormat('dd/MM/yyyy', 'es_ES').format(_selectedBirthDate!);
+      });
+    }
+  }
+
+
+  Future<void> _saveProfileChanges() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_isUploading) return;
+    setState(() => _isUploading = true);
+    Map<String, dynamic> dataToUpdate = {}; bool hasChanges = false;
+
+    void checkAndAdd(String key, dynamic newValue, dynamic oldValue) {
+      var effNew = (newValue is String) ? newValue.trim() : newValue;
+      var effOld = (oldValue is String) ? oldValue?.trim() : oldValue;
+
+      if (effNew != effOld) {
+        if ((effNew is String && effNew.isEmpty) || effNew == null) {
+          if (effOld != null && (effOld is! String || effOld.isNotEmpty)) {
+            dataToUpdate[key] = FieldValue.delete();
+            hasChanges = true;
+          }
+        } else {
+          dataToUpdate[key] = effNew;
+          hasChanges = true;
+        }
+      }
+    }
+    checkAndAdd('nombreUsuario', _userNameController.text, widget.currentUserData['nombreUsuario'] ?? widget.currentUserData['name']);
+    checkAndAdd('ciudad', _cityController.text, widget.currentUserData['ciudad']);
+    checkAndAdd('ciudadOrigen', _originCityController.text, widget.currentUserData['ciudadOrigen']);
+    checkAndAdd('preferenciasUsuario', _preferencesController.text, widget.currentUserData['preferenciasUsuario']);
+    checkAndAdd('genero', _selectedGender, widget.currentUserData['genero']);
+
+    final Timestamp? currentBirthDateTimestamp = widget.currentUserData['fechaNacimiento'] as Timestamp?;
+    if (_selectedBirthDate != null) {
+      Timestamp newBirthDateTimestamp = Timestamp.fromDate(_selectedBirthDate!);
+      if (newBirthDateTimestamp != currentBirthDateTimestamp) {
+        dataToUpdate['fechaNacimiento'] = newBirthDateTimestamp;
+        hasChanges = true;
+        if (widget.currentUserData.containsKey('edad')) {
+          dataToUpdate['edad'] = FieldValue.delete();
+        }
+      }
+    } else if (currentBirthDateTimestamp != null) {
+      dataToUpdate['fechaNacimiento'] = FieldValue.delete();
+      hasChanges = true;
+      if (widget.currentUserData.containsKey('edad')) {
+        dataToUpdate['edad'] = FieldValue.delete();
+      }
+    }
+
+
+    if (_newProfileImageFile != null) {
+      hasChanges = true;
+      try {
+        String fileExtension = _newProfileImageFile!.path.split('.').last.toLowerCase();
+        if (!['jpg', 'jpeg', 'png'].contains(fileExtension)) fileExtension = 'jpeg';
+        String fileName = 'profile_photos/${widget.userId}/profile_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+        String contentType = 'image/$fileExtension';
+
+        UploadTask uploadTask;
+        if (kIsWeb) {
+          if (_newProfileImageBytesPreview != null) {
+            uploadTask = FirebaseStorage.instance.ref(fileName).putData(_newProfileImageBytesPreview!, SettableMetadata(contentType: contentType));
+          } else {
+            throw Exception("Bytes de previsualización de imagen nulos para subida web.");
+          }
+        } else {
+          uploadTask = FirebaseStorage.instance.ref(fileName).putFile(_newProfileImageFile!, SettableMetadata(contentType: contentType));
+        }
+
+        TaskSnapshot snapshot = await uploadTask;
+        String newProfilePhotoUrl = await snapshot.ref.getDownloadURL();
+        dataToUpdate['profilePhotoUrl'] = newProfilePhotoUrl;
+
+        final String? oldProfilePhotoUrl = widget.currentUserData['profilePhotoUrl'] as String?;
+        if (oldProfilePhotoUrl != null && oldProfilePhotoUrl.isNotEmpty && oldProfilePhotoUrl.startsWith('https://firebasestorage.googleapis.com') && oldProfilePhotoUrl != newProfilePhotoUrl) {
+          try {
+            await FirebaseStorage.instance.refFromURL(oldProfilePhotoUrl).delete();
+            developer.log('Foto de perfil antigua eliminada de Storage: $oldProfilePhotoUrl', name: "EditarPerfilModal.DeleteOld");
+          } catch (e) {
+            developer.log('Error eliminando foto de perfil antigua de Storage: $e. URL: $oldProfilePhotoUrl', name: "EditarPerfilModal.DeleteOld", error: e);
+          }
+        }
+      } catch (e) {
+        developer.log('Error subiendo nueva foto de perfil: $e', name: "EditarPerfilModal.Upload", error: e);
+        if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al subir foto: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))));
+        setState(() => _isUploading = false); return;
+      }
+    }
+    if (hasChanges) {
+      try {
+        dataToUpdate['lastProfileUpdate'] = FieldValue.serverTimestamp();
+        await FirebaseFirestore.instance.collection('users').doc(widget.userId).update(dataToUpdate);
+        if (mounted) { ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(const SnackBar(content: Text('Perfil actualizado', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green)); Navigator.of(context).pop(); }
+      } catch (e) { developer.log('Error actualizando perfil en Firestore: $e', name: "EditarPerfilModal.FirestoreUpdate", error: e); if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al actualizar: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily)))); }
+    } else { if (mounted) { ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(const SnackBar(content: Text('No se realizaron cambios.', style: TextStyle(fontFamily: _fontFamily)))); Navigator.of(context).pop(); }}
+    if (mounted) setState(() => _isUploading = false);
+  }
+  @override void dispose() {
+    _userNameController.dispose();
+    _cityController.dispose();
+    _originCityController.dispose();
+    _preferencesController.dispose();
+    _birthDateDisplayController.dispose();
+    super.dispose();
+  }
+
+
+  Widget _buildTextField(TextEditingController controller, String label, {TextInputType keyboardType = TextInputType.text, String? imageAssetPath, bool isRequired = false, int? maxLength, bool readOnly = false, VoidCallback? onTap}) {
+    Widget? prefixWidget;
+    if (imageAssetPath != null) {
+      prefixWidget = Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Image.asset(imageAssetPath, width: 24, height: 24), // Sin color para usar el original
+      );
+    }
+
+    return Padding(padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: TextFormField(
+            controller: controller,
+            style: const TextStyle(fontFamily: _fontFamily, color: _primaryTextColor),
+            maxLength: maxLength,
+            readOnly: readOnly,
+            onTap: onTap,
+            decoration: InputDecoration(
+                labelText: label + (isRequired ? ' *' : ''),
+                labelStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.black54),
+                prefixIcon: prefixWidget,
+                filled: true, fillColor: Colors.white.withOpacity(0.9),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: const BorderSide(color: _buttonBackgroundColor, width: 2)),
+                errorStyle: TextStyle(fontFamily: _fontFamily, color: Colors.redAccent[700], fontWeight: FontWeight.bold), counterText: ""),
+            keyboardType: keyboardType,
+            validator: (value) {
+              if (isRequired && (value == null || value.trim().isEmpty)) return '$label es obligatorio.';
+              return null;
+            }, autovalidateMode: AutovalidateMode.onUserInteraction));
+  }
+  @override Widget build(BuildContext modalContext) {
+    String? displayPhotoUrl = widget.currentUserData['profilePhotoUrl'] as String?;
+    return FractionallySizedBox(heightFactor: 0.92,
+        child: ClipRRect(borderRadius: const BorderRadius.only(topLeft: Radius.circular(20.0), topRight: Radius.circular(20.0)),
+            child: Scaffold(backgroundColor: Colors.transparent,
+                appBar: AppBar(title: const Text('Editar Perfil', style: TextStyle(fontFamily: _fontFamily, color: Colors.white)), backgroundColor: _scaffoldBgColorModal, elevation: 0, automaticallyImplyLeading: false,
+                    actions: [IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.of(modalContext).pop())]),
+                body: Stack(children: [
+                  Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'), fit: BoxFit.cover))),
+                  SingleChildScrollView(padding: const EdgeInsets.all(16.0),
+                      child: Form(key: _formKey,
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
+                            Center(child: Stack(children: [
+                              Container(width: 130, height: 130, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: _buttonBackgroundColor, width: 3), color: Colors.grey[300]),
+                                  child: ClipOval(child: _newProfileImageFile != null
+                                      ? (kIsWeb && _newProfileImageBytesPreview != null ? Image.memory(_newProfileImageBytesPreview!, fit: BoxFit.cover) : (!kIsWeb ? Image.file(_newProfileImageFile!, fit: BoxFit.cover) : const Center(child: Text("Preview...", style: TextStyle(fontFamily: _fontFamily)))))
+                                      : (displayPhotoUrl != null && displayPhotoUrl.isNotEmpty ? CachedNetworkImage(imageUrl: displayPhotoUrl, fit: BoxFit.cover, placeholder: (ctx, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))), errorWidget: (ctx, url, error) => const Icon(Icons.person, size: 70, color: Colors.grey)) : const Icon(Icons.person, size: 70, color: Colors.grey)))),
+                              Positioned(bottom: 0, right: 0, child: Material(color: _buttonBackgroundColor, borderRadius: BorderRadius.circular(20), child: InkWell(onTap: _selectProfileImage, borderRadius: BorderRadius.circular(20), child: const Padding(padding: EdgeInsets.all(8.0), child: Icon(Icons.camera_alt, color: Colors.white, size: 20))))),
+                            ])), const SizedBox(height: 20),
+                            _buildTextField(_userNameController, 'Nombre de Usuario', imageAssetPath: 'assets/images/nombreusuario.png', isRequired: true, maxLength: 50),
+                            _buildTextField(_cityController, 'Ciudad donde vives', imageAssetPath: 'assets/images/viveen.png', maxLength: 50),
+                            _buildTextField(_originCityController, 'Ciudad de origen', imageAssetPath: 'assets/images/de.png', maxLength: 50),
+
+                            _buildTextField(
+                              _birthDateDisplayController,
+                              'Fecha de Nacimiento',
+                              imageAssetPath: 'assets/images/edadusuario.png',
+                              readOnly: true,
+                              onTap: () => _selectBirthDate(modalContext), // Usar modalContext aquí
+                            ),
+
+                            Padding(padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: DropdownButtonFormField<String>(value: _selectedGender,
+                                    decoration: InputDecoration(
+                                        labelText: 'Género',
+                                        labelStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.black54),
+                                        prefixIcon: Padding(
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: Image.asset('assets/images/genero.png', width: 24, height: 24), // Sin color
+                                        ),
+                                        filled: true, fillColor: Colors.white.withOpacity(0.9),
+                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
+                                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: const BorderSide(color: _buttonBackgroundColor, width: 2))
+                                    ),
+                                    items: _genderOptions.map((String value) => DropdownMenuItem<String>(value: value, child: Text(value, style: const TextStyle(fontFamily: _fontFamily)))).toList(),
+                                    onChanged: (String? newValue) => setState(() => _selectedGender = newValue), dropdownColor: Colors.white.withOpacity(0.95), style: const TextStyle(fontFamily: _fontFamily, color: _primaryTextColor))),
+                            _buildTextField(_preferencesController, 'Preferencias de mascotas', imageAssetPath: 'assets/images/preferencias.png', maxLength: 100),
+                            const SizedBox(height: 30),
+                            _isUploading ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)))
+                                : ElevatedButton.icon(icon: const Icon(Icons.save_alt_outlined, color: Colors.white), label: const Text('Guardar Cambios', style: TextStyle(color: Colors.white)), onPressed: _saveProfileChanges,
+                                style: ElevatedButton.styleFrom(backgroundColor: _buttonBackgroundColor, padding: const EdgeInsets.symmetric(vertical: 15.0), textStyle: const TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)))),
+                            const SizedBox(height: 10),
+                            TextButton(onPressed: () => Navigator.of(modalContext).pop(), child: const Text('Cancelar', style: TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold))),
+                            const SizedBox(height: 40),
+                          ])))]))));
+  }
+}
+
+
+// --- WIDGET DE VideoPlayer ---
+class _VideoPlayerWidgetFromHome extends StatefulWidget {
+  final String videoUrl;
+  const _VideoPlayerWidgetFromHome({Key? key, required this.videoUrl}) : super(key: key);
+
+  @override
+  __VideoPlayerWidgetFromHomeState createState() => __VideoPlayerWidgetFromHomeState();
+}
+
+class __VideoPlayerWidgetFromHomeState extends State<_VideoPlayerWidgetFromHome> {
+  late VideoPlayerController _controller;
+  late Future<void> _initializeVideoPlayerFuture;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePlayer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _VideoPlayerWidgetFromHome oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.videoUrl != oldWidget.videoUrl) {
+      _controller.dispose();
+      _initializePlayer();
+    }
+  }
+
+  void _initializePlayer() {
+    _hasError = false;
+    Uri? uri = Uri.tryParse(widget.videoUrl);
+
+    if (uri == null || (!uri.isAbsolute && !kIsWeb && !widget.videoUrl.startsWith('/'))) {
+      developer.log("URL de video inválida o no absoluta para VideoPlayer: ${widget.videoUrl}", name: "VideoPlayerPerfil");
+      if (mounted) setState(() => _hasError = true);
+      _initializeVideoPlayerFuture = Future.error("URL inválida: ${widget.videoUrl}");
+      return;
+    }
+
+    _controller = VideoPlayerController.networkUrl(uri);
+    _initializeVideoPlayerFuture = _controller.initialize().then((_) {
+      if (mounted) setState(() {});
+    }).catchError((error) {
+      developer.log("Error inicializando VideoPlayer (Perfil): $error, URL: ${widget.videoUrl}", name: "VideoPlayerPerfil", error: error);
+      if (mounted) setState(() => _hasError = true);
+    });
+    _controller.setLooping(true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) return _buildVideoErrorWidget();
+
+    return FutureBuilder(
+      future: _initializeVideoPlayerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done && !_hasError) {
+          if (_controller.value.hasError) {
+            developer.log("Error en VideoPlayerController (Perfil): ${_controller.value.errorDescription}, URL: ${widget.videoUrl}", name: "VideoPlayerPerfil", error: _controller.value.errorDescription);
+            return _buildVideoErrorWidget();
+          }
+          if (!_controller.value.isInitialized) {
+            return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)));
+          }
+
+          final videoAspectRatio = _controller.value.aspectRatio;
+          final validAspectRatio = (videoAspectRatio > 0 && videoAspectRatio.isFinite) ? videoAspectRatio : 16/9;
+
+          return AspectRatio(
+            aspectRatio: validAspectRatio,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                VideoPlayer(_controller),
+                _buildPlayPauseOverlay(),
+              ],
+            ),
+          );
+        } else if (snapshot.hasError || _hasError) {
+          developer.log("Error en FutureBuilder de VideoPlayer (Perfil): ${snapshot.error}, URL: ${widget.videoUrl}", name: "VideoPlayerPerfil", error: snapshot.error);
+          return _buildVideoErrorWidget();
+        }
+        else {
+          return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)));
+        }
+      },
+    );
+  }
+
+  Widget _buildPlayPauseOverlay() {
+    return GestureDetector(
+      onTap: () {
+        if (!_controller.value.isInitialized) return;
+        setState(() {
+          if (_controller.value.isPlaying) {
+            _controller.pause();
+          } else {
+            _controller.play();
+          }
+        });
+      },
+      child: AnimatedOpacity(
+        opacity: (_controller.value.isInitialized && !_controller.value.isPlaying) ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 300),
+        child: Container(
+          color: Colors.black26,
+          child: const Center(
+            child: Icon(
+              Icons.play_arrow,
+              color: Colors.white,
+              size: 50.0,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoErrorWidget() {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      color: Colors.black,
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, color: Colors.red, size: 40),
+          SizedBox(height: 8),
+          Text(
+            'Error al cargar el video',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white, fontSize: 14, fontFamily: _fontFamily),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+// --- WIDGET PARA EDITAR PUBLICACIÓN INDIVIDUAL ---
+class EditarPublicacionIndividualWidget extends StatefulWidget {
+  final String publicacionId;
+  final String captionActual;
+  final String? mediaUrlActual;
+  final bool esVideoActual;
+  final BuildContext parentContext;
+
+  const EditarPublicacionIndividualWidget({
+    required Key key,
+    required this.publicacionId,
+    required this.captionActual,
+    this.mediaUrlActual,
+    required this.esVideoActual,
+    required this.parentContext,
+  }) : super(key: key);
+
+  @override
+  _EditarPublicacionIndividualWidgetState createState() => _EditarPublicacionIndividualWidgetState();
+}
+
+class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionIndividualWidget> {
+  late TextEditingController _captionController;
+  File? _nuevoMedioFile;
+  Uint8List? _nuevoMedioBytesPreview;
+  bool _esNuevoMedioVideo = false;
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
+  final _formKeyModalPost = GlobalKey<FormState>();
+  VideoPlayerController? _videoPlayerControllerPreview;
+
+  @override
+  void initState() {
+    super.initState();
+    _captionController = TextEditingController(text: widget.captionActual);
+    _esNuevoMedioVideo = widget.esVideoActual;
+    if (widget.mediaUrlActual != null && widget.esVideoActual) {
+      _initializeVideoPlayerPreview(widget.mediaUrlActual!);
+    }
+  }
+
+  void _initializeVideoPlayerPreview(String url, {bool isFile = false}) async {
+    await _videoPlayerControllerPreview?.dispose();
+
+    Uri? uri = Uri.tryParse(url);
+    if (uri == null) {
+      developer.log("URL inválida para VideoPlayer (Preview Edit): $url", name: "EditPubPerfil.Video");
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+          SnackBar(content: Text('URL de video inválida: $url', style: const TextStyle(fontFamily: _fontFamily))),
+        );
+      }
+      return;
+    }
+
+    if (isFile && !kIsWeb) {
+      _videoPlayerControllerPreview = VideoPlayerController.file(File(url));
+    } else if (kIsWeb && isFile) {
+      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
+    }
+    else {
+      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
+    }
+
+    try {
+      await _videoPlayerControllerPreview!.initialize();
+      if (mounted) setState(() {});
+      _videoPlayerControllerPreview!.setLooping(true);
+    } catch (e) {
+      developer.log("Error inicializando VideoPlayer preview (Edit Perfil): $e, URL: $url", name: "EditPubPerfil.Video", error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+          const SnackBar(content: Text('Error al cargar la vista previa del video.', style: TextStyle(fontFamily: _fontFamily))),
+        );
+      }
+    }
+  }
+
+
+  Future<void> _seleccionarMedia(ImageSource source, {bool isVideo = false}) async {
+    XFile? pickedFile;
+    try {
+      if (isVideo) {
+        pickedFile = await _picker.pickVideo(source: source);
+      } else {
+        pickedFile = await _picker.pickImage(source: source, imageQuality: 70, maxWidth: 1080, maxHeight: 1920);
+      }
+
+      if (pickedFile != null) {
+        _nuevoMedioBytesPreview = null;
+        if (!isVideo && kIsWeb) {
+          _nuevoMedioBytesPreview = await pickedFile.readAsBytes();
+        }
+
+        if (mounted) {
+          setState(() {
+            _nuevoMedioFile = File(pickedFile!.path);
+            _esNuevoMedioVideo = isVideo;
+            _videoPlayerControllerPreview?.dispose();
+            _videoPlayerControllerPreview = null;
+            if (isVideo) {
+              _initializeVideoPlayerPreview(pickedFile.path, isFile: true);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      developer.log("Error seleccionando media para editar (Perfil): $e", name: "EditPubPerfil.Picker", error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+          SnackBar(content: Text('Error al seleccionar: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))),
+        );
+      }
+    }
+  }
+
+  Future<void> _guardarCambiosPublicacion() async {
+    if (!_formKeyModalPost.currentState!.validate()) return;
+    if (_isUploading) return;
+    setState(() => _isUploading = true);
+
+    Map<String, dynamic> datosParaActualizar = {};
+    bool hayCambios = false;
+
+    String nuevoCaption = _captionController.text.trim();
+    if (nuevoCaption != widget.captionActual) {
+      datosParaActualizar['caption'] = nuevoCaption;
+      hayCambios = true;
+    }
+
+    String? urlMediaFinalParaActualizar = widget.mediaUrlActual;
+    bool esVideoFinalParaActualizar = widget.esVideoActual;
+
+    if (_nuevoMedioFile != null) {
+      hayCambios = true;
+      try {
+        String fileExtension = _nuevoMedioFile!.path.split('.').last.toLowerCase();
+        if (_esNuevoMedioVideo) {
+          if (!['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(fileExtension)) fileExtension = 'mp4';
+        } else {
+          if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) fileExtension = 'jpeg';
+        }
+
+        String fileName = 'publicaciones/${widget.publicacionId}/media_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+        String contentType = _esNuevoMedioVideo ? 'video/$fileExtension' : 'image/$fileExtension';
+
+        UploadTask uploadTask;
+        if (kIsWeb) {
+          Uint8List? bytesParaSubir = _esNuevoMedioVideo
+              ? await _nuevoMedioFile!.readAsBytes()
+              : _nuevoMedioBytesPreview;
+
+          if (bytesParaSubir != null) {
+            uploadTask = FirebaseStorage.instance.ref(fileName).putData(bytesParaSubir, SettableMetadata(contentType: contentType));
+          } else {
+            throw Exception("Bytes nulos para la subida del medio en web.");
+          }
+        } else {
+          uploadTask = FirebaseStorage.instance.ref(fileName).putFile(_nuevoMedioFile!, SettableMetadata(contentType: contentType));
+        }
+
+        TaskSnapshot snapshot = await uploadTask;
+        urlMediaFinalParaActualizar = await snapshot.ref.getDownloadURL();
+        esVideoFinalParaActualizar = _esNuevoMedioVideo;
+
+        datosParaActualizar['imagenUrl'] = urlMediaFinalParaActualizar;
+        datosParaActualizar['esVideo'] = esVideoFinalParaActualizar;
+
+        if (widget.mediaUrlActual != null &&
+            widget.mediaUrlActual!.isNotEmpty &&
+            widget.mediaUrlActual!.startsWith('https://firebasestorage.googleapis.com') &&
+            widget.mediaUrlActual != urlMediaFinalParaActualizar) {
+          try {
+            await FirebaseStorage.instance.refFromURL(widget.mediaUrlActual!).delete();
+            developer.log('Medio antiguo eliminado (Edit Perfil): ${widget.mediaUrlActual}', name: "EditPubPerfil.DeleteOldStorage");
+          } catch (e) {
+            developer.log('Error eliminando medio antiguo (Edit Perfil): $e. URL: ${widget.mediaUrlActual}', name: "EditPubPerfil.DeleteOldStorage", error: e);
+          }
+        }
+      } catch (e) {
+        developer.log('Error subiendo nuevo medio (Edit Perfil): $e', name: "EditPubPerfil.Upload", error: e);
+        if (mounted) {
+          ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+            SnackBar(content: Text('Error al subir medio: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))),
+          );
+        }
+        setState(() => _isUploading = false);
+        return;
+      }
+    }
+
+    if (hayCambios) {
+      try {
+        datosParaActualizar['fechaActualizacion'] = FieldValue.serverTimestamp();
+        await FirebaseFirestore.instance.collection('publicaciones').doc(widget.publicacionId).update(datosParaActualizar);
+        if (mounted) {
+          ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+            const SnackBar(content: Text('Publicación actualizada', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green),
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        developer.log('Error actualizando publicación Firestore (Edit Perfil): $e', name: "EditPubPerfil.FirestoreUpdate", error: e);
+        if (mounted) {
+          ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+            SnackBar(content: Text('Error al actualizar: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))),
+          );
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+          const SnackBar(content: Text('No se realizaron cambios.', style: TextStyle(fontFamily: _fontFamily))),
+        );
+      }
+      if (mounted) Navigator.of(context).pop();
+    }
+    if (mounted) {
+      setState(() => _isUploading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _captionController.dispose();
+    _videoPlayerControllerPreview?.dispose();
+    super.dispose();
+  }
+
+  Widget _buildMediaPreview() {
+    if (_nuevoMedioFile != null && _esNuevoMedioVideo) {
+      if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
+        return AspectRatio(
+          aspectRatio: _videoPlayerControllerPreview!.value.aspectRatio > 0 ? _videoPlayerControllerPreview!.value.aspectRatio : 16/9,
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              VideoPlayer(_videoPlayerControllerPreview!),
+              _buildPlayPauseOverlayPreview(_videoPlayerControllerPreview!)
+            ],
+          ),
+        );
+      } else {
+        return Container(height: 200, color: Colors.black, child: const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)) ));
+      }
+    }
+    else if (_nuevoMedioFile != null && !_esNuevoMedioVideo) {
+      if (kIsWeb && _nuevoMedioBytesPreview != null) {
+        return Image.memory(_nuevoMedioBytesPreview!, height: 200, fit: BoxFit.contain);
+      } else if (!kIsWeb) {
+        return Image.file(_nuevoMedioFile!, height: 200, fit: BoxFit.contain);
+      } else {
+        return Container(height: 200, color: Colors.grey[300], child: const Center(child: Text("Cargando previsualización...", style: TextStyle(fontFamily: _fontFamily))));
+      }
+    }
+    else if (widget.mediaUrlActual != null && widget.esVideoActual) {
+      if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
+        return AspectRatio(
+          aspectRatio: _videoPlayerControllerPreview!.value.aspectRatio > 0 ? _videoPlayerControllerPreview!.value.aspectRatio : 16/9,
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              VideoPlayer(_videoPlayerControllerPreview!),
+              _buildPlayPauseOverlayPreview(_videoPlayerControllerPreview!)
+            ],
+          ),
+        );
+      } else if (widget.mediaUrlActual!.isNotEmpty) {
+        return Container(height: 200, color: Colors.black, child: const Center(child: Text("Cargando video...", style: TextStyle(color: Colors.white, fontFamily: _fontFamily))));
+      }
+    }
+    else if (widget.mediaUrlActual != null && !widget.esVideoActual) {
+      return CachedNetworkImage(
+        imageUrl: widget.mediaUrlActual!,
+        height: 200,
+        fit: BoxFit.contain,
+        placeholder: (context, url) => Container(height: 200, color: Colors.grey[300], child: const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)))),
+        errorWidget: (context, url, error) => Container(height: 200, color: Colors.grey[300], child: const Icon(Icons.broken_image, size: 50, color: Colors.grey)),
+      );
+    }
+    return Container(
+      height: 150,
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Center(
+        child: Text(
+          'No hay medio adjunto o no se ha seleccionado uno nuevo.\nPresiona "Cambiar Foto" o "Cambiar Video" para añadir o reemplazar.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontFamily: _fontFamily),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayPauseOverlayPreview(VideoPlayerController controller) {
+    return GestureDetector(
+      onTap: () {
+        if (!controller.value.isInitialized) return;
+        setState(() {
+          if (controller.value.isPlaying) {
+            controller.pause();
+          } else {
+            controller.play();
+          }
+        });
+      },
+      child: AnimatedOpacity(
+        opacity: (controller.value.isInitialized && !controller.value.isPlaying) ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 300),
+        child: Container(
+          color: Colors.black26,
+          child: const Center(
+            child: Icon(
+              Icons.play_circle_outline,
+              color: Colors.white,
+              size: 60.0,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  @override Widget build(BuildContext modalContext) {
+    return FractionallySizedBox(
+      heightFactor: 0.9,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Editar Publicación', style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
+            backgroundColor: _scaffoldBgColorModal,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(modalContext).pop(),
+              )
+            ],
+          ),
+          body: Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKeyModalPost,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      const Text(
+                        'Editar contenido:',
+                        style: TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      const SizedBox(height: 15),
+
+                      _buildMediaPreview(),
+                      const SizedBox(height: 10),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.image_outlined, color: Colors.white),
+                            label: const Text('Cambiar Foto', style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
+                            onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: false),
+                            style: ElevatedButton.styleFrom(backgroundColor: _buttonBackgroundColor, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.videocam_outlined, color: Colors.white),
+                            label: const Text('Cambiar Video', style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
+                            onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: true),
+                            style: ElevatedButton.styleFrom(backgroundColor: _buttonBackgroundColor, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      TextFormField(
+                        controller: _captionController,
+                        style: const TextStyle(fontFamily: _fontFamily, color: Colors.black),
+                        decoration: InputDecoration(
+                            labelText: 'Descripción (Caption)',
+                            labelStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.black54),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.85),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: const BorderSide(color: _buttonBackgroundColor, width: 2)
+                            ),
+                            errorStyle: TextStyle(fontFamily: _fontFamily, color: Colors.redAccent[700], fontWeight: FontWeight.bold)
+                        ),
+                        maxLines: 4,
+                        maxLength: 2200,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'La descripción no puede estar vacía.';
+                          }
+                          return null;
+                        },
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      const SizedBox(height: 30),
+
+                      _isUploading
+                          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)))
+                          : ElevatedButton.icon(
+                        icon: const Icon(Icons.save_outlined, color: Colors.white),
+                        label: const Text('Guardar Cambios', style: TextStyle(color: Colors.white)),
+                        onPressed: _guardarCambiosPublicacion,
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: _buttonBackgroundColor,
+                            padding: const EdgeInsets.symmetric(vertical: 15.0),
+                            textStyle: const TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextButton(
+                        onPressed: () => Navigator.of(modalContext).pop(),
+                        child: const Text(
+                          'Cancelar',
+                          style: TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
