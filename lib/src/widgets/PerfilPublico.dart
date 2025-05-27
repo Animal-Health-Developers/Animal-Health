@@ -28,7 +28,7 @@ const Color _primaryTextColor = Color(0xff000000);
 const Color _buttonBackgroundColor = Color(0xff54d1e0);
 const Color _tabBackgroundColor = Color(0xe3a0f4fe);
 const Color _infoTabActiveColor = Color(0xff54d1e0);
-const Color _infoTabInactiveColor = Color(0xff947b93);
+const Color _infoTabInactiveColor = Color(0xff947b93); // Color para el botón comunidad inactivo si es necesario
 const Color _boxShadowColor = Color(0xff080808);
 const Color _scaffoldBgColorModal = Color(0xff4ec8dd);
 
@@ -41,6 +41,7 @@ class PerfilPublico extends StatefulWidget {
 
 class _PerfilPublicoState extends State<PerfilPublico> {
   final AuthService _authService = AuthService();
+  int _selectedTabIndex = 0; // 0: Información, 1: Historias, 2: Comunidad
 
   Future<void> _mostrarDialogoEditarPerfilUsuario(BuildContext pageContext, String userId, Map<String, dynamic> currentUserData) async {
     await showModalBottomSheet(
@@ -58,10 +59,8 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
-  // --- FUNCIÓN PARA MOSTRAR IMAGEN DE PERFIL EN GRANDE ---
   void _showProfileImageDialog(BuildContext context, String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      // Opcional: mostrar un mensaje si no hay imagen
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No hay imagen de perfil para mostrar.', style: TextStyle(fontFamily: _fontFamily))),
       );
@@ -71,17 +70,17 @@ class _PerfilPublicoState extends State<PerfilPublico> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.transparent, // Para que no haya fondo blanco detrás de la imagen si tiene bordes redondeados
-          insetPadding: const EdgeInsets.all(10), // Margen alrededor del diálogo
-          child: GestureDetector( // Para cerrar el diálogo al tocar fuera de la imagen (o en la imagen misma)
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(10),
+          child: GestureDetector(
             onTap: () => Navigator.of(context).pop(),
-            child: InteractiveViewer( // Permite hacer zoom y pan
+            child: InteractiveViewer(
               panEnabled: true,
               minScale: 0.5,
               maxScale: 4.0,
               child: CachedNetworkImage(
                 imageUrl: imageUrl,
-                fit: BoxFit.contain, // Para que la imagen se ajuste sin recortar
+                fit: BoxFit.contain,
                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))),
                 errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, size: 100, color: Colors.grey)),
               ),
@@ -91,7 +90,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
       },
     );
   }
-
 
   Future<void> _toggleLike(String postId, String? userId, List<String> likedBy, BuildContext contextForSnackBar) async {
     if (userId == null) {
@@ -210,7 +208,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     }
   }
 
-
   Future<void> _mostrarDialogoEditarPublicacionIndividual(DocumentSnapshot publicacion, BuildContext contextForModals) async {
     final String publicacionId = publicacion.id;
     final pubData = publicacion.data() as Map<String, dynamic>;
@@ -245,11 +242,61 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     return age;
   }
 
+  // --- NUEVA FUNCIÓN PARA ELIMINAR AMIGO ---
+  Future<void> _removeFriend(BuildContext dialogContext, String currentUserId, String friendUid) async {
+    bool confirm = await showDialog<bool>(
+      context: dialogContext, // Usar el contexto del diálogo
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          backgroundColor: _tabBackgroundColor,
+          title: const Text('Eliminar Amigo', style: TextStyle(fontFamily: _fontFamily, color: _primaryTextColor)),
+          content: const Text('¿Estás seguro de que deseas eliminar a este amigo? Esta acción también lo eliminará de su lista de amigos.', style: TextStyle(fontFamily: _fontFamily, color: _primaryTextColor)),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar', style: TextStyle(fontFamily: _fontFamily, color: _buttonBackgroundColor)),
+              onPressed: () => Navigator.of(ctx).pop(false),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(backgroundColor: Colors.red[400]),
+              child: const Text('Eliminar', style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
+              onPressed: () => Navigator.of(ctx).pop(true),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+
+    if (!confirm) return;
+
+    try {
+      // Eliminar de la lista de amigos del usuario actual
+      await FirebaseFirestore.instance.collection('users').doc(currentUserId).collection('amigos').doc(friendUid).delete();
+      // Eliminar de la lista de amigos del otro usuario (bidireccional)
+      await FirebaseFirestore.instance.collection('users').doc(friendUid).collection('amigos').doc(currentUserId).delete();
+
+      // Usar el contexto original (pasado o `this.context`) para el SnackBar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Amigo eliminado correctamente.', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      developer.log('Error al eliminar amigo: $e', name: "PerfilPublico.RemoveFriend", error: e);
+      if (mounted) { // Verificar si el widget sigue montado
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar amigo.', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
+      // ... (código existente para usuario no autenticado)
       return Scaffold(
         backgroundColor: const Color(0xff4ec8dd),
         body: Center(
@@ -262,6 +309,8 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 onPressed: () {
                   if (Navigator.canPop(context)) {
                     Navigator.popUntil(context, (route) => route.isFirst);
+                  } else {
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Home(key: Key("Home_From_Unauth_Perfil"))));
                   }
                 },
                 child: const Text('Ir a Inicio', style: TextStyle(fontFamily: _fontFamily)),
@@ -275,6 +324,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
       builder: (context, userSnapshot) {
+        // ... (código existente para manejar estados de userSnapshot)
         if (userSnapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(backgroundColor: Color(0xff4ec8dd), body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))));
         }
@@ -313,14 +363,14 @@ class _PerfilPublicoState extends State<PerfilPublico> {
           edadString = userData['edad'].toString();
         }
 
-
         return Scaffold(
           body: Stack(
             children: <Widget>[
               Positioned.fill(
                 child: Image.asset('assets/images/Animal Health Fondo de Pantalla.png', fit: BoxFit.cover),
               ),
-
+              // --- Widgets Pinned de la AppBar ---
+              // ... (código existente de Pinned para back, logo, help, settings, listaanimales)
               Pinned.fromPins(
                 Pin(size: 52.9, start: 9.0),
                 Pin(size: 50.0, start: 40.0),
@@ -392,7 +442,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
               ),
 
               Pinned.fromPins(
-                Pin(size: 60.1, start: 6.0),
+                Pin(size: 60.1, start: 80.0),
                 Pin(size: 60.0, start: 44.0),
                 child: PageLink(
                   links: [
@@ -411,22 +461,26 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 ),
               ),
 
+
               Positioned(
                 top: 120.0,
                 left: 0,
                 right: 0,
                 bottom: 0,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
+                  padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0), // Reducido el padding superior
                   child: Column(
                     children: <Widget>[
                       _buildProfileHeader(context, profilePhotoUrl, userName, userData, currentUser.uid),
                       const SizedBox(height: 20),
-                      _buildInfoTabs(context),
-                      const SizedBox(height: 5),
-                      _buildUserInfoDetails(viveEn, deDonde, preferencias, genero, edadString),
+                      _buildInfoTabs(context), // Ya se usa _selectedTabIndex aquí
+                      const SizedBox(height: 10), // Espacio entre pestañas y contenido
+                      // --- CONTENIDO DINÁMICO BASADO EN LA PESTAÑA SELECCIONADA ---
+                      _buildContentForSelectedTab(currentUser.uid, viveEn, deDonde, preferencias, genero, edadString),
                       const SizedBox(height: 20),
-                      _buildUserPublicationsSection(context, currentUser.uid, userData),
+                      // Mostrar publicaciones solo si la pestaña Información está activa
+                      if (_selectedTabIndex == 0)
+                        _buildUserPublicationsSection(context, currentUser.uid, userData),
                     ],
                   ),
                 ),
@@ -438,10 +492,9 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
-
   Widget _buildProfileHeader(BuildContext context, String? profilePhotoUrl, String userName, Map<String, dynamic> currentUserData, String currentUserId) {
+    // ... (código existente de _buildProfileHeader)
     return Column(children: <Widget>[
-      // --- MODIFICADO: GestureDetector para la foto de perfil ---
       GestureDetector(
         onTap: () => _showProfileImageDialog(context, profilePhotoUrl),
         child: Container(
@@ -465,7 +518,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
           ),
         ),
       ),
-      // --- FIN MODIFICADO ---
       const SizedBox(height: 12.0),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -490,6 +542,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildActionButton(BuildContext context, {required String text, required VoidCallback onTapAction}) {
+    // ... (código existente de _buildActionButton)
     return SizedBox(width: 179.0, height: 40.0,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -505,31 +558,86 @@ class _PerfilPublicoState extends State<PerfilPublico> {
 
   Widget _buildInfoTabs(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 17.5, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10), // Ajustado el padding vertical
       decoration: BoxDecoration(color: _tabBackgroundColor, borderRadius: BorderRadius.circular(9.0), border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: <Widget>[
-        _buildTabButton(text: 'Información', isActive: true),
-        _buildTabButton(text: 'Historias', isActive: false),
-        _buildTabButton(text: 'Comunidad', isActive: false, activeColor: _infoTabInactiveColor),
+        _buildTabButton(context, text: 'Información', index: 0, iconPath: null),
+        _buildTabButton(context, text: 'Historias', index: 1, iconPath: null),
+        _buildTabButton(context, text: 'Comunidad', index: 2, iconPath: 'assets/images/comunidad.png'), // Se pasa iconPath
       ]),
     );
   }
 
-  Widget _buildTabButton({required String text, bool isActive = false, Color? activeColor}) {
-    final Color bgColor = isActive ? (activeColor ?? _infoTabActiveColor) : (text == 'Comunidad' ? _infoTabInactiveColor : _buttonBackgroundColor.withOpacity(0.5));
+  Widget _buildTabButton(BuildContext context, {required String text, required int index, String? iconPath}) {
+    bool isActive = _selectedTabIndex == index;
+    // Color bgColor = isActive ? _infoTabActiveColor : (text == 'Comunidad' ? _tabBackgroundColor : _buttonBackgroundColor.withOpacity(0.5)); // Fondo transparente para comunidad inactiva
+
     BoxDecoration decoration;
-    if (text == 'Información' && isActive) {
-      decoration = BoxDecoration(color: _infoTabActiveColor, borderRadius: BorderRadius.circular(8.0), border: Border.all(width: 1.0, color: _primaryTextColor),
-          boxShadow: const [BoxShadow(color: _boxShadowColor, offset: Offset(0,3), blurRadius: 6)]);
+    if (isActive) {
+      decoration = BoxDecoration(
+          color: _infoTabActiveColor,
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(width: 1.0, color: _primaryTextColor),
+          boxShadow: const [BoxShadow(color: _boxShadowColor, offset: Offset(0,3), blurRadius: 6)]
+      );
     } else {
-      decoration = BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(8.0), border: Border.all(color: _primaryTextColor, width: 1.0));
+      decoration = BoxDecoration(
+          color: text == 'Comunidad' ? _tabBackgroundColor.withOpacity(0.7) : _buttonBackgroundColor.withOpacity(0.5), // Color de fondo para comunidad inactiva
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(color: _primaryTextColor.withOpacity(0.7), width: 1.0)
+      );
     }
-    return Container(width: (text == 'Comunidad' || text == 'Información') ? 115.0 : 100.0, height: 30.0, decoration: decoration,
-      child: Center(child: Text(text, style: const TextStyle(fontFamily: _fontFamily, fontSize: 20, color: _primaryTextColor, fontWeight: FontWeight.w700), softWrap: false)),
+
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedTabIndex = index;
+        });
+      },
+      child: Container(
+        width: (text == 'Comunidad' || text == 'Información') ? 115.0 : 100.0,
+        height: 50.0, // MODIFICADO: Altura del botón a 50.0
+        decoration: decoration,
+        child: Center(
+          child: iconPath != null && text == 'Comunidad'
+              ? Image.asset(
+            iconPath,
+            height: 40.0, // MODIFICADO: Altura del icono
+            fit: BoxFit.contain, // MODIFICADO: Asegura que el icono encaje y mantenga el aspect ratio
+            // color: ..., // MODIFICADO: Propiedad color eliminada para usar los colores originales de la imagen
+          )
+              : Text(text, style: TextStyle(fontFamily: _fontFamily, fontSize: 20, color: _primaryTextColor, fontWeight: FontWeight.w700), softWrap: false),
+        ),
+      ),
     );
   }
 
+  // --- NUEVO: Widget para el contenido de la pestaña seleccionada ---
+  Widget _buildContentForSelectedTab(String currentUserId, String viveEn, String deDonde, String preferencias, String genero, String edad) {
+    switch (_selectedTabIndex) {
+      case 0: // Información
+        return _buildUserInfoDetails(viveEn, deDonde, preferencias, genero, edad);
+      case 1: // Historias
+        return Container(
+          padding: const EdgeInsets.all(20),
+          margin: const EdgeInsets.symmetric(vertical:10),
+          decoration: BoxDecoration(
+              color: _tabBackgroundColor,
+              borderRadius: BorderRadius.circular(9.0),
+              border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))
+          ),
+          child: const Center(child: Text('Contenido de Historias (Próximamente)', style: TextStyle(fontFamily: _fontFamily, fontSize: 18, color: _primaryTextColor))),
+        );
+      case 2: // Comunidad (Lista de Amigos)
+        return _buildFriendsListSection(currentUserId);
+      default:
+        return _buildUserInfoDetails(viveEn, deDonde, preferencias, genero, edad);
+    }
+  }
+
   Widget _buildUserInfoDetails(String viveEn, String deDonde, String preferencias, String genero, String edad) {
+    // ... (código existente de _buildUserInfoDetails)
     return Container(
       padding: const EdgeInsets.all(15.0),
       decoration: BoxDecoration(color: _tabBackgroundColor, borderRadius: BorderRadius.circular(9.0), border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))),
@@ -544,6 +652,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildProfileStatItem({required String iconAsset, required String label, required String value}) {
+    // ... (código existente de _buildProfileStatItem)
     double iconWidth = (iconAsset.contains('viveen') || iconAsset.contains('preferencias')) ? 45.5 : (iconAsset.contains('edad')) ? 41.2 : (iconAsset.contains('de')) ? 37.9 : 35.8;
     return Padding(padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(children: <Widget>[
@@ -556,7 +665,124 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
+  // --- NUEVO: Widget para la sección de lista de amigos ---
+  Widget _buildFriendsListSection(String currentUserId) {
+    return Container(
+      margin: const EdgeInsets.only(top:0, bottom: 15.0), // Ajusta según sea necesario
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+          color: _tabBackgroundColor,
+          borderRadius: BorderRadius.circular(9.0),
+          border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))
+      ),
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('users').doc(currentUserId).collection('amigos').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)));
+          }
+          if (snapshot.hasError) {
+            developer.log("Error cargando lista de amigos: ${snapshot.error}", name:"PerfilPublico.FriendsStream");
+            return const Center(child: Text('Error al cargar amigos.', style: TextStyle(fontFamily: _fontFamily, color: Colors.redAccent)));
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20.0),
+                child: Text(
+                  'Aún no tienes amigos.\n¡Conecta con otros usuarios!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontFamily: _fontFamily, fontSize: 18, color: _primaryTextColor),
+                ),
+              ),
+            );
+          }
+
+          final friendDocs = snapshot.data!.docs;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, bottom: 10.0, top: 5.0),
+                child: Text(
+                  'Amigos (${friendDocs.length})',
+                  style: TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: _primaryTextColor),
+                ),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: friendDocs.length,
+                itemBuilder: (context, index) {
+                  // El ID del documento en la subcolección 'amigos' es el UID del amigo.
+                  String friendUid = friendDocs[index].id;
+                  return _buildFriendListItem(context, friendUid, currentUserId);
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // --- NUEVO: Widget para cada item de la lista de amigos ---
+  Widget _buildFriendListItem(BuildContext context, String friendUid, String currentUserId) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(friendUid).snapshots(),
+      builder: (context, userSnapshot) {
+        if (!userSnapshot.hasData) {
+          return ListTile(title: Text('Cargando amigo...', style: TextStyle(fontFamily: _fontFamily)));
+        }
+        if (userSnapshot.hasError || !userSnapshot.data!.exists) {
+          developer.log("Error cargando datos del amigo $friendUid: ${userSnapshot.error}", name:"PerfilPublico.FriendItem");
+          return ListTile(title: Text('Error al cargar datos del amigo.', style: TextStyle(fontFamily: _fontFamily, color: Colors.red)));
+        }
+
+        final friendData = userSnapshot.data!.data() as Map<String, dynamic>;
+        final friendName = friendData['nombreUsuario'] ?? friendData['name'] ?? 'Amigo';
+        final friendProfilePicUrl = friendData['profilePhotoUrl'] as String?;
+
+        return Card(
+          color: _tabBackgroundColor.withAlpha(200), // Un poco más transparente que el fondo de la sección
+          elevation: 1,
+          margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 0),
+          child: ListTile(
+            leading: CircleAvatar(
+              radius: 25,
+              backgroundColor: Colors.grey[300],
+              backgroundImage: friendProfilePicUrl != null && friendProfilePicUrl.isNotEmpty
+                  ? CachedNetworkImageProvider(friendProfilePicUrl)
+                  : null,
+              child: (friendProfilePicUrl == null || friendProfilePicUrl.isEmpty)
+                  ? const Icon(Icons.person, color: _primaryTextColor)
+                  : null,
+            ),
+            title: Text(friendName, style: const TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.bold, color: _primaryTextColor)),
+            // Subtitle opcional, por ejemplo, "Amigos desde..."
+            trailing: IconButton(
+              icon: Icon(Icons.person_remove_alt_1_outlined, color: Colors.red[700]),
+              tooltip: 'Eliminar amigo',
+              onPressed: () => _removeFriend(context, currentUserId, friendUid),
+            ),
+            onTap: () {
+              // TODO: Navegar al perfil del amigo si se implementa
+              // Navigator.push(context, MaterialPageRoute(builder: (_) => PerfilPublico(userId: friendUid))); // Requeriría modificar PerfilPublico
+              developer.log("Ver perfil de $friendName (UID: $friendUid)", name: "PerfilPublico.ViewFriendProfile");
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Funcionalidad "Ver Perfil" no implementada aún.', style: TextStyle(fontFamily: _fontFamily))),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+
   Widget _buildUserPublicationsSection(BuildContext context, String userId, Map<String, dynamic> ownerUserData) {
+    // ... (código existente de _buildUserPublicationsSection)
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('publicaciones')
           .where('usuarioId', isEqualTo: userId)
@@ -603,19 +829,26 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildPublicacionItemEstiloHome(DocumentSnapshot publicacion, BuildContext itemContext, Map<String, dynamic> postOwnerUserDataFromProfile) {
+    // ... (código existente de _buildPublicacionItemEstiloHome)
     final pubData = publicacion.data() as Map<String, dynamic>;
     final mediaUrl = pubData['imagenUrl'] as String?;
     final isVideo = (pubData['esVideo'] as bool?) ?? false;
     final hasValidMedia = mediaUrl != null && mediaUrl.isNotEmpty;
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
-    final String postOwnerId = currentUserId!;
-    final String postOwnerName = postOwnerUserDataFromProfile['nombreUsuario'] ?? postOwnerUserDataFromProfile['name'] ?? 'Usuario';
-    final String? postOwnerProfilePicUrl = postOwnerUserDataFromProfile['profilePhotoUrl'];
+    // Esta sección usa postOwnerUserDataFromProfile que es del dueño del perfil que se está viendo.
+    // Si el perfil es el propio, estos datos son correctos.
+    final String postOwnerId = pubData['usuarioId'] as String? ?? currentUserId!; // Tomar el usuarioId de la publicación
+    // Para el nombre y foto del dueño de la publicación, idealmente deberían venir de la publicación o ser buscados.
+    // Aquí estamos reusando los datos del perfil actual si la publicación es del usuario del perfil.
+    // Si en el futuro se muestran publicaciones de otros en este stream (poco probable aquí), esto necesitaría ajuste.
+    final String postOwnerName = pubData['usuarioNombre'] ?? postOwnerUserDataFromProfile['nombreUsuario'] ?? postOwnerUserDataFromProfile['name'] ?? 'Usuario';
+    final String? postOwnerProfilePicUrl = pubData['usuarioFoto'] ?? postOwnerUserDataFromProfile['profilePhotoUrl'];
+
 
     final likes = pubData['likes'] as int? ?? 0;
     final likedBy = List<String>.from(pubData['likedBy'] as List<dynamic>? ?? []);
-    final commentsCount = (pubData['comentariosCount'] as int?) ?? (pubData['comentarios'] as int?) ?? 0;
+    final commentsCount = (pubData['comentariosCount'] as int?) ?? (pubData['comentarios'] as int?) ?? 0; // Asegurar consistencia
     final String tipoPublicacion = pubData['tipoPublicacion'] ?? 'Público';
 
 
@@ -666,22 +899,24 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                     ],
                   ),
                 ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.black54),
-                  color: Colors.white.withOpacity(0.95),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  onSelected: (value) {
-                    if (value == 'eliminar') {
-                      _eliminarPublicacion(publicacion.id, itemContext, mediaUrl);
-                    } else if (value == 'editar') {
-                      _mostrarDialogoEditarPublicacionIndividual(publicacion, itemContext);
-                    }
-                  },
-                  itemBuilder: (BuildContext context) => [
-                    const PopupMenuItem<String>(value: 'editar', child: Text('Editar', style: TextStyle(fontFamily: _fontFamily, color: _primaryTextColor))),
-                    const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar', style: TextStyle(fontFamily: _fontFamily, color: Colors.red))),
-                  ],
-                ),
+                // Solo mostrar PopupMenuButton si el usuario actual es el dueño de la publicación
+                if (currentUserId == postOwnerId)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.black54),
+                    color: Colors.white.withOpacity(0.95),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    onSelected: (value) {
+                      if (value == 'eliminar') {
+                        _eliminarPublicacion(publicacion.id, itemContext, mediaUrl);
+                      } else if (value == 'editar') {
+                        _mostrarDialogoEditarPublicacionIndividual(publicacion, itemContext);
+                      }
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem<String>(value: 'editar', child: Text('Editar', style: TextStyle(fontFamily: _fontFamily, color: _primaryTextColor))),
+                      const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar', style: TextStyle(fontFamily: _fontFamily, color: Colors.red))),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -693,9 +928,9 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 mediaUrl: mediaUrl,
                 isVideo: isVideo,
                 caption: pubData['caption'] as String?,
-                ownerUserId: postOwnerId,
-                ownerUserName: postOwnerName,
-                ownerUserProfilePic: postOwnerProfilePicUrl,
+                ownerUserId: postOwnerId, // Usar el ID del dueño de la publicación
+                ownerUserName: postOwnerName, // Usar el nombre del dueño de la publicación
+                ownerUserProfilePic: postOwnerProfilePicUrl, // Usar la foto del dueño de la publicación
               ))),
               child: Container(
                 width: double.infinity,
@@ -735,7 +970,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 _buildPostActionEstiloHome(
                     iconAsset: 'assets/images/like.png',
                     label: likes.toString(),
-                    isLiked: likedBy.contains(currentUserId),
+                    isLiked: likedBy.contains(currentUserId), // El like es del usuario actual
                     onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, itemContext)
                 ),
                 _buildPostActionEstiloHome(
@@ -783,28 +1018,21 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildPostActionEstiloHome({required String iconAsset, required String label, bool isLiked = false, bool isSavedStyle = false, required VoidCallback onTap}) {
+    // ... (código existente de _buildPostActionEstiloHome)
     double iconSize = 30.0;
     if (iconAsset.contains('like')) iconSize = 32.0;
-
-    // --- MODIFICACIÓN PARA EL BOTÓN DE LIKE ---
     Color? activeColor;
     bool isThisTheLikeButton = iconAsset.contains('like');
 
     if (isThisTheLikeButton) {
-      // Para el botón de like, nunca cambia de color.
-      // 'activeColor' permanece null, por lo que usa el estilo por defecto.
       activeColor = null;
     } else {
-      // Para otros botones (ej. botón de guardar)
-      // El color del botón de guardar cambia si 'isSavedStyle' es true.
       if (isSavedStyle) {
         activeColor = _buttonBackgroundColor;
       } else {
-        // Por defecto para el botón de guardar no activo, o para los botones de comentario/compartir
         activeColor = null;
       }
     }
-    // --- FIN DE LA MODIFICACIÓN ---
 
     return Expanded(
       child: InkWell(
@@ -826,6 +1054,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildMediaErrorWidget(String typeMessage) {
+    // ... (código existente de _buildMediaErrorWidget)
     IconData iconData = Icons.image_not_supported_outlined;
     String message = 'Error al cargar $typeMessage';
     if (typeMessage.contains('no disponible')) {
@@ -855,6 +1084,8 @@ class _PerfilPublicoState extends State<PerfilPublico> {
 }
 
 // --- MODAL PARA EDITAR PERFIL ---
+// _EditarPerfilUsuarioModalWidget (sin cambios, se asume que ya está bien)
+// ... (código existente de _EditarPerfilUsuarioModalWidget)
 class _EditarPerfilUsuarioModalWidget extends StatefulWidget {
   final String userId; final Map<String, dynamic> currentUserData; final BuildContext parentContextForSnackbars;
   const _EditarPerfilUsuarioModalWidget({Key? key, required this.userId, required this.currentUserData, required this.parentContextForSnackbars}) : super(key: key);
@@ -922,13 +1153,13 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
             colorScheme: const ColorScheme.light(
               primary: _buttonBackgroundColor,
               onPrimary: Colors.white,
-              surface: _tabBackgroundColor, // Un color claro para el fondo del picker
+              surface: _tabBackgroundColor,
               onSurface: _primaryTextColor,
             ),
-            dialogBackgroundColor: Colors.white, // Fondo del diálogo que contiene el picker
+            dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                  foregroundColor: _buttonBackgroundColor, // Color de los botones OK/CANCELAR
+                  foregroundColor: _buttonBackgroundColor,
                   textStyle: const TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.bold)
               ),
             ),
@@ -1055,7 +1286,7 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
     if (imageAssetPath != null) {
       prefixWidget = Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Image.asset(imageAssetPath, width: 24, height: 24), // Sin color para usar el original
+        child: Image.asset(imageAssetPath, width: 24, height: 24),
       );
     }
 
@@ -1108,7 +1339,7 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
                               'Fecha de Nacimiento',
                               imageAssetPath: 'assets/images/edadusuario.png',
                               readOnly: true,
-                              onTap: () => _selectBirthDate(modalContext), // Usar modalContext aquí
+                              onTap: () => _selectBirthDate(modalContext),
                             ),
 
                             Padding(padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -1118,7 +1349,7 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
                                         labelStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.black54),
                                         prefixIcon: Padding(
                                           padding: const EdgeInsets.all(12.0),
-                                          child: Image.asset('assets/images/genero.png', width: 24, height: 24), // Sin color
+                                          child: Image.asset('assets/images/genero.png', width: 24, height: 24),
                                         ),
                                         filled: true, fillColor: Colors.white.withOpacity(0.9),
                                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
@@ -1138,8 +1369,9 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
   }
 }
 
-
 // --- WIDGET DE VideoPlayer ---
+// _VideoPlayerWidgetFromHome (sin cambios, se asume que ya está bien)
+// ... (código existente de _VideoPlayerWidgetFromHome)
 class _VideoPlayerWidgetFromHome extends StatefulWidget {
   final String videoUrl;
   const _VideoPlayerWidgetFromHome({Key? key, required this.videoUrl}) : super(key: key);
@@ -1285,8 +1517,9 @@ class __VideoPlayerWidgetFromHomeState extends State<_VideoPlayerWidgetFromHome>
   }
 }
 
-
 // --- WIDGET PARA EDITAR PUBLICACIÓN INDIVIDUAL ---
+// EditarPublicacionIndividualWidget (sin cambios, se asume que ya está bien)
+// ... (código existente de EditarPublicacionIndividualWidget)
 class EditarPublicacionIndividualWidget extends StatefulWidget {
   final String publicacionId;
   final String captionActual;
@@ -1343,8 +1576,8 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
 
     if (isFile && !kIsWeb) {
       _videoPlayerControllerPreview = VideoPlayerController.file(File(url));
-    } else if (kIsWeb && isFile) {
-      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
+    } else if (kIsWeb && isFile) { // Esto puede no funcionar como se espera en web con path local
+      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri); // Para web necesitaría ser un URL accesible
     }
     else {
       _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
@@ -1375,19 +1608,34 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
       }
 
       if (pickedFile != null) {
-        _nuevoMedioBytesPreview = null;
+        _nuevoMedioBytesPreview = null; // Reset
+        String pickedFilePath = pickedFile.path;
+
         if (!isVideo && kIsWeb) {
           _nuevoMedioBytesPreview = await pickedFile.readAsBytes();
+        } else if (isVideo && kIsWeb){
+          // Para video en web, podríamos leer bytes también si es necesario para alguna lógica,
+          // pero VideoPlayerController.networkUrl es preferible para la preview si se sube a un sitio temporal.
+          // Por ahora, _nuevoMedioFile será usado para la subida.
         }
+
 
         if (mounted) {
           setState(() {
-            _nuevoMedioFile = File(pickedFile!.path);
+            _nuevoMedioFile = File(pickedFilePath); // Siempre establecer File para consistencia en la lógica de subida
             _esNuevoMedioVideo = isVideo;
             _videoPlayerControllerPreview?.dispose();
             _videoPlayerControllerPreview = null;
             if (isVideo) {
-              _initializeVideoPlayerPreview(pickedFile.path, isFile: true);
+              if (kIsWeb) {
+                // Para web, VideoPlayerController.file no funciona.
+                // Se podría usar video_player_web y crear un Object URL para la preview si se tienen los bytes.
+                // Por simplicidad, aquí podríamos no mostrar la preview de video local en web, o mostrar un placeholder.
+                // O si _nuevoMedioFile.path es un URL blob ya (tras picker en web), podría funcionar.
+                _initializeVideoPlayerPreview(pickedFilePath, isFile: true); // Intentar, puede que no funcione en web para files locales
+              } else {
+                _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
+              }
             }
           });
         }
@@ -1396,7 +1644,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
       developer.log("Error seleccionando media para editar (Perfil): $e", name: "EditPubPerfil.Picker", error: e);
       if (mounted) {
         ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-          SnackBar(content: Text('Error al seleccionar: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))),
+          SnackBar(content: Text('Error al seleccionar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily))),
         );
       }
     }
@@ -1431,12 +1679,17 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
 
         String fileName = 'publicaciones/${widget.publicacionId}/media_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
         String contentType = _esNuevoMedioVideo ? 'video/$fileExtension' : 'image/$fileExtension';
+        if (_esNuevoMedioVideo && fileExtension == 'mov') contentType = 'video/quicktime';
+
 
         UploadTask uploadTask;
         if (kIsWeb) {
-          Uint8List? bytesParaSubir = _esNuevoMedioVideo
-              ? await _nuevoMedioFile!.readAsBytes()
-              : _nuevoMedioBytesPreview;
+          Uint8List? bytesParaSubir;
+          if(_esNuevoMedioVideo) {
+            bytesParaSubir = await _nuevoMedioFile!.readAsBytes(); // Leer bytes del video para web
+          } else {
+            bytesParaSubir = _nuevoMedioBytesPreview; // Usar bytes de imagen ya leídos
+          }
 
           if (bytesParaSubir != null) {
             uploadTask = FirebaseStorage.instance.ref(fileName).putData(bytesParaSubir, SettableMetadata(contentType: contentType));
@@ -1469,7 +1722,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
         developer.log('Error subiendo nuevo medio (Edit Perfil): $e', name: "EditPubPerfil.Upload", error: e);
         if (mounted) {
           ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-            SnackBar(content: Text('Error al subir medio: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))),
+            SnackBar(content: Text('Error al subir medio: ${e.toString().substring(0,(e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily))),
           );
         }
         setState(() => _isUploading = false);
@@ -1491,7 +1744,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
         developer.log('Error actualizando publicación Firestore (Edit Perfil): $e', name: "EditPubPerfil.FirestoreUpdate", error: e);
         if (mounted) {
           ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-            SnackBar(content: Text('Error al actualizar: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))),
+            SnackBar(content: Text('Error al actualizar: ${e.toString().substring(0,(e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily))),
           );
         }
       }
@@ -1516,7 +1769,14 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
   }
 
   Widget _buildMediaPreview() {
+    // Preview para video nuevo seleccionado
     if (_nuevoMedioFile != null && _esNuevoMedioVideo) {
+      if (kIsWeb) {
+        // En web, la previsualización de video local (File) es complicada con VideoPlayerController.file.
+        // Se muestra un placeholder. Una solución más avanzada implicaría usar `video_player_web` y `createObjectURL` si se tienen los bytes.
+        return Container(height: 200, color: Colors.black, child: const Center(child: Text("Previsualización de video no disponible para web antes de subir.", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontFamily: _fontFamily))));
+      }
+      // Para móvil
       if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
         return AspectRatio(
           aspectRatio: _videoPlayerControllerPreview!.value.aspectRatio > 0 ? _videoPlayerControllerPreview!.value.aspectRatio : 16/9,
@@ -1528,19 +1788,21 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
             ],
           ),
         );
-      } else {
+      } else { // Cargando video en móvil
         return Container(height: 200, color: Colors.black, child: const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)) ));
       }
     }
+    // Preview para imagen nueva seleccionada
     else if (_nuevoMedioFile != null && !_esNuevoMedioVideo) {
       if (kIsWeb && _nuevoMedioBytesPreview != null) {
         return Image.memory(_nuevoMedioBytesPreview!, height: 200, fit: BoxFit.contain);
       } else if (!kIsWeb) {
         return Image.file(_nuevoMedioFile!, height: 200, fit: BoxFit.contain);
-      } else {
+      } else { // Placeholder si los bytes no están listos en web
         return Container(height: 200, color: Colors.grey[300], child: const Center(child: Text("Cargando previsualización...", style: TextStyle(fontFamily: _fontFamily))));
       }
     }
+    // Preview para video existente (desde URL)
     else if (widget.mediaUrlActual != null && widget.esVideoActual) {
       if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
         return AspectRatio(
@@ -1553,10 +1815,11 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
             ],
           ),
         );
-      } else if (widget.mediaUrlActual!.isNotEmpty) {
+      } else if (widget.mediaUrlActual!.isNotEmpty) { // Cargando video existente
         return Container(height: 200, color: Colors.black, child: const Center(child: Text("Cargando video...", style: TextStyle(color: Colors.white, fontFamily: _fontFamily))));
       }
     }
+    // Preview para imagen existente (desde URL)
     else if (widget.mediaUrlActual != null && !widget.esVideoActual) {
       return CachedNetworkImage(
         imageUrl: widget.mediaUrlActual!,
@@ -1566,6 +1829,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
         errorWidget: (context, url, error) => Container(height: 200, color: Colors.grey[300], child: const Icon(Icons.broken_image, size: 50, color: Colors.grey)),
       );
     }
+    // Placeholder si no hay nada
     return Container(
       height: 150,
       decoration: BoxDecoration(

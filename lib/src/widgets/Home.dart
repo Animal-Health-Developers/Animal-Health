@@ -50,7 +50,7 @@ class _HomeState extends State<Home> {
   }
 
   void _initializeGemini() {
-    if (GEMINI_API_KEY_HOME.isNotEmpty && GEMINI_API_KEY_HOME != 'AIzaSyD4FUbajaBbCslYPKZNyF-WGwrJZPcBZss') {
+    if (GEMINI_API_KEY_HOME.isNotEmpty && GEMINI_API_KEY_HOME != 'AIzaSyD4FUbajaBbCslYPKZNyF-WGwrJZPcBZss') { // Reemplaza con tu placeholder si es diferente
       _geminiModel = GenerativeModel(
         model: 'gemini-pro',
         apiKey: GEMINI_API_KEY_HOME,
@@ -171,9 +171,10 @@ class _HomeState extends State<Home> {
 
   Future<void> _mostrarDialogoEditarPublicacion(DocumentSnapshot publicacion) async {
     final String publicacionId = publicacion.id;
-    final String? captionActual = publicacion['caption'] as String?;
-    final String? mediaUrlActual = publicacion['imagenUrl'] as String?;
-    final bool esVideoActual = (publicacion['esVideo'] as bool?) ?? false;
+    final data = publicacion.data() as Map<String, dynamic>?;
+    final String? captionActual = data?['caption'] as String?;
+    final String? mediaUrlActual = data?['imagenUrl'] as String?;
+    final bool esVideoActual = (data?['esVideo'] as bool?) ?? false;
 
     await showModalBottomSheet(
       context: context,
@@ -323,7 +324,8 @@ class _HomeState extends State<Home> {
                   .doc(FirebaseAuth.instance.currentUser?.uid)
                   .snapshots(),
               builder: (context, snapshot) {
-                final profilePhotoUrl = snapshot.data?['profilePhotoUrl'] as String?;
+                final data = snapshot.data?.data() as Map<String, dynamic>?;
+                final profilePhotoUrl = data?['profilePhotoUrl'] as String?;
                 return PageLink(
                   links: [
                     PageLinkInfo(
@@ -530,14 +532,15 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildPublicacionItem(DocumentSnapshot publicacion, BuildContext context) {
-    final mediaUrl = publicacion['imagenUrl'] as String?;
-    final isVideo = (publicacion['esVideo'] as bool?) ?? false;
+    final pubDataMap = publicacion.data() as Map<String, dynamic>?;
+    final mediaUrl = pubDataMap?['imagenUrl'] as String?;
+    final isVideo = (pubDataMap?['esVideo'] as bool?) ?? false;
     final hasValidMedia = mediaUrl != null && mediaUrl.isNotEmpty;
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    final postOwnerId = publicacion['usuarioId'] as String?;
+    final postOwnerId = pubDataMap?['usuarioId'] as String?;
     final isOwnPost = currentUserId != null && postOwnerId == currentUserId;
-    final likes = publicacion['likes'] as int? ?? 0;
-    final likedBy = List<String>.from(publicacion['likedBy'] as List<dynamic>? ?? []);
+    final likes = pubDataMap?['likes'] as int? ?? 0;
+    final likedBy = List<String>.from(pubDataMap?['likedBy'] as List<dynamic>? ?? []);
 
     return Container(
       margin: const EdgeInsets.only(top: 10.0),
@@ -560,11 +563,11 @@ class _HomeState extends State<Home> {
                       transition: LinkTransition.Fade,
                       ease: Curves.easeOut,
                       duration: 0.3,
-                      pageBuilder: () => PerfilPublico(key: const Key('PerfilPublicoOwner'), /* userId: postOwnerId */),
+                      pageBuilder: () => PerfilPublico(key: Key('PerfilPublicoOwner_${postOwnerId ?? "anon"}'), /* userId: postOwnerId */), // Asegúrate de que PerfilPublico pueda manejar un userId
                     ),
                   ],
                   child: StreamBuilder<DocumentSnapshot>(
-                    stream: FirebaseFirestore.instance.collection('users').doc(publicacion['usuarioId']).snapshots(),
+                    stream: FirebaseFirestore.instance.collection('users').doc(postOwnerId).snapshots(),
                     builder: (context, userSnapshot) {
                       if (userSnapshot.connectionState == ConnectionState.waiting) {
                         return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
@@ -576,7 +579,8 @@ class _HomeState extends State<Home> {
                       if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
                         return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: Icon(Icons.person, color: Colors.white));
                       }
-                      final profilePhotoUrl = userSnapshot.data?['profilePhotoUrl'] as String?;
+                      final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
+                      final profilePhotoUrl = userData?['profilePhotoUrl'] as String?;
                       return CircleAvatar(
                         radius: 20,
                         backgroundColor: Colors.grey[200],
@@ -592,14 +596,14 @@ class _HomeState extends State<Home> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        publicacion['usuarioNombre'] ?? 'Usuario Anónimo',
+                        pubDataMap?['usuarioNombre'] ?? 'Usuario Anónimo',
                         style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       Row(
                         children: [
                           Image.asset('assets/images/publico.png', width: 15, height: 15),
                           const SizedBox(width: 5),
-                          Text(publicacion['tipoPublicacion'] ?? 'Público', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14)),
+                          Text(pubDataMap?['tipoPublicacion'] ?? 'Público', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14)),
                         ],
                       ),
                     ],
@@ -635,7 +639,7 @@ class _HomeState extends State<Home> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              publicacion['caption'] ?? '',
+              pubDataMap?['caption'] ?? '',
               style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 15, fontWeight: FontWeight.w700),
             ),
           ),
@@ -661,28 +665,24 @@ class _HomeState extends State<Home> {
                       ease: Curves.easeOut,
                       duration: 0.3,
                       pageBuilder: () {
-                        String? pubId = publicacion.id;
+                        String pubId = publicacion.id;
                         developer.log("Navegando a Detalles: publicationId = '$pubId'", name: "Home.Navigation");
-                        if (pubId == null || pubId.isEmpty) {
-                          developer.log("ERROR en Home: El ID de la publicación es nulo o vacío ANTES de navegar a Detalles.", name: "Home.Navigation");
-                        }
 
                         String? ownerProfilePic;
-                        final pubData = publicacion.data() as Map<String, dynamic>?;
-                        if (pubData != null && pubData.containsKey('usuarioFotoUrl')) {
-                          ownerProfilePic = pubData['usuarioFotoUrl'] as String?;
-                        } else if (pubData != null && pubData.containsKey('profilePhotoUrl')) {
-                          ownerProfilePic = pubData['profilePhotoUrl'] as String?;
+                        if (pubDataMap != null && pubDataMap.containsKey('usuarioFotoUrl')) {
+                          ownerProfilePic = pubDataMap['usuarioFotoUrl'] as String?;
+                        } else if (pubDataMap != null && pubDataMap.containsKey('profilePhotoUrl')) { // Fallback por si acaso
+                          ownerProfilePic = pubDataMap['profilePhotoUrl'] as String?;
                         }
 
                         return DetallesdeFotooVideo(
-                          key: Key('Detalles_${pubId ?? "ID_NULO"}'),
-                          publicationId: pubId ?? "",
+                          key: Key('Detalles_$pubId'),
+                          publicationId: pubId,
                           mediaUrl: mediaUrl,
                           isVideo: isVideo,
-                          caption: publicacion['caption'] as String?,
-                          ownerUserId: publicacion['usuarioId'] as String?,
-                          ownerUserName: publicacion['usuarioNombre'] as String?,
+                          caption: pubDataMap?['caption'] as String?,
+                          ownerUserId: postOwnerId,
+                          ownerUserName: pubDataMap?['usuarioNombre'] as String?,
                           ownerUserProfilePic: ownerProfilePic,
                         );
                       },
@@ -692,7 +692,17 @@ class _HomeState extends State<Home> {
                     children: [
                       Image.asset('assets/images/comments.png', width: 40, height: 40),
                       const SizedBox(width: 5),
-                      Text((publicacion['comentarios'] as int? ?? 0).toString(), style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
+                      // --- INICIO DE LA CORRECCIÓN ---
+                      Builder(
+                          builder: (context) {
+                            final commentsCount = (pubDataMap?['comentariosCount'] as int?) ?? (pubDataMap?['comentarios'] as int?) ?? 0;
+                            return Text(
+                                commentsCount.toString(),
+                                style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)
+                            );
+                          }
+                      ),
+                      // --- FIN DE LA CORRECCIÓN ---
                     ],
                   ),
                 ),
@@ -706,7 +716,7 @@ class _HomeState extends State<Home> {
                         key: Key('Compartir_${publicacion.id}'),
                         publicationId: publicacion.id,
                         mediaUrl: mediaUrl,
-                        caption: publicacion['caption'] as String?,
+                        caption: pubDataMap?['caption'] as String?,
                       ),
                     ),
                   ],
@@ -803,7 +813,8 @@ class _HomeState extends State<Home> {
           developer.log('Error: Publicación no encontrada para dar like: $postId', name: "Home.Like");
           throw Exception("Publicación no encontrada.");
         }
-        List<String> currentLikedBy = List<String>.from(postSnapshot.data()?['likedBy'] as List<dynamic>? ?? []);
+        final postData = postSnapshot.data() as Map<String, dynamic>?;
+        List<String> currentLikedBy = List<String>.from(postData?['likedBy'] as List<dynamic>? ?? []);
         final bool isLiked = currentLikedBy.contains(userId);
         List<String> newLikedBy;
         if (isLiked) {
@@ -830,17 +841,28 @@ class _HomeState extends State<Home> {
         }
         return;
       }
-      await FirebaseFirestore.instance.collection('publicaciones_guardadas').doc(user.uid).collection('guardados').doc(publicacionId).set({
-        'publicacionId': publicacionId,
-        'fechaGuardado': FieldValue.serverTimestamp(),
-      });
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación guardada correctamente'), backgroundColor: Colors.green));
+      // Guardar en la subcolección del usuario
+      final userSavedPubRef = FirebaseFirestore.instance.collection('users').doc(user.uid).collection('publicacionesGuardadas').doc(publicacionId);
+      final doc = await userSavedPubRef.get();
+
+      if (doc.exists) {
+        await userSavedPubRef.delete();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación eliminada de guardados'), backgroundColor: Colors.orangeAccent));
+        }
+      } else {
+        await userSavedPubRef.set({
+          'publicacionId': publicacionId, // Puedes guardar solo el ID o más datos si lo necesitas
+          'fechaGuardado': FieldValue.serverTimestamp(),
+        });
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación guardada correctamente'), backgroundColor: Colors.green));
+        }
       }
     } catch (e) {
-      developer.log('Error al guardar publicación: $e', error: e, name: "Home.Save");
+      developer.log('Error al guardar/desguardar publicación: $e', error: e, name: "Home.Save");
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al procesar guardado: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'), backgroundColor: Colors.red));
       }
     }
   }
@@ -880,7 +902,6 @@ class _HomeState extends State<Home> {
         final String? mediaUrlToDelete = data['imagenUrl'] as String?;
         if (mediaUrlToDelete != null && mediaUrlToDelete.isNotEmpty) {
           try {
-            // Solo intentar eliminar de Storage si es una URL de Firebase Storage
             if (mediaUrlToDelete.startsWith('https://firebasestorage.googleapis.com')) {
               await FirebaseStorage.instance.refFromURL(mediaUrlToDelete).delete();
               developer.log('Medio eliminado de Storage: $mediaUrlToDelete', name: "Home.DeleteStorage");
@@ -928,8 +949,8 @@ class EditarPublicacionWidget extends StatefulWidget {
 
 class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
   late TextEditingController _captionController;
-  File? _nuevoMedioFile; // Para móvil/escritorio y para subir a Storage
-  Uint8List? _nuevoMedioBytesPreview; // Para previsualizar imagen en web
+  File? _nuevoMedioFile;
+  Uint8List? _nuevoMedioBytesPreview;
   bool _esNuevoMedioVideo = false;
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
@@ -939,6 +960,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
   void initState() {
     super.initState();
     _captionController = TextEditingController(text: widget.captionActual);
+    _esNuevoMedioVideo = widget.esVideoActual; // Inicializa con el estado actual
     if (widget.mediaUrlActual != null && widget.esVideoActual) {
       _initializeVideoPlayerPreview(widget.mediaUrlActual!);
     }
@@ -958,12 +980,12 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
       return;
     }
 
-    if (isFile && !kIsWeb) { // Video local en móvil/escritorio
+    if (isFile && !kIsWeb) {
       _videoPlayerControllerPreview = VideoPlayerController.file(File(url));
-    } else if (kIsWeb && isFile) { // Video local (blob) en web
-      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri); // En web, path de XFile es una blob URL
+    } else if (kIsWeb && isFile) {
+      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
     }
-    else { // Video de red
+    else {
       _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
     }
 
@@ -987,28 +1009,25 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
       if (isVideo) {
         pickedFile = await _picker.pickVideo(source: source);
       } else {
-        pickedFile = await _picker.pickImage(source: source, imageQuality: 70);
+        pickedFile = await _picker.pickImage(source: source, imageQuality: 70, maxWidth: 1080, maxHeight: 1920);
       }
 
       if (pickedFile != null) {
         _nuevoMedioBytesPreview = null;
+        String pickedFilePath = pickedFile.path;
+
         if (!isVideo && kIsWeb) {
           _nuevoMedioBytesPreview = await pickedFile.readAsBytes();
         }
 
         if (mounted) {
           setState(() {
-            // Para subir a Storage, siempre usamos pickedFile.path (en web es una blob URL, en móvil es una ruta de archivo)
-            // _nuevoMedioFile se usa para la preview en móvil/escritorio con Image.file
-            // y también para pasarlo a putFile (que maneja la diferencia web/móvil).
-            _nuevoMedioFile = File(pickedFile!.path); // Esto es principalmente para la preview en móvil y para la lógica de subida.
-
+            _nuevoMedioFile = File(pickedFilePath);
             _esNuevoMedioVideo = isVideo;
             _videoPlayerControllerPreview?.dispose();
             _videoPlayerControllerPreview = null;
             if (isVideo) {
-              // Para video, pickedFile.path es la ruta (o blob URL en web)
-              _initializeVideoPlayerPreview(pickedFile.path, isFile: true);
+              _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
             }
           });
         }
@@ -1039,27 +1058,43 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
     String? mediaUrlParaActualizar = widget.mediaUrlActual;
     bool esVideoParaActualizar = widget.esVideoActual;
 
-    if (_nuevoMedioFile != null) { // Si se seleccionó un nuevo medio (móvil/web)
+    if (_nuevoMedioFile != null) {
       hayCambios = true;
       try {
-        String fileName = 'publicaciones/${widget.publicacionId}/media_${DateTime.now().millisecondsSinceEpoch}.${_nuevoMedioFile!.path.split('.').last}';
+        String fileExtension = _nuevoMedioFile!.path.split('.').last.toLowerCase();
+        if (_esNuevoMedioVideo) {
+          if (!['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(fileExtension)) fileExtension = 'mp4';
+        } else {
+          if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) fileExtension = 'jpeg';
+        }
+
+        String fileName = 'publicaciones/${widget.publicacionId}/media_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+        String contentType = _esNuevoMedioVideo ? 'video/$fileExtension' : 'image/$fileExtension';
+        if (_esNuevoMedioVideo && fileExtension == 'mov') contentType = 'video/quicktime';
+
 
         UploadTask uploadTask;
         if (kIsWeb) {
-          // Para web, necesitamos los bytes si es una imagen, o el blob si es video.
-          // image_picker nos da XFile, y _nuevoMedioFile es File(XFile.path).
-          // putFile para web puede tomar el path (que es una blob URL).
-          // Si es imagen y tenemos bytes, podemos usar putData.
-          if (!_esNuevoMedioVideo && _nuevoMedioBytesPreview != null) {
-            uploadTask = FirebaseStorage.instance.ref(fileName).putData(_nuevoMedioBytesPreview!);
+          Uint8List? bytesParaSubir;
+          if(_esNuevoMedioVideo) {
+            bytesParaSubir = await _nuevoMedioFile!.readAsBytes(); // Leer bytes del video para web
           } else {
-            // Para video en web o imagen sin bytes (aunque deberíamos tenerlos), intentamos con putFile y la blob URL
+            bytesParaSubir = _nuevoMedioBytesPreview; // Usar bytes de imagen ya leídos
+          }
+
+          if (bytesParaSubir != null) {
+            uploadTask = FirebaseStorage.instance.ref(fileName).putData(bytesParaSubir, SettableMetadata(contentType: contentType));
+          } else {
+            // Si es video y no se pudieron leer bytes (debería ser raro, pero como fallback)
+            // o si _nuevoMedioBytesPreview es null para una imagen (también raro si se seleccionó)
+            // intentamos con putFile que en web espera una blob URL (que es lo que XFile.path es en web)
+            developer.log("Intentando putFile para web con path: ${_nuevoMedioFile!.path}", name: "EditWidget.UploadWeb");
             uploadTask = FirebaseStorage.instance.ref(fileName).putFile(
-                _nuevoMedioFile!,
-                SettableMetadata(contentType: _esNuevoMedioVideo ? 'video/${_nuevoMedioFile!.path.split('.').last}' : 'image/${_nuevoMedioFile!.path.split('.').last}')
+                _nuevoMedioFile!, // En web, esto es una blob URL
+                SettableMetadata(contentType: contentType)
             );
           }
-        } else { // Móvil / Escritorio
+        } else {
           uploadTask = FirebaseStorage.instance.ref(fileName).putFile(_nuevoMedioFile!);
         }
 
@@ -1184,13 +1219,13 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
                           icon: const Icon(Icons.image, color: Colors.white),
                           label: const Text('Cambiar Foto', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')),
                           onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: false),
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff4ec8dd), padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff54d1e0), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
                         ),
                         ElevatedButton.icon(
                           icon: const Icon(Icons.videocam, color: Colors.white),
                           label: const Text('Cambiar Video', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')),
                           onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: true),
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff4ec8dd), padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff54d1e0), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
                         ),
                       ],
                     ),
@@ -1208,30 +1243,38 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
                           borderRadius: BorderRadius.circular(10.0),
                           borderSide: BorderSide.none,
                         ),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                            borderSide: const BorderSide(color: Color(0xff54d1e0), width: 2)
+                        ),
                       ),
-                      maxLines: 3,
+                      maxLines: 4,
+                      maxLength: 2200,
                     ),
                     const SizedBox(height: 30),
 
                     _isUploading
-                        ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))))
-                        : ElevatedButton(
+                        ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff54d1e0))))
+                        : ElevatedButton.icon(
+                      icon: const Icon(Icons.save_outlined, color: Colors.white),
+                      label: const Text('Guardar Cambios', style: TextStyle(color: Colors.white)),
                       onPressed: _guardarCambios,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff4ec8dd),
-                        padding: const EdgeInsets.symmetric(vertical: 15.0),
-                        textStyle: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, fontWeight: FontWeight.bold),
+                          backgroundColor: const Color(0xff54d1e0),
+                          padding: const EdgeInsets.symmetric(vertical: 15.0),
+                          textStyle: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, fontWeight: FontWeight.bold),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
                       ),
-                      child: const Text('Guardar Cambios', style: TextStyle(color: Colors.white)),
                     ),
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text(
                         'Cancelar',
-                        style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.white, fontSize: 16),
+                        style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -1245,6 +1288,11 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
   Widget _buildMediaPreview() {
     // Si hay un nuevo archivo de video seleccionado
     if (_nuevoMedioFile != null && _esNuevoMedioVideo) {
+      if (kIsWeb) {
+        // En web, la previsualización de video local (File) es complicada con VideoPlayerController.file.
+        // Se muestra un placeholder. Una solución más avanzada implicaría usar `video_player_web` y `createObjectURL` si se tienen los bytes.
+        return Container(height: 200, color: Colors.black, child: const Center(child: Text("Previsualización de video no disponible para web antes de subir.", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontFamily: "Comic Sans MS"))));
+      }
       if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
         return AspectRatio(
           aspectRatio: _videoPlayerControllerPreview!.value.aspectRatio > 0 ? _videoPlayerControllerPreview!.value.aspectRatio : 16/9,
@@ -1257,7 +1305,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
           ),
         );
       } else {
-        return Container(height: 200, color: Colors.black, child: const Center(child: CircularProgressIndicator()));
+        return Container(height: 200, color: Colors.black, child: const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff54d1e0)))));
       }
     }
     // Si hay un nuevo archivo de imagen seleccionado
@@ -1267,7 +1315,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
       } else if (!kIsWeb) {
         return Image.file(_nuevoMedioFile!, height: 200, fit: BoxFit.contain);
       } else {
-        return Container(height: 200, color: Colors.grey[300], child: const Center(child: Text("Cargando previsualización...")));
+        return Container(height: 200, color: Colors.grey[300], child: const Center(child: Text("Cargando previsualización...", style: TextStyle(fontFamily: "Comic Sans MS"))));
       }
     }
     // Si hay un video actual y no se ha seleccionado uno nuevo
@@ -1284,7 +1332,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
           ),
         );
       } else if (widget.mediaUrlActual!.isNotEmpty) {
-        return Container(height: 200, color: Colors.black, child: const Center(child: Text("Cargando video...", style: TextStyle(color: Colors.white))));
+        return Container(height: 200, color: Colors.black, child: const Center(child: Text("Cargando video...", style: TextStyle(color: Colors.white, fontFamily: "Comic Sans MS"))));
       }
     }
     // Si hay una imagen actual y no se ha seleccionado una nueva
@@ -1293,8 +1341,8 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
         imageUrl: widget.mediaUrlActual!,
         height: 200,
         fit: BoxFit.contain,
-        placeholder: (context, url) => Container(height: 200, color: Colors.grey[300], child: const Center(child: CircularProgressIndicator())),
-        errorWidget: (context, url, error) => Container(height: 200, color: Colors.grey[300], child: const Icon(Icons.broken_image, size: 50)),
+        placeholder: (context, url) => Container(height: 200, color: Colors.grey[300], child: const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff54d1e0))))),
+        errorWidget: (context, url, error) => Container(height: 200, color: Colors.grey[300], child: const Icon(Icons.broken_image, size: 50, color: Colors.grey)),
       );
     }
     return Container(
@@ -1305,7 +1353,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
       ),
       child: const Center(
         child: Text(
-          'No hay medio seleccionado.\nPresiona "Cambiar Foto" o "Cambiar Video".',
+          'No hay medio adjunto o no se ha seleccionado uno nuevo.\nPresiona "Cambiar Foto" o "Cambiar Video" para añadir o reemplazar.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white70, fontFamily: 'Comic Sans MS'),
         ),
@@ -1326,13 +1374,13 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
         });
       },
       child: AnimatedOpacity(
-        opacity: controller.value.isPlaying && controller.value.isInitialized ? 0.0 : 1.0,
+        opacity: (controller.value.isInitialized && !controller.value.isPlaying) ? 1.0 : 0.0,
         duration: const Duration(milliseconds: 300),
         child: Container(
           color: Colors.black26,
-          child: Center(
+          child: const Center(
             child: Icon(
-              controller.value.isPlaying ? Icons.pause_circle_outline : Icons.play_circle_outline,
+              Icons.play_circle_outline,
               color: Colors.white,
               size: 60.0,
             ),
@@ -1368,23 +1416,25 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
   void didUpdateWidget(covariant _VideoPlayerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.videoUrl != oldWidget.videoUrl) {
-      // Si la URL del video cambia, reinicializar el controlador
-      _controller.dispose(); // Liberar el controlador antiguo
-      _initializePlayer();   // Inicializar con la nueva URL
+      _controller.dispose();
+      _initializePlayer();
     }
   }
 
 
   void _initializePlayer() {
+    _hasError = false; // Resetear error en reinicialización
     Uri? uri = Uri.tryParse(widget.videoUrl);
-    if (uri == null || (!uri.isAbsolute && !kIsWeb)) { // En web, una ruta relativa puede ser una blob url
+    // Corrección: para web, !uri.isAbsolute puede ser falso para blob URLs, que son válidas.
+    // Es mejor chequear si la URI es nula. Si no es absoluta Y no es web Y no es un path local, entonces es inválida.
+    if (uri == null || (!uri.isAbsolute && !kIsWeb && !widget.videoUrl.startsWith('/'))) {
       developer.log("URL de video inválida o no absoluta para VideoPlayer: ${widget.videoUrl}", name: "VideoPlayer");
       if (mounted) {
         setState(() {
           _hasError = true;
         });
       }
-      _initializeVideoPlayerFuture = Future.error("URL inválida");
+      _initializeVideoPlayerFuture = Future.error("URL inválida: ${widget.videoUrl}");
       return;
     }
 
@@ -1425,6 +1475,9 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
             return _buildVideoErrorWidget();
           }
           if (!_controller.value.isInitialized) {
+            // Esto puede pasar si hay un error después de 'done' pero antes de setear _hasError.
+            // O si el controlador no se inicializó correctamente por alguna razón no capturada por el catchError.
+            developer.log("VideoPlayerController no inicializado después de Future. URL: ${widget.videoUrl}", name: "VideoPlayer");
             return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))));
           }
 
@@ -1465,13 +1518,13 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         });
       },
       child: AnimatedOpacity(
-        opacity: _controller.value.isPlaying && _controller.value.isInitialized ? 0.0 : 1.0,
+        opacity: (_controller.value.isInitialized && !_controller.value.isPlaying) ? 1.0 : 0.0,
         duration: const Duration(milliseconds: 300),
         child: Container(
           color: Colors.black26,
           child: Center(
             child: Icon(
-              _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+              Icons.play_arrow, // Siempre mostrar play, el overlay solo aparece cuando está pausado
               color: Colors.white,
               size: 50.0,
             ),
