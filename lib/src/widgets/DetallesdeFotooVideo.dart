@@ -404,7 +404,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
       });
 
       // Actualiza el contador de comentarios en el documento principal de la publicación
-      // Usamos 'comentariosCount' primero, y si no existe, 'comentarios' (por compatibilidad con Home.dart)
+      // Aquí también nos aseguramos de que el campo 'comentariosCount' se incremente
       await _firestore
           .collection('publicaciones')
           .doc(widget.publicationId)
@@ -809,11 +809,24 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
   }
 
   Widget _buildActionButtons(DocumentSnapshot publicacion, String? currentUserId) {
-    final likes = publicacion['likes'] as int? ?? 0;
-    final likedBy = List<String>.from(publicacion['likedBy'] as List<dynamic>? ?? []);
+    // === INICIO DE LA CORRECCIÓN PRINCIPAL ===
+    // Obtener el mapa de datos de la publicación de forma segura.
+    final pubDataMap = publicacion.data() as Map<String, dynamic>?;
 
-    // Corrección para el nombre del campo de comentarios (consistente con Home.dart)
-    final comentariosCount = (publicacion['comentariosCount'] as int?) ?? (publicacion['comentarios'] as int?) ?? 0;
+    // Si el mapa de datos es nulo (por alguna razón inesperada, aunque publicacion.exists ya lo maneja),
+    // podemos retornar un widget vacío para evitar errores posteriores.
+    if (pubDataMap == null) {
+      developer.log('Error: pubDataMap es nulo para publicación: ${publicacion.id}', name: 'Detalles.buildActionButtons');
+      return const SizedBox.shrink();
+    }
+
+    // Ahora, usa pubDataMap para acceder a los campos. Esto es mucho más seguro.
+    final likes = pubDataMap['likes'] as int? ?? 0;
+    final likedBy = List<String>.from(pubDataMap['likedBy'] as List<dynamic>? ?? []);
+
+    // La lógica de comentariosCount ya estaba correcta, pero ahora se aplica sobre pubDataMap.
+    final comentariosCount = (pubDataMap['comentariosCount'] as int?) ?? (pubDataMap['comentarios'] as int?) ?? 0;
+    // === FIN DE LA CORRECCIÓN PRINCIPAL ===
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 8.0),
@@ -840,7 +853,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
               Image.asset('assets/images/comments.png', width: 40, height: 40),
               const SizedBox(width: 4),
               Text(
-                comentariosCount.toString(),
+                comentariosCount.toString(), // Usa el conteo corregido
                 style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black),
               ),
             ],
@@ -870,7 +883,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
           GestureDetector(
             onTap: () => _guardarPublicacion(widget.publicationId),
             child: Row(
-              mainAxisSize: MainAxisSize.min, // LA CORRECCIÓN ESTÁ AQUÍ
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset('assets/images/save.png', width: 40, height: 40),
                 const SizedBox(width: 4),
@@ -888,7 +901,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
       stream: _firestore
           .collection('publicaciones')
           .doc(widget.publicationId)
-          .collection('comentarios')
+          .collection('comentarios') // Esta es la subcolección de comentarios, no el campo de conteo.
           .orderBy('timestamp', descending: false)
           .snapshots(),
       builder: (context, snapshot) {
