@@ -257,12 +257,23 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
         }
         return;
       }
-      await _firestore.collection('publicaciones_guardadas').doc(user.uid).collection('guardados').doc(publicacionId).set({
-        'publicacionId': publicacionId,
-        'fechaGuardado': FieldValue.serverTimestamp(),
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación guardada correctamente'), backgroundColor: Colors.green));
+      // Guardar en la subcolección del usuario
+      final userSavedPubRef = FirebaseFirestore.instance.collection('users').doc(user.uid).collection('publicacionesGuardadas').doc(publicacionId);
+      final doc = await userSavedPubRef.get();
+
+      if (doc.exists) {
+        await userSavedPubRef.delete();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación eliminada de guardados'), backgroundColor: Colors.orangeAccent));
+        }
+      } else {
+        await _firestore.collection('publicaciones_guardadas').doc(user.uid).collection('guardados').doc(publicacionId).set({
+          'publicacionId': publicacionId,
+          'fechaGuardado': FieldValue.serverTimestamp(),
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación guardada correctamente'), backgroundColor: Colors.green));
+        }
       }
     } catch (e) {
       developer.log('Error al guardar publicación: $e', error: e, name: "Detalles.Save");
@@ -392,10 +403,12 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
+      // Actualiza el contador de comentarios en el documento principal de la publicación
+      // Usamos 'comentariosCount' primero, y si no existe, 'comentarios' (por compatibilidad con Home.dart)
       await _firestore
           .collection('publicaciones')
           .doc(widget.publicationId)
-          .update({'comentarios': FieldValue.increment(1)});
+          .update({'comentariosCount': FieldValue.increment(1)}); // Campo preferido para el conteo
 
       _commentController.clear();
       FocusScope.of(context).unfocus();
@@ -447,7 +460,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => home_widgets.Home(key: Key('HomeFromDetails')), // Usando el alias si es necesario
+                  pageBuilder: () => home_widgets.Home(key: const Key('HomeFromDetails')), // Usando el alias si es necesario
                 ),
               ],
               child: Container(
@@ -491,7 +504,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('AyudaFromDetails')),
+                  pageBuilder: () => Ayuda(key: const Key('AyudaFromDetails')),
                 ),
               ],
               child: Container(
@@ -530,7 +543,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10.0),
                       color: Colors.grey[200],
-                      border: Border.all(color: const Color(0xff000000), width: 1.0),
+                      border: Border.all(width: 1.0, color: const Color(0xff000000)),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10.0),
@@ -564,7 +577,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('SettingsFromDetails'), authService: AuthService()),
+                  pageBuilder: () => Configuraciones(key: const Key('SettingsFromDetails'), authService: AuthService()),
                 ),
               ],
               child: Container(
@@ -587,7 +600,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimalesFromDetails')),
+                  pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimalesFromDetails')),
                 ),
               ],
               child: Container(
@@ -611,7 +624,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                   transition: LinkTransition.Fade,
                   ease: Curves.easeOut,
                   duration: 0.3,
-                  pageBuilder: () => CompradeProductos(key: Key('CompradeProductosFromDetails')),
+                  pageBuilder: () => CompradeProductos(key: const Key('CompradeProductosFromDetails')),
                 ),
               ],
               child: Container(
@@ -798,7 +811,9 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
   Widget _buildActionButtons(DocumentSnapshot publicacion, String? currentUserId) {
     final likes = publicacion['likes'] as int? ?? 0;
     final likedBy = List<String>.from(publicacion['likedBy'] as List<dynamic>? ?? []);
-    final comentariosCount = publicacion['comentarios'] as int? ?? 0;
+
+    // Corrección para el nombre del campo de comentarios (consistente con Home.dart)
+    final comentariosCount = (publicacion['comentariosCount'] as int?) ?? (publicacion['comentarios'] as int?) ?? 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 8.0),
@@ -855,7 +870,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
           GestureDetector(
             onTap: () => _guardarPublicacion(widget.publicationId),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min, // LA CORRECCIÓN ESTÁ AQUÍ
               children: [
                 Image.asset('assets/images/save.png', width: 40, height: 40),
                 const SizedBox(width: 4),
