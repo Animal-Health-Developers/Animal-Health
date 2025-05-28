@@ -561,16 +561,16 @@ class _PerfilPublicoState extends State<PerfilPublico> {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10), // Ajustado el padding vertical
       decoration: BoxDecoration(color: _tabBackgroundColor, borderRadius: BorderRadius.circular(9.0), border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: <Widget>[
-        _buildTabButton(context, text: 'Información', index: 0, iconPath: null),
-        _buildTabButton(context, text: 'Historias', index: 1, iconPath: null),
-        _buildTabButton(context, text: 'Comunidad', index: 2, iconPath: 'assets/images/comunidad.png'), // Se pasa iconPath
+        // Ahora pasamos el iconPath a 'Información' y 'Historias'
+        _buildTabButton(context, text: 'Información', index: 0, iconPath: 'assets/images/infoperfil.png'),
+        _buildTabButton(context, text: 'Historias', index: 1, iconPath: 'assets/images/historias.png'),
+        _buildTabButton(context, text: 'Comunidad', index: 2, iconPath: 'assets/images/comunidad.png'), // Ya se pasaba iconPath
       ]),
     );
   }
 
   Widget _buildTabButton(BuildContext context, {required String text, required int index, String? iconPath}) {
     bool isActive = _selectedTabIndex == index;
-    // Color bgColor = isActive ? _infoTabActiveColor : (text == 'Comunidad' ? _tabBackgroundColor : _buttonBackgroundColor.withOpacity(0.5)); // Fondo transparente para comunidad inactiva
 
     BoxDecoration decoration;
     if (isActive) {
@@ -581,13 +581,17 @@ class _PerfilPublicoState extends State<PerfilPublico> {
           boxShadow: const [BoxShadow(color: _boxShadowColor, offset: Offset(0,3), blurRadius: 6)]
       );
     } else {
+      // MODIFICADO: Aplicar el mismo color de fondo para inactivo a todos los botones con icono
       decoration = BoxDecoration(
-          color: text == 'Comunidad' ? _tabBackgroundColor.withOpacity(0.7) : _buttonBackgroundColor.withOpacity(0.5), // Color de fondo para comunidad inactiva
+          color: _tabBackgroundColor.withOpacity(0.7), // Se unifica al color de 'Comunidad' cuando está inactivo
           borderRadius: BorderRadius.circular(8.0),
           border: Border.all(color: _primaryTextColor.withOpacity(0.7), width: 1.0)
       );
     }
 
+    // MODIFICADO: Si hay un iconPath, usar el ancho de 115.0 para todos, si no, mantener 100.0.
+    // Dado que ahora todos tendrán iconPath, todos serán de 115.0.
+    final double buttonWidth = (iconPath != null) ? 115.0 : 100.0;
 
     return GestureDetector(
       onTap: () {
@@ -596,16 +600,16 @@ class _PerfilPublicoState extends State<PerfilPublico> {
         });
       },
       child: Container(
-        width: (text == 'Comunidad' || text == 'Información') ? 115.0 : 100.0,
-        height: 50.0, // MODIFICADO: Altura del botón a 50.0
+        width: buttonWidth, // Usar el ancho calculado
+        height: 50.0,
         decoration: decoration,
         child: Center(
-          child: iconPath != null && text == 'Comunidad'
+          // MODIFICADO: Mostrar el Image.asset si iconPath NO es nulo, independientemente del texto.
+          child: iconPath != null
               ? Image.asset(
             iconPath,
-            height: 40.0, // MODIFICADO: Altura del icono
-            fit: BoxFit.contain, // MODIFICADO: Asegura que el icono encaje y mantenga el aspect ratio
-            // color: ..., // MODIFICADO: Propiedad color eliminada para usar los colores originales de la imagen
+            height: 40.0,
+            fit: BoxFit.contain,
           )
               : Text(text, style: TextStyle(fontFamily: _fontFamily, fontSize: 20, color: _primaryTextColor, fontWeight: FontWeight.w700), softWrap: false),
         ),

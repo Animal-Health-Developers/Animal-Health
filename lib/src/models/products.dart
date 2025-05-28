@@ -1,8 +1,28 @@
-// En ../models/products.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer' as developer;
 
+class ProductImageInfo {
+  String url;
+  String? description;
+
+  ProductImageInfo({required this.url, this.description});
+
+  // Factory constructor para crear una instancia desde un mapa (Firestore)
+  factory ProductImageInfo.fromMap(Map<String, dynamic> map) {
+    return ProductImageInfo(
+      url: map['url'] as String,
+      description: map['description'] as String?,
+    );
+  }
+
+  // Método para convertir la instancia a un mapa (para guardar en Firestore)
+  Map<String, dynamic> toMap() {
+    return {
+      'url': url,
+      'description': description,
+    };
+  }
+}
 class Product {
   String id; // Firestore asignará el ID al crear, pero es útil tenerlo si actualizas
   String name;
@@ -175,4 +195,5 @@ class ProductOpinion {
       comment: json['comment'] as String? ?? '',
     );
   }
+
 }
