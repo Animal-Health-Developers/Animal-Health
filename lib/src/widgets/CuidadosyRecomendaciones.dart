@@ -21,12 +21,14 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:developer' as developer;
-import '../models/animal.dart'; // Importa tu modelo Animal si es necesario para leer especies
+import '../models/animal.dart'; // Importa tu modelo Animal para leer especies y razas
 
 // --- CONFIGURACIÓN DE API KEYS ---
-const String GEMINI_API_KEY_CARE = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3nenc';
+// Asegúrate de que estas claves sean las correctas y válidas para tu proyecto.
+// Una clave que empiece por AIzaSy... es el formato correcto, pero el valor debe ser tu propia clave.
+const String GEMINI_API_KEY_CARE = 'AAIzaSyCwyNmyfXy9dAeRLKj6fHaTKzJRiaG5ZcE'; // <<< VERIFICAR ESTA CLAVE
 const String THE_DOG_API_KEY = 'live_vkA9cQvaiI3cmRM7qiNqgvFPtyApnTvGQzTtVuEK6evCT1yTzFyUIXEW2l4JPCAU';
-const String THE_CAT_API_KEY = 'live_cfM38FCZX4mhnH3NqCwMXMOLWMiSygx6x8NhH3q1Uaubz3eI6pOtc1l8Ls05XzHp';
+const String THE_CAT_API_KEY = 'live_cfM38FCZX4mhnH3NqCwMXMOLWMiSygx6x8Nh3q1Uaubz3eI6pOtc1l8Ls05XzHp'; // Asegúrate de que esta sea la clave correcta
 const String UNSPLASH_ACCESS_KEY = 'bmwT3dUY0JzWsIV1DqP8rhKKbQhLPMD9xThDow4TzXg';
 // ---------------------------------
 
@@ -59,7 +61,7 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
       );
       developer.log("Modelo Gemini para búsqueda inicializado en CuidadosyRecomendaciones.");
     } else {
-      developer.log("API Key de Gemini no configurada en CuidadosyRecomendaciones. La búsqueda con IA no funcionará.");
+      developer.log("API Key de Gemini no configurada o es un placeholder en CuidadosyRecomendaciones. La búsqueda con IA no funcionará.");
     }
   }
 
@@ -72,22 +74,32 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
     }
     if (_geminiModelSearch == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La búsqueda con IA no está disponible.')),
+        const SnackBar(content: Text('La búsqueda con IA no está disponible. La clave API de Gemini no está configurada.')),
       );
       return;
     }
     setState(() => _isSearchingWithGemini = true);
     try {
       final prompt = 'Busca información o un consejo de cuidado relevante para mascotas sobre: "$query". Proporciona una respuesta concisa y útil.';
-      final response = await _geminiModelSearch!.generateContent([Content.text(prompt)]).timeout(const Duration(seconds: 20));
+      developer.log("Enviando prompt a Gemini para búsqueda '$query': $prompt");
+
+      // Aumentar el timeout
+      final response = await _geminiModelSearch!.generateContent([Content.text(prompt)]).timeout(const Duration(seconds: 25));
       developer.log("Respuesta de Gemini para búsqueda '$query' en Cuidados: ${response.text}");
+
+      String responseText = response.text ?? 'No se encontró información útil.';
+      // Si la respuesta es vacía o solo espacios en blanco
+      if (responseText.trim().isEmpty) {
+        responseText = 'La IA no pudo generar una respuesta útil para tu búsqueda. Intenta con una pregunta diferente.';
+      }
+
       if (mounted) {
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text('Resultado para: $query'),
-              content: SingleChildScrollView(child: Text(response.text ?? 'No se encontró información.')),
+              content: SingleChildScrollView(child: Text(responseText)),
               actions: <Widget>[
                 TextButton(child: const Text('Cerrar'), onPressed: () => Navigator.of(context).pop()),
               ],
@@ -95,16 +107,29 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
           },
         );
       }
-    } catch (e) {
-      developer.log("Error al buscar con Gemini en Cuidados: $e");
-      String errorMessageText = "Hubo un problema al realizar la búsqueda con IA.";
-      if (e is GenerativeAIException && e.message.contains('API key not valid')) {
-        errorMessageText = "Error: La API Key de Gemini no es válida.";
-      } else if (e.toString().contains('timeout')) {
-        errorMessageText = "La búsqueda tardó demasiado. Inténtalo de nuevo.";
+    } on TimeoutException catch (e) {
+      developer.log("Timeout al buscar con Gemini en Cuidados: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("La búsqueda tardó demasiado. Por favor, revisa tu conexión a internet e inténtalo de nuevo.")));
+      }
+    } on GenerativeAIException catch (e) {
+      developer.log("Error de GenerativeAI al buscar con Gemini en Cuidados: ${e.message}");
+      String errorMessageText;
+      if (e.message.contains('API key not valid')) {
+        errorMessageText = "Error: La API Key de Gemini no es válida. Por favor, revisa tu configuración en Google Cloud Console.";
+      } else if (e.message.contains('429')) { // Too Many Requests / Rate Limit
+        errorMessageText = "Demasiadas solicitudes a la IA. Por favor, espera un momento antes de intentar de nuevo.";
+      } else {
+        errorMessageText = "Problema con la IA de Gemini: ${e.message}. Inténtalo de nuevo más tarde.";
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessageText)));
+      }
+    } catch (e) {
+      // Captura cualquier otra excepción inesperada
+      developer.log("Error inesperado al buscar con Gemini en Cuidados: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Hubo un problema inesperado al realizar la búsqueda con IA. Por favor, revisa tu conexión e inténtalo más tarde.")));
       }
     } finally {
       if (mounted) setState(() => _isSearchingWithGemini = false);
@@ -291,9 +316,9 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
 
   final String _fallbackImageUrl = 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=500&q=60';
 
-  // Lista de tipos de animales genéricos para mostrar si el usuario no los tiene
-  final List<String> _tiposAnimalesGenericos = ['ave', 'roedor', 'reptil', 'pollo', 'cerdo', 'vaca', 'conejo'];
-
+  // Lista de tipos de animales genéricos para mostrar si el usuario no los tiene o para complementar
+  // Asegúrate de que estos estén en minúsculas.
+  final List<String> _tiposAnimalesGenericos = ['ave', 'roedor', 'reptil', 'pez', 'caballo', 'conejo', 'huron', 'cerdo'];
 
   @override
   void initState() {
@@ -307,34 +332,39 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
       _geminiModelTips = GenerativeModel(model: 'gemini-pro', apiKey: GEMINI_API_KEY_CARE);
       developer.log("Modelo Gemini para consejos inicializado en DailyAnimalCareContent.");
     } else {
-      developer.log("API Key de Gemini no configurada en DailyAnimalCareContent. Los consejos de IA no se generarán.");
+      developer.log("API Key de Gemini no configurada o es un placeholder en DailyAnimalCareContent. Los consejos de IA no se generarán.");
+      errorMessage = "Consejos IA no disponibles. La clave API de Gemini no está configurada correctamente.";
     }
   }
 
-  Future<Set<String>> _getTiposAnimalesUsuario() async {
+  /// Fetches the user's animals (species and breed) from Firestore.
+  /// Returns a list of maps, e.g., [{'especie': 'perro', 'raza': 'golden retriever'}].
+  /// Species and breed are converted to lowercase for consistent comparison.
+  Future<List<Map<String, String>>> _getUserAnimalsSpeciesAndBreeds() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return {};
+    if (user == null) return [];
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .collection('animals') // Nombre correcto de la subcolección
+          .collection('animals') // Asegúrate de que este es el nombre correcto de tu subcolección
           .get();
-      if (snapshot.docs.isEmpty) return {};
-      // Extraer la especie y convertir a minúsculas para comparación
+      if (snapshot.docs.isEmpty) return [];
       return snapshot.docs.map((doc) {
         var data = doc.data();
-        return (data['especie'] as String? ?? '').toLowerCase();
-      }).toSet();
+        return {
+          'especie': (data['especie'] as String? ?? '').toLowerCase(),
+          'raza': (data['raza'] as String? ?? '').toLowerCase(),
+        };
+      }).toList();
     } catch (e) {
-      developer.log("Error al obtener tipos de animales del usuario: $e");
-      return {};
+      developer.log("Error al obtener tipos y razas de animales del usuario: $e");
+      return [];
     }
   }
 
 
   Future<String> _fetchImageFromUnsplash(String query) async {
-    // Lógica de _fetchImageFromUnsplash (sin cambios, ya la tienes)
     if (UNSPLASH_ACCESS_KEY.isEmpty || UNSPLASH_ACCESS_KEY == 'TU_UNSPLASH_ACCESS_KEY') {
       developer.log("Unsplash API Key no configurada. Usando imagen de fallback para '$query'.");
       final Map<String, List<String>> sampleImageUrls = {
@@ -343,19 +373,20 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
         'ave': ['https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=500'],
         'roedor': ['https://images.unsplash.com/photo-1593628026050-39998109554e?w=500'],
         'reptil': ['https://images.unsplash.com/photo-1509247999901-638878935f59?w=500'],
-        'pollo': ['https://images.unsplash.com/photo-1588422206008-45690090a411?w=500'],
-        'cerdo': ['https://images.unsplash.com/photo-1516457016043-6409a4aa5d9a?w=500'],
-        'vaca': ['https://images.unsplash.com/photo-1552797599-96f0a10001a8?w=500'],
+        'pez': ['https://images.unsplash.com/photo-1522069795076-26794179373e?w=500'],
+        'caballo': ['https://images.unsplash.com/photo-1577457788879-1c713b19280d?w=500'],
         'conejo': ['https://images.unsplash.com/photo-1590900547020-17101905f89a?w=500'],
         'loro': ['https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=500'],
-        'hámster': ['https://images.unsplash.com/photo-1593628026050-39998109554e?w=500'],
+        'hamster': ['https://images.unsplash.com/photo-1593628026050-39998109554e?w=500'],
         'iguana': ['https://images.unsplash.com/photo-1509247999901-638878935f59?w=500'],
+        'huron': ['https://images.unsplash.com/photo-1593628026050-39998109554e?w=500'], // Usando roedor como placeholder
+        'cerdo': ['https://images.unsplash.com/photo-1560938555-d4ce2585f67b?w=500'],
         'pregunta': ['https://images.unsplash.com/photo-1531011074460-b0d3930c0f7a?w=500'],
         'error': ['https://images.unsplash.com/photo-1578328819058-b69f3a3b0f6b?w=500'],
       };
       final lowerQuery = query.toLowerCase();
       if (sampleImageUrls.containsKey(lowerQuery) && sampleImageUrls[lowerQuery]!.isNotEmpty) {
-        return sampleImageUrls[lowerQuery]![0];
+        return sampleImageUrls[lowerQuery]![_random.nextInt(sampleImageUrls[lowerQuery]!.length)];
       }
       return _fallbackImageUrl;
     }
@@ -375,22 +406,46 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
   }
 
   Future<String> _generateTipWithGemini(String animalType, {String? breed}) async {
-    // Lógica de _generateTipWithGemini (modificada para incluir raza opcional)
-    if (_geminiModelTips == null) return "Consejo IA no disponible.";
+    if (_geminiModelTips == null) {
+      developer.log("GEMINI_API_KEY_CARE is not properly initialized or is a placeholder.");
+      return "Consejo IA no disponible. La clave API de Gemini no está configurada correctamente.";
+    }
     try {
       String prompt;
+      String typeDisplay = animalType.capitalize();
       if (breed != null && breed.isNotEmpty) {
-        prompt = 'Escribe un consejo de cuidado breve y útil para un $animalType de raza "$breed". El consejo debe ser práctico y fácil de entender. No más de 2 frases.';
+        prompt = 'Escribe un consejo de cuidado breve y útil para un $typeDisplay de raza "$breed". El consejo debe ser práctico y fácil de entender. No más de 3 frases.';
       } else {
-        prompt = 'Escribe un consejo de cuidado breve y útil para un $animalType. El consejo debe ser práctico y fácil de entender. No más de 2 frases.';
+        prompt = 'Escribe un consejo de cuidado breve y útil para un $typeDisplay. El consejo debe ser práctico y fácil de entender. No más de 3 frases.';
       }
-      final response = await _geminiModelTips!.generateContent([Content.text(prompt)]).timeout(const Duration(seconds: 15));
+      developer.log("Enviando prompt a Gemini para $animalType (raza: $breed): $prompt");
+
+      // Aumentar el timeout
+      final response = await _geminiModelTips!.generateContent([Content.text(prompt)]).timeout(const Duration(seconds: 25));
       developer.log("Respuesta de Gemini para $animalType (raza: $breed): ${response.text}");
-      return response.text ?? "No se pudo generar un consejo de la IA.";
+
+      // Verificar si la respuesta es nula o vacía
+      if (response.text == null || response.text!.trim().isEmpty) {
+        return "La IA no pudo generar un consejo útil para esto. Inténtalo de nuevo o con otro tipo de mascota.";
+      }
+      return response.text!;
+    } on TimeoutException catch (e) {
+      developer.log("Timeout al generar consejo con Gemini para $animalType (raza: $breed): $e");
+      return "La solicitud a la IA tardó demasiado. Por favor, revisa tu conexión a internet e inténtalo de nuevo.";
+    } on GenerativeAIException catch (e) {
+      developer.log("Error de GenerativeAI al generar consejo para $animalType (raza: $breed): ${e.message}");
+      if (e.message.contains('API key not valid')) {
+        return "Error: La API Key de Gemini no es válida. Por favor, revisa tu configuración en Google Cloud Console.";
+      }
+      if (e.message.contains('429')) { // Too Many Requests / Rate Limit
+        return "Demasiadas solicitudes a la IA. Por favor, espera un momento antes de intentar de nuevo.";
+      }
+      // Mensaje genérico para otras excepciones de GenerativeAI
+      return "Problema con la IA de Gemini: ${e.message}. Inténtalo de nuevo más tarde.";
     } catch (e) {
-      developer.log("Error al generar consejo con Gemini para $animalType (raza: $breed): $e");
-      if (e is GenerativeAIException && e.message.contains('API key not valid')) return "Error: API Key de Gemini no válida.";
-      return "Problema al contactar IA para consejo.";
+      // Captura cualquier otra excepción inesperada
+      developer.log("Error inesperado al generar consejo con Gemini para $animalType (raza: $breed): $e");
+      return "Hubo un problema inesperado al contactar la IA. Por favor, revisa tu conexión e inténtalo más tarde.";
     }
   }
 
@@ -400,199 +455,237 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
 
     try {
       final snapshot = await FirebaseFirestore.instance.collection('daily_animal_tips').doc(todayString).get();
-      if (snapshot.exists && snapshot.data()?['tips'] != null) {
+
+      // Check if cache exists and has tips for today
+      if (snapshot.exists && snapshot.data()?['tips'] != null && (snapshot.data()?['tips'] as List).isNotEmpty) {
         final data = snapshot.data() as Map<String, dynamic>;
-        // Antes de cargar desde caché, verificamos si los animales del usuario han cambiado
-        final Set<String> tiposUsuarioActuales = await _getTiposAnimalesUsuario();
-        final List<dynamic> tipsCacheados = data['tips'] as List;
-        bool cacheValido = true;
-
-        if (tiposUsuarioActuales.isNotEmpty) {
-          for (String tipo in tiposUsuarioActuales) {
-            if (!tipsCacheados.any((tip) => (tip['title'] as String? ?? '').toLowerCase().contains(tipo))) {
-              cacheValido = false;
-              developer.log("Cache invalidado: El usuario tiene un '$tipo' y no hay consejo en caché.");
-              break;
-            }
-          }
-        }
-        // También verificamos si faltan genéricos si el usuario no tiene muchos animales
-        if (cacheValido && tiposUsuarioActuales.length < 2) {
-          for (String tipoGenerico in _tiposAnimalesGenericos) {
-            if (!tiposUsuarioActuales.contains(tipoGenerico) && !tipsCacheados.any((tip) => (tip['title'] as String? ?? '').toLowerCase().contains(tipoGenerico))) {
-              // Podríamos invalidar si queremos asegurar siempre variedad de genéricos
-              // Por ahora, si hay tips personalizados y algunos genéricos, es suficiente
-            }
-          }
-        }
-
-
-        if (cacheValido) {
-          setState(() {
-            tips = tipsCacheados.map((tip) => AnimalCareTip.fromJson(tip as Map<String, dynamic>)).toList();
-            isLoading = false;
-          });
-          developer.log("Consejos cargados desde Firestore para $todayString (cache validado)");
-          return;
-        } else {
-          developer.log("Cache de Firestore para $todayString invalidado o incompleto debido a cambios en animales del usuario. Obteniendo de APIs...");
-        }
+        setState(() {
+          tips = (data['tips'] as List).map((tip) => AnimalCareTip.fromJson(tip as Map<String, dynamic>)).toList();
+          isLoading = false;
+        });
+        developer.log("Consejos cargados desde Firestore para $todayString (cache existente)");
+        return;
       } else {
-        developer.log("No hay datos en Firestore para $todayString. Obteniendo de APIs...");
+        developer.log("No hay datos en Firestore para $todayString o el cache está vacío. Obteniendo de APIs...");
+        await _fetchAndCachePersonalizedTips(todayString);
       }
-      await _fetchAndCachePersonalizedTips(todayString);
     } catch (e, stacktrace) {
       developer.log("Error en _loadDailyTips: $e\n$stacktrace");
       if (mounted) {
-        setState(() { isLoading = false; errorMessage = 'Error al cargar los consejos.'; });
+        setState(() { isLoading = false; errorMessage = 'Error al cargar los consejos: $e'; });
       }
     }
   }
 
-
   Future<void> _fetchAndCachePersonalizedTips(String todayString) async {
     final List<AnimalCareTip> fetchedTips = [];
-    final Set<String> tiposAnimalesDelUsuario = await _getTiposAnimalesUsuario();
-    final Set<String> tiposYaAgregados = {}; // Para no repetir tipos si hay varias mascotas de la misma especie
+    final List<Map<String, String>> userAnimals = await _getUserAnimalsSpeciesAndBreeds();
+    final Set<String> processedAnimalKeys = {}; // Para evitar consejos duplicados por especie/raza
+    final Set<String> processedGenericSpecies = {}; // Para evitar genéricos si ya hay uno específico
 
-    developer.log("Tipos de animales del usuario: $tiposAnimalesDelUsuario");
+    developer.log("Animales del usuario: $userAnimals");
 
-    // 1. Consejos para los animales del usuario
-    for (String tipoAnimal in tiposAnimalesDelUsuario) {
-      if (tipoAnimal.isEmpty || tiposYaAgregados.contains(tipoAnimal)) continue;
+    // 1. Generar consejos para los animales específicos del usuario (especie + raza)
+    if (userAnimals.isNotEmpty) {
+      for (var animalData in userAnimals) {
+        String type = animalData['especie']!;
+        String breed = animalData['raza']!;
+        String key = '${type}_$breed'; // Clave única para especie y raza
 
-      String consejo;
-      String imageUrl;
-      String fuente = 'IA Gemini / Unsplash';
-      String titulo = 'Consejo para tu ${tipoAnimal.capitalize()}:';
+        if (processedAnimalKeys.contains(key)) {
+          continue; // Saltar si ya generamos un consejo para esta combinación específica
+        }
+        processedAnimalKeys.add(key);
+        processedGenericSpecies.add(type); // Añadir la especie para evitar genéricos redundantes
 
-      if (tipoAnimal == 'perro' && THE_DOG_API_KEY.isNotEmpty && THE_DOG_API_KEY != 'TU_API_KEY_DE_THE_DOG_API') {
-        try {
-          final dogApiResponse = await http.get(Uri.parse('https://api.thedogapi.com/v1/images/search?has_breeds=true&limit=1&breed_ids='), headers: {'x-api-key': THE_DOG_API_KEY}).timeout(const Duration(seconds: 10));
-          if (dogApiResponse.statusCode == 200) {
-            final List<dynamic> dogData = json.decode(dogApiResponse.body);
-            if (dogData.isNotEmpty && dogData[0]['breeds'] != null && (dogData[0]['breeds'] as List).isNotEmpty) {
-              final breedInfo = dogData[0]['breeds'][0];
-              titulo = 'Para tu Perro (${breedInfo['name'] ?? tipoAnimal.capitalize()}):';
-              consejo = 'Temperamento: ${breedInfo['temperament'] ?? 'N/A'}.\nCuidados principales: ${breedInfo['bred_for'] ?? await _generateTipWithGemini('perro', breed: breedInfo['name'])}';
-              imageUrl = dogData[0]['url'] ?? await _fetchImageFromUnsplash(breedInfo['name'] ?? 'perro');
-              fuente = 'The Dog API / Unsplash';
+        String consejo;
+        String imageUrl;
+        String fuente = 'IA Gemini / Unsplash';
+        String titulo = 'Consejo para tu ${type.capitalize()}';
+
+        if (breed.isNotEmpty) {
+          titulo += ' de raza ${breed.capitalize()}:';
+        } else {
+          titulo += ':'; // Si no hay raza, solo dos puntos
+        }
+
+        // Priorizar APIs específicas para mascotas comunes si las claves están configuradas
+        if (type == 'perro' && THE_DOG_API_KEY.isNotEmpty && THE_DOG_API_KEY != 'TU_API_KEY_DE_THE_DOG_API') {
+          try {
+            // Intentar obtener una raza aleatoria de The Dog API, o buscar por nombre de raza si la tenemos
+            String apiUrl = 'https://api.thedogapi.com/v1/images/search?has_breeds=true&limit=1';
+            // Si la raza de nuestro animal coincide con alguna de las razas de The Dog API, podemos intentar buscar por breed_id
+            // Esto es más complejo y requeriría una búsqueda previa de IDs de razas.
+            // Por simplicidad, por ahora, seguimos buscando una raza aleatoria y obtenemos su info.
+
+            final dogApiResponse = await http.get(Uri.parse(apiUrl), headers: {'x-api-key': THE_DOG_API_KEY}).timeout(const Duration(seconds: 10));
+            if (dogApiResponse.statusCode == 200) {
+              final List<dynamic> dogData = json.decode(dogApiResponse.body);
+              if (dogData.isNotEmpty && dogData[0]['breeds'] != null && (dogData[0]['breeds'] as List).isNotEmpty) {
+                final breedInfo = dogData[0]['breeds'][0];
+                String apiBreedName = breedInfo['name'] ?? type.capitalize();
+
+                titulo = 'Para tu Perro ${breed.isNotEmpty ? 'de raza ${breed.capitalize()}' : 'de raza ${apiBreedName}'}:';
+
+                // Intentar generar consejo con la raza real del usuario, si no, con la de la API, si no, genérico.
+                consejo = await _generateTipWithGemini('perro', breed: breed.isNotEmpty ? breed : apiBreedName);
+                if (consejo.isEmpty || consejo.contains("Problema al contactar IA")) {
+                  // Si Gemini falla o no da un buen consejo, usar temperamento de la API como fallback
+                  consejo = 'Temperamento: ${breedInfo['temperament'] ?? 'N/A'}.\n${breedInfo['life_span'] ?? 'Esperanza de vida no disponible.'}';
+                }
+
+                imageUrl = dogData[0]['url'] ?? await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : apiBreedName);
+                fuente = 'The Dog API / Unsplash';
+              } else {
+                // No hay raza específica de la API, recurrir a Gemini para perro
+                consejo = await _generateTipWithGemini(type, breed: breed);
+                imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
+              }
             } else {
-              consejo = await _generateTipWithGemini('perro');
-              imageUrl = await _fetchImageFromUnsplash('perro');
+              developer.log('Error The Dog API: ${dogApiResponse.statusCode}');
+              consejo = await _generateTipWithGemini(type, breed: breed);
+              imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
             }
-          } else {
-            developer.log('Error The Dog API: ${dogApiResponse.statusCode}');
-            consejo = await _generateTipWithGemini('perro');
-            imageUrl = await _fetchImageFromUnsplash('perro');
+          } catch (e) {
+            developer.log('Excepción The Dog API: $e');
+            consejo = await _generateTipWithGemini(type, breed: breed);
+            imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
           }
-        } catch (e) {
-          developer.log('Excepción The Dog API: $e');
-          consejo = await _generateTipWithGemini('perro');
-          imageUrl = await _fetchImageFromUnsplash('perro');
-        }
-      } else if (tipoAnimal == 'gato' && THE_CAT_API_KEY.isNotEmpty && THE_CAT_API_KEY != 'TU_API_KEY_DE_THE_CAT_API') {
-        try {
-          final catApiResponse = await http.get(Uri.parse('https://api.thecatapi.com/v1/images/search?has_breeds=true&limit=1'), headers: {'x-api-key': THE_CAT_API_KEY}).timeout(const Duration(seconds: 10));
-          if (catApiResponse.statusCode == 200) {
-            final List<dynamic> catData = json.decode(catApiResponse.body);
-            if (catData.isNotEmpty && catData[0]['breeds'] != null && (catData[0]['breeds'] as List).isNotEmpty) {
-              final breedInfo = catData[0]['breeds'][0];
-              titulo = 'Para tu Gato (${breedInfo['name'] ?? tipoAnimal.capitalize()}):';
-              consejo = 'Temperamento: ${breedInfo['temperament'] ?? 'N/A'}.\nConsejo: ${await _generateTipWithGemini('gato', breed: breedInfo['name'])}';
-              imageUrl = catData[0]['url'] ?? await _fetchImageFromUnsplash(breedInfo['name'] ?? 'gato');
-              fuente = 'The Cat API / Unsplash';
+        } else if (type == 'gato' && THE_CAT_API_KEY.isNotEmpty && THE_CAT_API_KEY != 'TU_API_KEY_DE_THE_CAT_API') {
+          try {
+            String apiUrl = 'https://api.thecatapi.com/v1/images/search?has_breeds=true&limit=1';
+            final catApiResponse = await http.get(Uri.parse(apiUrl), headers: {'x-api-key': THE_CAT_API_KEY}).timeout(const Duration(seconds: 10));
+            if (catApiResponse.statusCode == 200) {
+              final List<dynamic> catData = json.decode(catApiResponse.body);
+              if (catData.isNotEmpty && catData[0]['breeds'] != null && (catData[0]['breeds'] as List).isNotEmpty) {
+                final breedInfo = catData[0]['breeds'][0];
+                String apiBreedName = breedInfo['name'] ?? type.capitalize();
+
+                titulo = 'Para tu Gato ${breed.isNotEmpty ? 'de raza ${breed.capitalize()}' : 'de raza ${apiBreedName}'}:';
+                consejo = await _generateTipWithGemini('gato', breed: breed.isNotEmpty ? breed : apiBreedName);
+                if (consejo.isEmpty || consejo.contains("Problema al contactar IA")) {
+                  // Si Gemini falla o no da un buen consejo, usar temperamento de la API como fallback
+                  consejo = 'Temperamento: ${breedInfo['temperament'] ?? 'N/A'}.\n${breedInfo['life_span'] ?? 'Esperanza de vida no disponible.'}';
+                }
+                imageUrl = catData[0]['url'] ?? await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : apiBreedName);
+                fuente = 'The Cat API / Unsplash';
+              } else {
+                // No hay raza específica de la API, recurrir a Gemini para gato
+                consejo = await _generateTipWithGemini(type, breed: breed);
+                imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
+              }
             } else {
-              consejo = await _generateTipWithGemini('gato');
-              imageUrl = await _fetchImageFromUnsplash('gato');
+              developer.log('Error The Cat API: ${catApiResponse.statusCode}');
+              consejo = await _generateTipWithGemini(type, breed: breed);
+              imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
             }
-          } else {
-            developer.log('Error The Cat API: ${catApiResponse.statusCode}');
-            consejo = await _generateTipWithGemini('gato');
-            imageUrl = await _fetchImageFromUnsplash('gato');
+          } catch (e) {
+            developer.log('Excepción The Cat API: $e');
+            consejo = await _generateTipWithGemini(type, breed: breed);
+            imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
           }
-        } catch (e) {
-          developer.log('Excepción The Cat API: $e');
-          consejo = await _generateTipWithGemini('gato');
-          imageUrl = await _fetchImageFromUnsplash('gato');
+        } else { // Para otros tipos de animales o si las claves de API no están configuradas
+          consejo = await _generateTipWithGemini(type, breed: breed);
+          imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
         }
-      } else { // Para otros tipos de animales del usuario, usar Gemini
-        consejo = await _generateTipWithGemini(tipoAnimal);
-        imageUrl = await _fetchImageFromUnsplash(tipoAnimal);
-      }
 
-      // Manejar error de API Key de Gemini
-      if (consejo.contains("API Key de Gemini no válida")) {
-        imageUrl = await _fetchImageFromUnsplash('error');
-        fetchedTips.add(AnimalCareTip(
-          title: 'Error de Configuración IA',
-          description: consejo, // El mensaje de error de Gemini
-          imageUrl: imageUrl,
-          source: 'Sistema Gemini',
-          date: todayString,
-        ));
-      } else {
-        fetchedTips.add(AnimalCareTip(
-          title: titulo,
-          description: consejo,
-          imageUrl: imageUrl,
-          source: fuente,
-          date: todayString,
-        ));
-      }
-      tiposYaAgregados.add(tipoAnimal);
-    }
-
-    // 2. Consejos para animales genéricos que el usuario NO tiene
-    for (String tipoGenerico in _tiposAnimalesGenericos) {
-      if (!tiposAnimalesDelUsuario.contains(tipoGenerico) && !tiposYaAgregados.contains(tipoGenerico)) {
-        String consejo = '';
-        String titulo = '';
-        String fuente = 'Expertos / Unsplash'; // Fuente genérica
-        switch (tipoGenerico) {
-          case 'ave':
-            titulo = 'Cuidado General de Aves';
-            consejo = 'Las aves necesitan jaulas espaciosas, juguetes para estimular su mente y una dieta variada. La interacción social es crucial para su bienestar.';
-            break;
-          case 'roedor':
-            titulo = 'Cuidado General de Roedores';
-            consejo = 'Roedores como hámsters o cobayas requieren jaulas seguras, sustrato adecuado, y ejercicio. Investiga la dieta específica para cada tipo de roedor.';
-            break;
-          case 'reptil':
-            titulo = 'Cuidado General de Reptiles';
-            consejo = 'Los reptiles necesitan terrarios con control de temperatura, humedad e iluminación UVB específica. Su dieta es muy variada; infórmate bien.';
-            break;
-          case 'pollo':
-            titulo = 'Cuidado General de Pollos/Gallinas';
-            consejo = 'Las gallinas necesitan un gallinero seguro, espacio para picotear, agua fresca y alimento balanceado. Son animales sociales y curiosos.';
-            break;
-          case 'cerdo':
-            titulo = 'Cuidado General de Cerdos (Domésticos)';
-            consejo = 'Los cerdos (especialmente mini pigs) son inteligentes y requieren estimulación mental, espacio para hozar, y una dieta controlada para evitar la obesidad.';
-            break;
-          case 'vaca':
-            titulo = 'Cuidado General de Vacas (Pequeñas Razas/Mascotas)';
-            consejo = 'Algunas razas pequeñas de vacas pueden ser mascotas y necesitan pasto, agua fresca, refugio y cuidados veterinarios regulares. Son animales de rebaño.';
-            break;
-          case 'conejo':
-            titulo = 'Cuidado General de Conejos';
-            consejo = 'Los conejos necesitan heno ilimitado, verduras frescas y una pequeña cantidad de pienso de calidad. Requieren espacio para moverse y roer.';
-            break;
-        }
-        if (consejo.isNotEmpty) {
+        // Manejar el mensaje de error de la API Key de Gemini
+        if (consejo.contains("API Key de Gemini no válida") || consejo.contains("Problema al contactar IA") || consejo.contains("La solicitud a la IA tardó demasiado")) {
+          imageUrl = await _fetchImageFromUnsplash('error');
+          fetchedTips.add(AnimalCareTip(
+            title: 'Error al obtener consejo',
+            description: consejo, // Aquí se mostrará el mensaje de error específico de Gemini
+            imageUrl: imageUrl,
+            source: 'Sistema',
+            date: todayString,
+          ));
+        } else {
           fetchedTips.add(AnimalCareTip(
             title: titulo,
             description: consejo,
-            imageUrl: await _fetchImageFromUnsplash(tipoGenerico),
+            imageUrl: imageUrl,
             source: fuente,
             date: todayString,
           ));
-          tiposYaAgregados.add(tipoGenerico);
         }
       }
     }
-    // 3. Dato Curioso General (si aún hay espacio o para variar)
-    if (fetchedTips.length < 6) { // Limitar el número total de tips para no abrumar
+
+    // 2. Añadir consejos genéricos para rellenar o si el usuario no tiene animales específicos
+    // Objetivo: tener al menos 3 consejos si es posible, o hasta 6 si hay muchos animales
+    int targetTips = max(3, fetchedTips.length);
+    int genericTipsAdded = 0;
+
+    // Si el usuario no tiene animales, empezar con algunos genéricos
+    if (userAnimals.isEmpty) {
+      for (String genericType in _tiposAnimalesGenericos.take(3)) { // Tomar los 3 primeros genéricos si el usuario no tiene animales
+        if (genericTipsAdded >= targetTips) break;
+
+        String consejo = await _generateTipWithGemini(genericType);
+        String imageUrl = await _fetchImageFromUnsplash(genericType);
+
+        // Manejar errores de IA también para consejos genéricos
+        if (consejo.contains("API Key de Gemini no válida") || consejo.contains("Problema al contactar IA") || consejo.contains("La solicitud a la IA tardó demasiado")) {
+          if (!fetchedTips.any((tip) => tip.title == 'Error al obtener consejo')) { // Evitar múltiples errores de IA
+            fetchedTips.add(AnimalCareTip(
+              title: 'Error al obtener consejo',
+              description: consejo,
+              imageUrl: await _fetchImageFromUnsplash('error'),
+              source: 'Sistema',
+              date: todayString,
+            ));
+          }
+        } else {
+          fetchedTips.add(AnimalCareTip(
+            title: 'Cuidado General de ${genericType.capitalize()}',
+            description: consejo,
+            imageUrl: imageUrl,
+            source: 'IA Gemini / Unsplash',
+            date: todayString,
+          ));
+          genericTipsAdded++;
+          processedGenericSpecies.add(genericType);
+        }
+      }
+    } else {
+      // Si el usuario tiene animales, añadir genéricos SOLO si no se ha cubierto esa especie y necesitamos más tips
+      for (String genericType in _tiposAnimalesGenericos) {
+        if (fetchedTips.length >= 6) break; // Limitar el total de consejos a 6
+
+        // Si ya hay un consejo específico para esta especie, o ya añadimos un genérico para ella, saltar
+        if (processedGenericSpecies.contains(genericType)) {
+          continue;
+        }
+
+        String consejo = await _generateTipWithGemini(genericType);
+        String imageUrl = await _fetchImageFromUnsplash(genericType);
+
+        // Manejar errores de IA también para consejos genéricos
+        if (consejo.contains("API Key de Gemini no válida") || consejo.contains("Problema al contactar IA") || consejo.contains("La solicitud a la IA tardó demasiado")) {
+          if (!fetchedTips.any((tip) => tip.title == 'Error al obtener consejo')) {
+            fetchedTips.add(AnimalCareTip(
+              title: 'Error al obtener consejo',
+              description: consejo,
+              imageUrl: await _fetchImageFromUnsplash('error'),
+              source: 'Sistema',
+              date: todayString,
+            ));
+          }
+        } else {
+          fetchedTips.add(AnimalCareTip(
+            title: 'Cuidado General de ${genericType.capitalize()}',
+            description: consejo,
+            imageUrl: imageUrl,
+            source: 'IA Gemini / Unsplash',
+            date: todayString,
+          ));
+          processedGenericSpecies.add(genericType);
+        }
+      }
+    }
+
+    // 3. Añadir un "Dato Curioso" general si todavía hay espacio para variedad
+    if (fetchedTips.length < 5) { // Se podría ajustar para asegurar al menos 5-6 consejos si es posible
       try {
         final factResponse = await http.get(Uri.parse('https://uselessfacts.jsph.pl/api/v2/facts/random?language=es')).timeout(const Duration(seconds: 10));
         if (factResponse.statusCode == 200) {
@@ -604,10 +697,11 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
             source: 'Useless Facts API / Unsplash',
             date: todayString,
           ));
+        } else {
+          developer.log('Error Useless Facts API: ${factResponse.statusCode} - ${factResponse.body}');
         }
       } catch (e) { developer.log('Excepción Useless Facts API: $e'); }
     }
-
 
     fetchedTips.shuffle(_random); // Mezclar para variedad diaria
 
@@ -615,8 +709,15 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
       await FirebaseFirestore.instance.collection('daily_animal_tips').doc(todayString).set({
         'tips': fetchedTips.map((tip) => tip.toJson()).toList(),
         'date': todayString,
+        // Opcional: podrías guardar un hash de los userAnimals para invalidar el caché si cambian.
+        // Por ahora, la invalidación es diaria, lo que significa que los cambios en animales se reflejan al día siguiente.
       });
       developer.log("Consejos personalizados y genéricos guardados en Firestore para $todayString");
+    } else {
+      developer.log("No se pudieron generar consejos.");
+      if (mounted) {
+        setState(() { errorMessage = 'No se pudieron generar consejos para hoy. Por favor, asegúrate de tener conexión a internet y que tus claves API estén configuradas.'; });
+      }
     }
 
     if (mounted) {
@@ -627,7 +728,6 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
 
   @override
   Widget build(BuildContext context) {
-    // (build method de _DailyAnimalCareContentState sin cambios, ya lo tienes)
     if (isLoading) {
       return const Center(child: CircularProgressIndicator(
         valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)),
@@ -673,7 +773,6 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
   }
 
   Widget _buildTipCard(AnimalCareTip tip) {
-    // (Widget _buildTipCard sin cambios, ya lo tienes)
     String displayDate;
     try {
       final DateTime parsedDate = DateFormat('yyyy-MM-dd').parse(tip.date);
@@ -735,7 +834,6 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
 
 // --- AnimalCareTip Class ---
 class AnimalCareTip {
-  // (Clase AnimalCareTip sin cambios, ya la tienes)
   final String title;
   final String description;
   final String imageUrl;
@@ -774,9 +872,10 @@ class AnimalCareTip {
 // Extensión para capitalizar la primera letra de un String
 extension StringExtension on String {
   String capitalize() {
-    if (this.isEmpty) {
+    if (isEmpty) {
       return "";
     }
-    return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
+    // Asegura que solo la primera letra sea mayúscula y el resto minúsculas.
+    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }

@@ -172,12 +172,14 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) throw Exception("Usuario no autenticado para subir imagen.");
 
+      // Intenta eliminar la imagen anterior si existe
       if (_currentImageUrl != null && _currentImageUrl!.isNotEmpty) {
         try {
           final oldImageRef = FirebaseStorage.instance.refFromURL(_currentImageUrl!);
           await oldImageRef.delete();
           print('Imagen anterior eliminada de Storage: $_currentImageUrl');
         } catch (e) {
+          // No mostrar error si la imagen no existe o hubo un problema al eliminarla, es una advertencia
           print('Advertencia: Error al eliminar imagen anterior de Storage: $e');
         }
       }
@@ -199,7 +201,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
     } catch (e) {
       print("Error al subir imagen: $e");
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al subir imagen: $e')));
-      return _currentImageUrl;
+      return _currentImageUrl; // Retorna la URL actual si falla la subida
     } finally {
       if (mounted) setState(() { _isUploading = false; });
     }
@@ -222,7 +224,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
       if (userId == null) throw Exception("Usuario no autenticado.");
       if (widget.animalId.isEmpty) throw Exception("ID de animal inválido.");
 
-      final String? newImageUrl = await _uploadImage();
+      final String? newImageUrl = await _uploadImage(); // Intenta subir la nueva imagen si hay
 
       final Map<String, dynamic> updateData = {
         'nombre': _nombreController.text.trim(),
@@ -234,12 +236,13 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
         'ancho': double.tryParse(_anchoController.text.trim().replaceAll(',', '.')) ?? 0.0,
         'updatedAt': FieldValue.serverTimestamp(),
       };
+      // Actualiza la URL de la foto de perfil
       if (newImageUrl != null) {
         updateData['fotoPerfilUrl'] = newImageUrl;
       } else if (_currentImageUrl != null && _currentImageUrl!.isNotEmpty) {
-        updateData['fotoPerfilUrl'] = _currentImageUrl;
+        updateData['fotoPerfilUrl'] = _currentImageUrl; // Mantener la URL existente si no se subió una nueva
       } else {
-        updateData['fotoPerfilUrl'] = null;
+        updateData['fotoPerfilUrl'] = null; // Si no hay ni nueva ni vieja, la establece como null
       }
 
       await FirebaseFirestore.instance
@@ -270,6 +273,19 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
       initialDate: _fechaNacimiento ?? DateTime.now(),
       firstDate: DateTime(1980),
       lastDate: DateTime.now(),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xff4ec8dd), // Color del encabezado del calendario
+              onPrimary: Colors.white, // Color del texto del encabezado
+              onSurface: Colors.black, // Color del texto del día
+            ),
+            dialogBackgroundColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _fechaNacimiento) {
       if (mounted) {
@@ -278,6 +294,70 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
         });
       }
     }
+  }
+
+  // Método para mostrar la imagen de perfil en grande con la "X"
+  void _showLargeImage() {
+    Widget imageWidget;
+    // Determina qué imagen mostrar
+    if (_isUploading) {
+      imageWidget = const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
+    } else if (_pickedImage != null) {
+      if (kIsWeb && _imageBytes != null) {
+        imageWidget = Image.memory(_imageBytes!, fit: BoxFit.contain);
+      } else if (!kIsWeb) {
+        imageWidget = Image.file(_pickedImage as File, fit: BoxFit.contain);
+      } else {
+        imageWidget = const Icon(Icons.broken_image, size: 100, color: Colors.grey);
+      }
+    } else if (_currentImageUrl != null && _currentImageUrl!.isNotEmpty) {
+      imageWidget = CachedNetworkImage(
+        imageUrl: _currentImageUrl!,
+        fit: BoxFit.contain, // Ajusta la imagen manteniendo su relación de aspecto
+        placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
+        errorWidget: (context, url, error) => const Icon(Icons.error, size: 100, color: Colors.grey),
+      );
+    } else {
+      imageWidget = const Icon(Icons.pets, size: 100, color: Colors.grey); // Placeholder si no hay imagen
+    }
+
+    showDialog(
+      context: context,
+      useSafeArea: false, // Permite que el diálogo ignore el área segura y se extienda por toda la pantalla
+      builder: (BuildContext context) {
+        return GestureDetector( // Permite cerrar el diálogo al tocar cualquier parte fuera de la "X"
+          onTap: () => Navigator.of(context).pop(),
+          child: Dialog(
+            backgroundColor: Colors.transparent, // Fondo del diálogo transparente
+            insetPadding: EdgeInsets.zero, // Elimina el padding alrededor del diálogo para que ocupe todo el espacio
+            child: Stack( // Usa un Stack para superponer la imagen y el botón de cierre
+              alignment: Alignment.center, // Centra la imagen dentro del Stack
+              children: [
+                // Contenedor de la imagen que ocupará todo el espacio del diálogo
+                Container(
+                  width: double.infinity, // Ocupa todo el ancho disponible
+                  height: double.infinity, // Ocupa toda la altura disponible
+                  color: Colors.black.withOpacity(0.9), // Fondo oscuro semi-transparente para la imagen
+                  child: imageWidget, // La imagen real del animal
+                ),
+                // Botón de cierre (la "X") posicionado en la esquina superior derecha
+                Positioned(
+                  // Ajusta el 'top' para no chocar con la barra de estado en dispositivos móviles
+                  top: MediaQuery.of(context).padding.top + 10,
+                  right: 10,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 30), // Icono de "X" blanco y grande
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Cierra el diálogo
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -444,38 +524,59 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                 child: Column(
                   children: [
                     const SizedBox(height: 10),
-                    // --- Contenedor para Foto y Botón de Funciones ---
+                    // --- Contenedor para Foto, Botón de Actualizar y Botón de Funciones ---
                     SizedBox(
-                      height: 120,
+                      height: 170, // Altura aumentada para acomodar el botón "Actualizar Foto"
                       child: Stack(
-                        // alignment: Alignment.center, // El Align dentro de Positioned se encarga
                         children: [
-                          // --- Foto de Perfil (Centrada) ---
-                          Align( // Asegurar que la foto esté centrada en el SizedBox
-                            alignment: Alignment.center,
-                            child: GestureDetector(
-                              onTap: _isUploading ? null : _pickImage,
-                              child: CircleAvatar(
-                                radius: 55,
-                                backgroundColor: Colors.white.withOpacity(0.8),
-                                child: _isUploading
-                                    ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))
-                                    : _pickedImage != null
-                                    ? (kIsWeb && _imageBytes != null
-                                    ? ClipOval(child: Image.memory(_imageBytes!, width: 100, height: 100, fit: BoxFit.cover))
-                                    : !kIsWeb ? ClipOval(child: Image.file(_pickedImage as File, width: 100, height: 100, fit: BoxFit.cover))
-                                    : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey))
-                                    : (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
-                                    ? ClipOval(child: CachedNetworkImage(imageUrl: _currentImageUrl!, width: 100, height: 100, fit: BoxFit.cover, placeholder: (c, u) => CircularProgressIndicator(), errorWidget: (c,u,e) => Icon(Icons.pets, size: 40, color: Colors.grey[600],)))
-                                    : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
-                              ),
+                          // --- Columna centrada para la Foto y el Botón de Actualizar ---
+                          Align(
+                            alignment: Alignment.center, // Centra la columna que contiene la imagen y el botón
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min, // Ajusta la altura al contenido vertical
+                              children: [
+                                // --- Foto de Perfil (Centrada y con GestureDetector para vista grande) ---
+                                GestureDetector(
+                                  onTap: _isUploading ? null : _showLargeImage, // Al tocar, muestra la imagen en grande
+                                  child: CircleAvatar(
+                                    radius: 55,
+                                    backgroundColor: Colors.white.withOpacity(0.8),
+                                    child: _isUploading
+                                        ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))
+                                        : _pickedImage != null
+                                        ? (kIsWeb && _imageBytes != null
+                                        ? ClipOval(child: Image.memory(_imageBytes!, width: 100, height: 100, fit: BoxFit.cover))
+                                        : !kIsWeb ? ClipOval(child: Image.file(_pickedImage as File, width: 100, height: 100, fit: BoxFit.cover))
+                                        : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey))
+                                        : (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
+                                        ? ClipOval(child: CachedNetworkImage(imageUrl: _currentImageUrl!, width: 100, height: 100, fit: BoxFit.cover, placeholder: (c, u) => CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))), errorWidget: (c,u,e) => Icon(Icons.pets, size: 40, color: Colors.grey[600],)))
+                                        : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+                                  ),
+                                ),
+                                const SizedBox(height: 10), // Espacio entre la imagen y el botón
+                                // --- Botón de Actualizar Foto ---
+                                ElevatedButton(
+                                  onPressed: _isUploading ? null : _pickImage, // Al tocar, permite seleccionar nueva imagen
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xff4ec8dd), // Color de tu tema
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                  ),
+                                  child: const Text(
+                                    'Actualizar Foto',
+                                    style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           // --- Botón de Funciones (Posicionado a la izquierda del Stack padre) ---
                           Positioned(
-                            left: 0, // Lo alinea al inicio del Stack padre (SizedBox)
-                            // Centrado verticalmente: (Altura_SizedBox - Altura_Boton) / 2
-                            top: (120 - 70) / 2, // (120 - 70) / 2 = 25
+                            left: 0,
+                            top: (170 - 70) / 2, // Centrado verticalmente con la nueva altura
                             child: GestureDetector(
                               onTap: () {
                                 if (widget.animalId.isNotEmpty) {
@@ -505,7 +606,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 25), // Espaciado ajustado
                     // --- Campos del Formulario ---
                     _buildTextFormFieldWithIcon(controller: _nombreController, labelText: 'Nombre', assetIconPath: 'assets/images/nombreanimal.png', iconWidth: 37.4, iconHeight: 40.0, validator: (v) => v!.isEmpty ? 'Ingrese nombre' : null),
                     Container(
@@ -527,7 +628,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    _fechaNacimiento != null ? '${_fechaNacimiento!.day}/${_fechaNacimiento!.month}/${_fechaNacimiento!.year}' : 'Seleccionar fecha',
+                                    _fechaNacimiento != null ? DateFormat('dd/MM/yyyy').format(_fechaNacimiento!) : 'Seleccionar fecha',
                                     style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: _fechaNacimiento != null ? Colors.black87 : Colors.grey.shade700),
                                   ),
                                   Icon(Icons.arrow_drop_down, color: Colors.grey.shade700),

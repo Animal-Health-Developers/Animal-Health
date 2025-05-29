@@ -1,504 +1,602 @@
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
-import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Importar Firestore
+import 'package:firebase_auth/firebase_auth.dart';     // Importar FirebaseAuth
+import 'package:cached_network_image/cached_network_image.dart'; // Para imágenes de red
+import 'package:intl/intl.dart'; // Para formatear fechas
+
+// Imports de Navegación y Servicios
+import '../services/auth_service.dart';
+import './Home.dart';
 import './Ayuda.dart';
+import './EditarPerfildeAnimal.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
-import './CarnetdeVacunacin.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import './EditarPerfildeAnimal.dart';
+import './CarnetdeVacunacin.dart'; // Para volver a esta pantalla
 import './FuncionesdelaApp.dart';
-import '../services/auth_service.dart';
-class CrearVacuna extends StatelessWidget {
-  CrearVacuna({
+import '../models/animal.dart'; // Importar el modelo Animal
+import '../models/carnetvacunacion.dart'; // Importar el modelo CarnetVacunacion
+
+// --- CrearVacuna Class (StatefulWidget) ---
+class CrearVacuna extends StatefulWidget {
+  final String animalId;
+
+  const CrearVacuna({
     required Key key,
+    required this.animalId,
   }) : super(key: key);
+
+  @override
+  _CrearVacunaState createState() => _CrearVacunaState();
+}
+
+// --- _CrearVacunaState Class ---
+class _CrearVacunaState extends State<CrearVacuna> {
+  final _formKey = GlobalKey<FormState>();
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+
+  // Controladores para los campos del formulario de vacuna
+  final TextEditingController _nombreVacunaController = TextEditingController();
+  final TextEditingController _loteController = TextEditingController();
+  final TextEditingController _veterinarioController = TextEditingController();
+  final TextEditingController _numeroDosisController = TextEditingController();
+  DateTime _fechaVacunacion = DateTime.now();
+  DateTime _proximaDosis = DateTime.now().add(const Duration(days: 365)); // Por defecto un año después
+
+  // Constantes de posicionamiento, reutilizadas para consistencia
+  static const double logoBottomY = 115.0;
+  static const double spaceAfterLogo = 25.0;
+  static const double animalProfilePhotoTop = logoBottomY + spaceAfterLogo;
+  static const double animalProfilePhotoHeight = 90.0;
+  static const double animalNameHeight = 20.0;
+  static const double spaceAfterAnimalProfile = 15.0;
+  static const double titleFormTop = animalProfilePhotoTop + animalProfilePhotoHeight + animalNameHeight + spaceAfterAnimalProfile;
+
+
+  // Método para seleccionar fecha
+  Future<void> _selectDate(BuildContext context, {required bool isVaccinationDate}) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: isVaccinationDate ? _fechaVacunacion : _proximaDosis,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101), // Fecha máxima razonable
+    );
+    if (picked != null) {
+      setState(() {
+        if (isVaccinationDate) {
+          _fechaVacunacion = picked;
+        } else {
+          _proximaDosis = picked;
+        }
+      });
+    }
+  }
+
+  // Método para guardar la vacuna
+  Future<void> _guardarVacuna() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      if (currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuario no autenticado.')),
+        );
+        return;
+      }
+
+      if (widget.animalId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ID del animal no válido. No se puede guardar la vacuna.')),
+        );
+        return;
+      }
+
+      try {
+        final newVaccine = CarnetVacunacion(
+          nombreVacuna: _nombreVacunaController.text,
+          fechaVacunacion: _fechaVacunacion,
+          lote: _loteController.text,
+          veterinario: _veterinarioController.text,
+          numeroDosis: int.tryParse(_numeroDosisController.text) ?? 1,
+          proximaDosis: _proximaDosis,
+        );
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid) // current user ya es seguro aquí
+            .collection('animals')
+            .doc(widget.animalId)
+            .collection('vaccinations') // Subcolección de vacunas
+            .add(newVaccine.toMap()); // Guarda el mapa de la vacuna
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vacuna guardada exitosamente.')),
+        );
+
+        // Navegar de vuelta a CarnetdeVacunacion para el mismo animal
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CarnetdeVacunacin(
+              key: const Key('CarnetVacFromCrear'),
+              animalId: widget.animalId,
+            ),
+          ),
+        );
+      } catch (e) {
+        print("Error al guardar vacuna: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al guardar la vacuna: $e')),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nombreVacunaController.dispose();
+    _loteController.dispose();
+    _veterinarioController.dispose();
+    _numeroDosisController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Si llegamos hasta aquí y currentUser es nulo o animalId es vacío,
+    // es un estado no esperado ya que el flujo de navegación debería evitarlo.
+    // Podemos mostrar un mensaje de error o redirigir.
+    if (currentUser == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xff4ec8dd),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.person_off, size: 80, color: Colors.white),
+              const SizedBox(height: 20),
+              const Text(
+                'Usuario no autenticado. Por favor, inicia sesión.',
+                style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => Home(key: const Key('Home_CrearVacunaNoUser'))),
+                      (Route<dynamic> route) => false,
+                ),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xe3a0f4fe), foregroundColor: Colors.black),
+                child: const Text('Ir a Inicio', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (widget.animalId.isEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xff4ec8dd),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.pets, size: 80, color: Colors.white),
+              const SizedBox(height: 20),
+              const Text(
+                'No se ha seleccionado un animal. Por favor, selecciona uno.',
+                style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const ListadeAnimales(key: Key('ListaAnimales_CrearVacunaNoAnimalId'))),
+                      (Route<dynamic> route) => false,
+                ),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xe3a0f4fe), foregroundColor: Colors.black),
+                child: const Text('Ver mis Animales', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Aquí currentUserId es definitivamente no nulo
+    final String currentUserId = currentUser!.uid;
+
+
     return Scaffold(
+      backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
+          // --- Fondo de Pantalla ---
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
-            margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              width: 392.0,
-              height: 611.0,
-              child: SingleChildScrollView(
-                primary: false,
-                child: SizedBox(
-                  width: 392.0,
-                  height: 711.0,
-                  child: Stack(
-                    children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                        child: SingleChildScrollView(
-                          primary: false,
-                          child: Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 20,
-                            runSpacing: 20,
-                            children: [{}].map((itemData) {
-                              return SizedBox(
-                                width: 392.0,
-                                height: 691.0,
-                                child: Stack(
-                                  children: <Widget>[
-                                    Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                          0.0, 0.0, 0.0, 173.0),
-                                      child: Stack(
-                                        children: <Widget>[
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              color: const Color(0x8754d1e0),
-                                              borderRadius:
-                                                  BorderRadius.circular(20.0),
-                                              border: Border.all(
-                                                  width: 1.0,
-                                                  color:
-                                                      const Color(0x87000000)),
-                                            ),
-                                            margin: EdgeInsets.fromLTRB(
-                                                0.0, 57.0, 0.0, 0.0),
-                                          ),
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              color: const Color(0x8754d1e0),
-                                              borderRadius:
-                                                  BorderRadius.circular(20.0),
-                                              border: Border.all(
-                                                  width: 1.0,
-                                                  color:
-                                                      const Color(0x87000000)),
-                                            ),
-                                            margin: EdgeInsets.fromLTRB(
-                                                3.0, 61.0, 4.0, 5.0),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 39.0, end: 38.0),
-                                            Pin(size: 45.0, middle: 0.203),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 75.0, start: 44.0),
-                                            Pin(size: 28.0, start: 68.0),
-                                            child: Text(
-                                              'Nombre',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 81.5, end: 81.5),
-                                            Pin(size: 35.0, start: 0.0),
-                                            child: SvgPicture.string(
-                                              _svg_eq66i,
-                                              allowDrawingOutsideViewBox: true,
-                                              fit: BoxFit.fill,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 152.0, middle: 0.5),
-                                            Pin(size: 28.0, start: 3.5),
-                                            child: Text(
-                                              'Agregar Vacuna',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 39.0, end: 38.0),
-                                            Pin(size: 45.0, middle: 0.3573),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 169.0, start: 44.0),
-                                            Pin(size: 28.0, middle: 0.2878),
-                                            child: Text(
-                                              'Fecha Vacunación',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 39.0, end: 38.0),
-                                            Pin(size: 45.0, middle: 0.5116),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 134.0, start: 44.0),
-                                            Pin(size: 28.0, middle: 0.4367),
-                                            child: Text(
-                                              'Proxima Dósis',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 39.0, end: 38.0),
-                                            Pin(size: 45.0, middle: 0.666),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 42.0, start: 44.0),
-                                            Pin(size: 28.0, middle: 0.5857),
-                                            child: Text(
-                                              'Lote',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 39.0, end: 38.0),
-                                            Pin(size: 45.0, middle: 0.8203),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 164.0, start: 44.0),
-                                            Pin(size: 28.0, middle: 0.7347),
-                                            child: Text(
-                                              'Número de Dósis',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(start: 39.0, end: 38.0),
-                                            Pin(size: 45.0, end: 13.0),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xffffffff),
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                border: Border.all(
-                                                    width: 1.0,
-                                                    color: const Color(
-                                                        0xff000000)),
-                                              ),
-                                            ),
-                                          ),
-                                          Pinned.fromPins(
-                                            Pin(size: 108.0, start: 44.0),
-                                            Pin(size: 28.0, end: 58.0),
-                                            child: Text(
-                                              'Veterinario',
-                                              style: TextStyle(
-                                                fontFamily: 'Comic Sans MS',
-                                                fontSize: 20,
-                                                color: const Color(0xff000000),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                              softWrap: false,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: SizedBox(
-                                        width: 152.0,
-                                        height: 149.0,
-                                        child: Stack(
-                                          children: <Widget>[
-                                            Pinned.fromPins(
-                                              Pin(start: 12.6, end: 12.6),
-                                              Pin(size: 120.0, start: 0.0),
-                                              child: PageLink(
-                                                links: [
-                                                  PageLinkInfo(
-                                                    transition:
-                                                        LinkTransition.Fade,
-                                                    ease: Curves.easeOut,
-                                                    duration: 0.3,
-                                                    pageBuilder: () =>
-                                                        CarnetdeVacunacin(key: Key('CarnetdeVacunacin'), animalId: '',),//ICONO AGREGAR VACUNA
-                                                  ),
-                                                ],
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    image: DecorationImage(
-                                                      image:
-                                                          const AssetImage('assets/images/agregarvacuna.png'),
-                                                      fit: BoxFit.fill,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Pinned.fromPins(
-                                              Pin(start: 0.0, end: 0.0),
-                                              Pin(size: 28.0, end: 0.0),
-                                              child: Text(
-                                                'Agregar Vacuna',
-                                                style: TextStyle(
-                                                  fontFamily: 'Comic Sans MS',
-                                                  fontSize: 20,
-                                                  color:
-                                                      const Color(0xff000000),
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                                softWrap: false,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
+          // --- Logo de la App (Navega a Home) ---
+          Pinned.fromPins(
+            Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0),
+            child: PageLink(
+              links: [
+                PageLinkInfo(
+                  transition: LinkTransition.Fade,
+                  ease: Curves.easeOut,
+                  duration: 0.3,
+                  pageBuilder: () => Home(key: const Key('Home_From_CrearVacuna')),
+                ),
+              ],
+              child: Container(
+                decoration: BoxDecoration(
+                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                  borderRadius: BorderRadius.circular(15.0),
+                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                ),
+              ),
+            ),
+          ),
+          // --- Botón de Retroceso (Vuelve a CarnetdeVacunacion para este animal) ---
+          Pinned.fromPins(
+            Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0),
+            child: InkWell(
+              onTap: () => Navigator.pop(context), // Vuelve a CarnetdeVacunacion
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+            ),
+          ),
+          // --- Botón de Ayuda ---
+          Pinned.fromPins(
+            Pin(size: 40.5, end: 15.0), Pin(size: 50.0, start: 49.0),
+            child: PageLink(
+              links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda_From_CrearVacuna')))],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+            ),
+          ),
+          // --- Iconos Laterales (Configuración y Lista General de Animales) ---
+          Pinned.fromPins(
+            Pin(size: 47.2, end: 15.0), Pin(size: 50.0, start: 110.0),
+            child: PageLink(
+              links: [
+                PageLinkInfo(
+                  pageBuilder: () => Configuraciones(key: const Key('Settings_From_CrearVacuna'), authService: AuthService()),
+                ),
+              ],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+            ),
+          ),
+          Pinned.fromPins(
+            Pin(size: 60.1, start: 15.0), Pin(size: 60.0, start: 110.0),
+            child: PageLink(
+              links: [
+                PageLinkInfo(
+                  pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_From_CrearVacuna')),
+                ),
+              ],
+              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+            ),
+          ),
+
+          // --- Foto de Perfil y Nombre del Animal (Reutilizado de CarnetdeVacunacion) ---
+          Positioned(
+            top: animalProfilePhotoTop,
+            left: 0,
+            right: 0,
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(currentUserId)
+                  .collection('animals')
+                  .doc(widget.animalId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.grey[300], child: const CircularProgressIndicator(strokeWidth: 2.0, valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))));
+                }
+                if (snapshot.hasError) {
+                  print("Error obteniendo datos del animal: ${snapshot.error}");
+                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.red[100], child: Icon(Icons.error_outline, size: 50, color: Colors.red[700])));
+                }
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  print("Documento del animal (ID: ${widget.animalId}) no encontrado.");
+                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.grey[200], child: Icon(Icons.pets, size: 50, color: Colors.grey[400])));
+                }
+
+                Animal animalData;
+                try {
+                  animalData = Animal.fromFirestore(snapshot.data!);
+                } catch (e) {
+                  print("Error al deserializar datos del animal (ID: ${widget.animalId}): $e. Data: ${snapshot.data!.data()}");
+                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.orange[100], child: Icon(Icons.report_problem_outlined, size: 50, color: Colors.orange[700])));
+                }
+
+                return Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditarPerfildeAnimal(
+                            key: Key('EditarPerfilDesdeCrearVacuna_${widget.animalId}'),
+                            animalId: widget.animalId,
                           ),
                         ),
+                      );
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 90.0, height: 90.0,
+                          decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(25.0),
+                              border: Border.all(color: Colors.white, width: 2.5),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: Offset(0,3))]
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(22.5),
+                            child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
+                                ? CachedNetworkImage(
+                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                                errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
+                                : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                          ),
+                        ),
+                        if (animalData.nombre.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              animalData.nombre,
+                              style: const TextStyle(
+                                  fontFamily: 'Comic Sans MS',
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [Shadow(blurRadius: 1.0, color: Colors.black, offset: Offset(1.0,1.0))]
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // --- Título "Agregar Vacuna" y Formulario ---
+          Positioned(
+            top: titleFormTop,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Column(
+              children: <Widget>[
+                // Título
+                Container(
+                  width: 300.0,
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  margin: const EdgeInsets.only(bottom: 25.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xe3a0f4fe),
+                    borderRadius: BorderRadius.circular(10.0),
+                    border: Border.all(width: 1.0, color: const Color(0xe3000000)),
+                  ),
+                  child: const Text(
+                    'Agregar Vacuna',
+                    style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Color(0xff000000), fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                // Formulario
+                Expanded(
+                  child: Form(
+                    key: _formKey,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Column(
+                        children: [
+                          // Nombre de Vacuna
+                          _buildFormField(
+                            controller: _nombreVacunaController,
+                            labelText: 'Nombre de Vacuna',
+                            iconPath: 'assets/images/nombrevacuna.png', // Reutilizando icono si es adecuado
+                            validator: (value) => value == null || value.isEmpty ? 'Por favor ingrese el nombre de la vacuna' : null,
+                            keyboardType: TextInputType.text,
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Fecha de Vacunación
+                          _buildDateField(
+                            labelText: 'Fecha de Vacunación',
+                            date: _fechaVacunacion,
+                            iconPath: 'assets/images/edad.png', // Reutilizando icono
+                            onTap: () => _selectDate(context, isVaccinationDate: true),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Próxima Dosis
+                          _buildDateField(
+                            labelText: 'Próxima Dosis',
+                            date: _proximaDosis,
+                            iconPath: 'assets/images/edad.png', // Reutilizando icono
+                            onTap: () => _selectDate(context, isVaccinationDate: false),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Lote
+                          _buildFormField(
+                            controller: _loteController,
+                            labelText: 'Lote',
+                            iconPath: 'assets/images/lote.png', // Asegúrate de tener este icono o usa uno genérico
+                            validator: (value) => value == null || value.isEmpty ? 'Por favor ingrese el lote' : null,
+                            keyboardType: TextInputType.text,
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Número de Dosis
+                          _buildFormField(
+                            controller: _numeroDosisController,
+                            labelText: 'Número de Dosis',
+                            iconPath: 'assets/images/dosis.png', // Asegúrate de tener este icono o usa uno genérico
+                            validator: (value) {
+                              if (value == null || value.isEmpty) return 'Por favor ingrese el número de dosis';
+                              if (int.tryParse(value) == null || int.parse(value) <= 0) return 'Ingrese un número válido (mayor a 0)';
+                              return null;
+                            },
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Veterinario
+                          _buildFormField(
+                            controller: _veterinarioController,
+                            labelText: 'Veterinario',
+                            iconPath: 'assets/images/veterinario.png', // Asegúrate de tener este icono o usa uno genérico
+                            validator: (value) => value == null || value.isEmpty ? 'Por favor ingrese el nombre del veterinario' : null,
+                            keyboardType: TextInputType.text,
+                          ),
+                          const SizedBox(height: 30),
+
+                          // Botón Guardar Vacuna
+                          GestureDetector(
+                            onTap: _guardarVacuna,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.asset(
+                                  'assets/images/agregarvacuna.png', // Reutilizando el icono de agregar vacuna
+                                  width: 120.0,
+                                  height: 120.0,
+                                  fit: BoxFit.fill,
+                                ),
+                                const Text(
+                                  'Guardar Vacuna',
+                                  style: TextStyle(
+                                    fontFamily: 'Comic Sans MS',
+                                    fontSize: 20,
+                                    color: Color(0xff000000),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 30), // Espacio al final
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-          Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: Key('Home'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/logo.png'),
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
-                ),
-              ),
+        ],
+      ),
+    );
+  }
+
+  // --- Widgets Reutilizables para el Formulario ---
+
+  Widget _buildFormField({
+    required TextEditingController controller,
+    required String labelText,
+    required String iconPath,
+    String? Function(String?)? validator,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      height: 60, // Ajusta la altura si es necesario
+      child: Stack(
+        children: [
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            decoration: InputDecoration(
+              labelText: labelText,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
             ),
+            validator: validator,
           ),
-          Pinned.fromPins(
-            Pin(size: 52.9, start: 9.1),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(),
-              ],
+          Positioned(
+            left: 5,
+            top: 0,
+            bottom: 10, // Alinea el icono verticalmente
+            child: Align(
+              alignment: Alignment.centerLeft,
               child: Container(
+                width: 40.0, // Tamaño del icono
+                height: 40.0, // Tamaño del icono
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/images/back.png'),
+                    image: AssetImage(iconPath),
                     fit: BoxFit.fill,
                   ),
                 ),
               ),
             ),
           ),
-          Pinned.fromPins(
-            Pin(size: 40.5, middle: 0.8328),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: Key('Ayuda'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateField({
+    required String labelText,
+    required DateTime date,
+    required String iconPath,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      height: 60,
+      child: Stack(
+        children: [
+          InkWell(
+            onTap: onTap,
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: labelText,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    DateFormat('dd/MM/yyyy').format(date),
+                    style: const TextStyle(fontSize: 16), // Ajusta el tamaño de fuente
                   ),
-                ),
+                  const Icon(Icons.arrow_drop_down),
+                ],
               ),
             ),
           ),
-          Align(
-            alignment: Alignment(0.0, -0.549),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => EditarPerfildeAnimal(key: Key('EditarPerfildeAnimalesdeCompaia'), animalId: '',),//FOTO DE PERFIL DE ANIMALES
-                ),
-              ],
+          Positioned(
+            left: 5,
+            top: 0,
+            bottom: 10, // Alinea el icono verticalmente
+            child: Align(
+              alignment: Alignment.centerLeft,
               child: Container(
-                width: 90.0,
-                height: 90.0,
+                width: 40.0,
+                height: 40.0,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage('assets/images/kitty.jpg'),
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius: BorderRadius.circular(25.0),
-                  border:
-                      Border.all(width: 1.0, color: const Color(0xff000000)),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 62.7, start: 6.7),
-            Pin(size: 70.0, middle: 0.2324),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  duration: 0.3,
-                  pageBuilder: () => FuncionesdelaApp(key: Key('FuncionesdelaApp'), animalId: '',),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/funciones.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 47.2, end: 7.6),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService(),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 60.1, end: 7.6),
-            Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: Key('ListadeAnimales'),),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const AssetImage('assets/images/listaanimales.png'),
+                    image: AssetImage(iconPath),
                     fit: BoxFit.fill,
                   ),
                 ),
@@ -510,6 +608,3 @@ class CrearVacuna extends StatelessWidget {
     );
   }
 }
-
-const String _svg_eq66i =
-    '<svg viewBox="91.5 281.0 229.0 35.0" ><path transform="translate(91.5, 281.0)" d="M 10 0 L 219 0 C 224.5228424072266 0 229 4.477152347564697 229 10 L 229 25 C 229 30.52284812927246 224.5228424072266 35 219 35 L 10 35 C 4.477152347564697 35 0 30.52284812927246 0 25 L 0 10 C 0 4.477152347564697 4.477152347564697 0 10 0 Z" fill="#a0f4fe" fill-opacity="0.89" stroke="#000000" stroke-width="1" stroke-opacity="0.89" stroke-miterlimit="4" stroke-linecap="butt" /></svg>';

@@ -10,7 +10,7 @@ import '../services/auth_service.dart';
 import './Home.dart';
 import './Ayuda.dart';
 import './EditarPerfildeAnimal.dart';
-import './VisitasalVeterinario.dart';
+import './VisitasalVeterinario.dart'; // Asegúrate que esta ruta es correcta
 import './CarnetdeVacunacin.dart';
 import './Tratamientomedico.dart';
 import './HistoriaClnica.dart';
@@ -56,9 +56,9 @@ class _FuncionesdelaAppState extends State<FuncionesdelaApp> {
               color: const Color(0x994ec8dd),
               borderRadius: BorderRadius.circular(20.0),
               border: Border.all(width: 1.0, color: const Color(0xff707070)),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  color: const Color(0x29000000),
+                  color: Color(0x29000000),
                   offset: Offset(0, 3),
                   blurRadius: 6,
                 ),
@@ -195,7 +195,7 @@ class _FuncionesdelaAppState extends State<FuncionesdelaApp> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.grey[300], child: CircularProgressIndicator(strokeWidth: 2.0, valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))));
+                  return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.grey[300], child: CircularProgressIndicator(strokeWidth: 2.0, valueColor: AlwaysStoppedAnimation<Color>(const Color(0xff4ec8dd)))));
                 }
                 if (snapshot.hasError) {
                   print("Error obteniendo datos del animal: ${snapshot.error}");
@@ -240,9 +240,9 @@ class _FuncionesdelaAppState extends State<FuncionesdelaApp> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(22.5),
-                            child: (animalData.fotoPerfilUrl.isNotEmpty)
+                            child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
                                 ? CachedNetworkImage(
-                                imageUrl: animalData.fotoPerfilUrl, fit: BoxFit.cover,
+                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                                 errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
                                 : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
