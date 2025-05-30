@@ -6,6 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
+// NEW IMPORTS FOR LOCATION AND IMAGE CACHING
+import 'package:geolocator/geolocator.dart'; // Para geolocalización
+import 'package:cached_network_image/cached_network_image.dart'; // Para cargar y cachear imágenes
+import '../models/animal.dart'; // Asume que Animal está en lib/src/models/animal.dart
+
 // Importa tus pantallas existentes
 import './Home.dart';
 import './Ayuda.dart';
@@ -30,6 +35,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
   final TextEditingController _medicamentosController = TextEditingController();
   final TextEditingController _observacionesController = TextEditingController();
   final TextEditingController _costoController = TextEditingController();
+  final TextEditingController _veterinarianNameController = TextEditingController();
 
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
@@ -40,54 +46,135 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
   List<Map<String, dynamic>> _clinics = [];
   bool _isLoading = true;
   bool _isSaving = false;
-  String? _veterinarianName;
-  List<String> _affiliatedClinicIds = [];
+
+  // NUEVAS VARIABLES DE ESTADO PARA UBICACIÓN Y DATOS DEL ANIMAL
+  Position? _currentPosition;
+  String? _locationError;
+  bool _isLocationLoading = false; // Para indicar si la ubicación se está cargando
+  Animal? _animalData; // Para almacenar los datos del animal
 
   @override
   void initState() {
     super.initState();
-    _loadClinicsAndUserAffiliation();
+    _loadAllData(); // Carga todos los datos necesarios al iniciar la pantalla
   }
 
-  Future<void> _loadClinicsAndUserAffiliation() async {
+  // Método unificado para cargar datos (ubicación, animal, clínicas)
+  Future<void> _loadAllData() async {
     if (!mounted) return;
     setState(() {
-      _isLoading = true;
+      _isLoading = true; // Indicador de carga general
+      _isLocationLoading = true; // Indicador de carga de ubicación
+      _locationError = null; // Reinicia errores de ubicación
     });
 
     try {
+      // 1. Obtener la ubicación del usuario
+      bool serviceEnabled;
+      LocationPermission permission;
+
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _locationError = 'Los servicios de ubicación están deshabilitados. No se pueden buscar clínicas cercanas.';
+        print(_locationError);
+        // No se retorna, se intentará cargar todas las clínicas sin filtrar por ubicación.
+      }
+
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _locationError = 'Permiso de ubicación denegado. No se pueden buscar clínicas cercanas.';
+          print(_locationError);
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _locationError = 'Los permisos de ubicación están denegados permanentemente. Por favor, habilítelos desde la configuración de su dispositivo.';
+        print(_locationError);
+      }
+
+      if (_locationError == null && serviceEnabled && (permission == LocationPermission.whileInUse || permission == LocationPermission.always)) {
+        try {
+          _currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+          print("Ubicación actual: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}");
+        } catch (e) {
+          _locationError = 'Error al obtener la ubicación: $e';
+          print(_locationError);
+        }
+      }
+    } catch (e) {
+      _locationError = 'Error con la geolocalización: $e';
+      print("Error durante la inicialización de geolocator: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLocationLoading = false; // Finaliza la carga de ubicación
+        });
+      }
+    }
+
+    // 2. Cargar datos del animal (copiado de VisitasalVeterinario.dart)
+    try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId == null) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuario no autenticado.')));
-        Navigator.pop(context);
-        return;
-      }
-
-      // Cargar información del usuario actual (veterinario)
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-      if (userDoc.exists) {
-        final userData = userDoc.data();
-        _veterinarianName = userData?['name'] ?? 'Veterinario Desconocido';
-        _affiliatedClinicIds = List<String>.from(userData?['affiliatedClinics'] ?? []);
+      if (userId != null && widget.animalId.isNotEmpty) {
+        final animalDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('animals')
+            .doc(widget.animalId)
+            .get();
+        if (animalDoc.exists) {
+          _animalData = Animal.fromFirestore(animalDoc);
+        } else {
+          print("Documento del animal con ID ${widget.animalId} no encontrado.");
+        }
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se encontró el perfil del veterinario.')));
-        Navigator.pop(context);
-        return;
+        print("Usuario no autenticado o animalId vacío.");
       }
+    } catch (e) {
+      print("Error cargando datos del animal: $e");
+    }
 
-      // Cargar clínicas disponibles
+    // 3. Cargar Clínicas (y filtrar si la ubicación está disponible)
+    try {
       final clinicSnapshot = await FirebaseFirestore.instance.collection('clinics').get();
-      _clinics = clinicSnapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+      List<Map<String, dynamic>> fetchedClinics = clinicSnapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+
+      if (_currentPosition != null) {
+        // Calcular distancias y ordenar
+        fetchedClinics.forEach((clinic) {
+          if (clinic['latitude'] != null && clinic['longitude'] != null) {
+            double distance = Geolocator.distanceBetween(
+              _currentPosition!.latitude,
+              _currentPosition!.longitude,
+              clinic['latitude'],
+              clinic['longitude'],
+            );
+            clinic['distance'] = distance; // Distancia en metros
+          } else {
+            clinic['distance'] = double.infinity; // Clínicas sin coordenadas al final
+          }
+        });
+
+        // Ordenar por distancia (las más cercanas primero)
+        fetchedClinics.sort((a, b) => (a['distance'] as double).compareTo(b['distance'] as double));
+
+        // Opcional: filtrar por una distancia máxima (ej. 50 km)
+        // _clinics = fetchedClinics.where((clinic) => clinic['distance'] <= 50000).toList();
+        _clinics = fetchedClinics; // Se muestran todas, pero ordenadas por distancia
+      } else {
+        _clinics = fetchedClinics; // Si no hay ubicación, se cargan todas sin ordenar por distancia
+      }
 
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _isLoading = false; // Finaliza la carga general
         });
       }
     } catch (e) {
-      print("Error cargando clínicas o afiliación: $e");
+      print("Error cargando clínicas: $e");
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al cargar datos iniciales: $e')));
-      Navigator.pop(context);
     }
   }
 
@@ -156,14 +243,6 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
       return;
     }
 
-    // Permiso: Verificar afiliación del veterinario
-    if (!_affiliatedClinicIds.contains(_selectedClinicId)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: No estás afiliado a la clínica seleccionada para crear visitas.')),
-      );
-      return;
-    }
-
     if (!mounted) return;
     setState(() {
       _isSaving = true;
@@ -171,7 +250,11 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
 
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId == null) throw Exception("Usuario no autenticado.");
+      if (userId == null) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuario no autenticado. Por favor, inicie sesión.')));
+        Navigator.pop(context);
+        return;
+      }
 
       final visitDateTime = DateTime(
         _selectedDate!.year,
@@ -193,8 +276,8 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
         'centroAtencionId': _selectedClinicId,
         'centroAtencionNombre': _selectedClinicName,
         'centroAtencionDireccion': _selectedClinicAddress,
-        'veterinarioId': userId, // UID del veterinario que crea la visita
-        'veterinarioNombre': _veterinarianName,
+        'veterinarioId': userId, // Se registra el UID del dueño del animal como quien creó la entrada
+        'veterinarioNombre': _veterinarianNameController.text.trim(), // Nombre del veterinario ingresado por el dueño
         'diagnostico': _diagnosticoController.text.trim(),
         'tratamiento': _tratamientoController.text.trim(),
         'medicamentos': _medicamentosController.text.trim(),
@@ -205,7 +288,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Visita creada con éxito!')));
-        Navigator.pop(context, true); // Regresar y pasar 'true' para indicar éxito
+        Navigator.pop(context, true);
       }
     } catch (e) {
       print("Error al guardar visita: $e");
@@ -224,9 +307,11 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
     _medicamentosController.dispose();
     _observacionesController.dispose();
     _costoController.dispose();
+    _veterinarianNameController.dispose();
     super.dispose();
   }
 
+  // MODIFICADO: Añadidos nuevos parámetros para la posición del icono (iconPositionedTop, iconPositionedBottom, iconPositionedLeft)
   Widget _buildTextFormFieldWithIcon({
     required TextEditingController controller,
     required String labelText,
@@ -237,7 +322,28 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
     String? Function(String?)? validator,
     int maxLines = 1,
     bool enabled = true,
+    // Nuevos parámetros para la posición explícita del icono
+    double? iconPositionedTop,
+    double? iconPositionedBottom,
+    double? iconPositionedLeft,
   }) {
+    // Determinar la posición real del icono, dando prioridad a los parámetros explícitos
+    double? actualTop;
+    double? actualBottom;
+    double actualLeft = iconPositionedLeft ?? 5; // Usa el valor proporcionado o el predeterminado de 5
+
+    if (iconPositionedTop != null) {
+      actualTop = iconPositionedTop;
+      actualBottom = null; // Si se especifica 'top', 'bottom' se deja nulo (a menos que también se especifique)
+    } else if (iconPositionedBottom != null) {
+      actualBottom = iconPositionedBottom;
+      actualTop = null; // Si se especifica 'bottom', 'top' se deja nulo
+    } else {
+      // Si no se especifica 'top' ni 'bottom', se usa la lógica original basada en maxLines
+      actualTop = maxLines > 1 ? 10 : 0;
+      actualBottom = maxLines > 1 ? null : 10;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       child: Stack(
@@ -259,11 +365,14 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
             maxLines: maxLines,
           ),
           Positioned(
-            left: 5,
-            top: maxLines > 1 ? 10 : 0, // Ajusta la posición vertical del icono para multilínea
-            bottom: maxLines > 1 ? null : 10,
+            left: actualLeft,
+            top: actualTop,
+            bottom: actualBottom,
             child: Align(
-              alignment: maxLines > 1 ? Alignment.topLeft : Alignment.centerLeft,
+              // El Alignment se ajusta. Si top/bottom explícitos, se centra. Si no, usa la lógica anterior.
+              alignment: (iconPositionedTop != null || iconPositionedBottom != null)
+                  ? Alignment.centerLeft
+                  : (maxLines > 1 ? Alignment.topLeft : Alignment.centerLeft),
               child: Container(
                 width: iconWidth,
                 height: iconHeight,
@@ -281,8 +390,69 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
     );
   }
 
+  // Método auxiliar para mostrar imagen grande (copiado de VisitasalVeterinario.dart)
+  void _showLargeImage(String imageUrl) {
+    Widget imageWidget = CachedNetworkImage(
+      imageUrl: imageUrl,
+      fit: BoxFit.contain,
+      placeholder: (context, url) => const Center(
+          child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
+      errorWidget: (context, url, error) =>
+      const Icon(Icons.error, size: 100, color: Colors.grey),
+    );
+
+    showDialog(
+      context: context,
+      useSafeArea: false,
+      builder: (BuildContext context) {
+        return GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: EdgeInsets.zero,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  color: Colors.black.withOpacity(0.9),
+                  child: imageWidget,
+                ),
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 10,
+                  right: 10,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
+    // Estas constantes se ajustan para el layout de CrearVisitaVeterinariaScreen
+    // El logo y los botones superiores ocupan la parte superior.
+    // La foto del animal se colocará debajo de ellos, antes del título del formulario.
+    const double animalPhotoTop = 120.0; // Posición vertical de la foto del animal
+    const double animalPhotoSize = 90.0; // Alto y ancho de la foto del animal
+    const double animalNameHeight = 20.0; // Altura estimada para el nombre
+    const double spaceAfterAnimalPhoto = 20.0; // Espacio entre el nombre y el título del formulario
+
+    // La posición superior del área principal del formulario se ajusta
+    final double mainContentTop = animalPhotoTop + animalPhotoSize + animalNameHeight + spaceAfterAnimalPhoto;
+
+
     return Scaffold(
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
@@ -311,7 +481,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
           Pinned.fromPins(
             Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0),
             child: GestureDetector(
-              onTap: () => Navigator.of(context).pop(), // Botón de retroceso
+              onTap: () => Navigator.of(context).pop(),
               child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
             ),
           ),
@@ -330,8 +500,63 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
             ),
           ),
 
+          // NUEVO: Foto y Nombre del Animal (copiado de VisitasalVeterinario.dart)
           Positioned(
-            top: 125,
+            top: animalPhotoTop, // Posición ajustada para el diseño actual
+            left: 0,
+            right: 0,
+            child: _animalData != null
+                ? Center(
+              child: GestureDetector(
+                onTap: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
+                    ? () => _showLargeImage(_animalData!.fotoPerfilUrl!)
+                    : null,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: animalPhotoSize, height: animalPhotoSize, // Usar tamaño fijo para la foto
+                      decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(25.0),
+                          border: Border.all(color: Colors.white, width: 2.5),
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: Offset(0,3))]
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(22.5),
+                        child: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
+                            ? CachedNetworkImage(
+                            imageUrl: _animalData!.fotoPerfilUrl!, fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                            errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
+                            : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                      ),
+                    ),
+                    if (_animalData!.nombre.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          _animalData!.nombre,
+                          style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              shadows: [Shadow(blurRadius: 1.0, color: Colors.black.withOpacity(0.5), offset: Offset(1.0,1.0))]
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            )
+                : const SizedBox.shrink(), // O un placeholder mientras carga
+          ),
+
+
+          // Área de contenido principal, movida hacia abajo para acomodar la foto del animal
+          Positioned(
+            top: mainContentTop, // Posición superior ajustada
             left: 20,
             right: 20,
             bottom: 20,
@@ -343,7 +568,8 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Column(
                   children: [
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 10), // Pequeño espacio después del nombre del animal
+
                     Container(
                       width: 229.0,
                       height: 35.0,
@@ -440,28 +666,38 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                       ),
                     ),
 
-                    // Selector de Centro de Atención
+                    // Selector de Centro de Atención - Altura consistente con fecha y hora
                     Container(
-                      height: 60,
+                      height: 60, // Mantiene la misma altura que Fecha y Hora
                       margin: const EdgeInsets.only(bottom: 20),
                       child: Stack(
                         children: [
                           DropdownButtonFormField<String>(
                             value: _selectedClinicId,
                             decoration: InputDecoration(
-                              labelText: 'Centro de Atención',
+                              labelText: _isLocationLoading
+                                  ? 'Cargando centros de atención...'
+                                  : (_locationError ?? 'Centro de Atención'), // Muestra error o etiqueta normal
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.95),
+                              // Padding de contenido consistente con los campos de fecha/hora
                               contentPadding: const EdgeInsets.only(left: 50.0, right: 15.0, top: 15, bottom: 15),
                             ),
                             items: _clinics.map((clinic) {
-                              return DropdownMenuItem<String>( // FIXED: Explicitly type DropdownMenuItem
-                                value: clinic['id'] as String, // FIXED: Cast value to String
-                                child: Text(clinic['name'] ?? 'Clínica desconocida', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
+                              String clinicName = clinic['name'] ?? 'Clínica desconocida';
+                              String distanceText = '';
+                              if (clinic['distance'] != null && clinic['distance'] != double.infinity) {
+                                // Convertir metros a km y formatear a 1 decimal
+                                double distanceKm = clinic['distance'] / 1000;
+                                distanceText = ' (${distanceKm.toStringAsFixed(1)} km)';
+                              }
+                              return DropdownMenuItem<String>(
+                                value: clinic['id'] as String,
+                                child: Text('$clinicName$distanceText', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
                               );
                             }).toList(),
-                            onChanged: (value) {
+                            onChanged: _isLoading || _isLocationLoading ? null : (value) { // Deshabilitar si se está cargando
                               setState(() {
                                 _selectedClinicId = value;
                                 final selectedClinic = _clinics.firstWhere((clinic) => clinic['id'] == value);
@@ -476,8 +712,50 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                             left: 5, top: 0, bottom: 10,
                             child: Align(alignment: Alignment.centerLeft, child: Container(width: 35.2, height: 40.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/ubicacion.png'), fit: BoxFit.fill)))),
                           ),
+                          if (_isLocationLoading) // Muestra un pequeño indicador de carga junto a la etiqueta
+                            Positioned(
+                              right: 40, // Ajusta la posición según sea necesario
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2.0, valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade600)),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
+                    ),
+
+                    // Muestra el error de ubicación si existe
+                    if (_locationError != null && !_isLocationLoading)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10.0),
+                        child: Text(
+                          _locationError!,
+                          style: const TextStyle(
+                            fontFamily: 'Comic Sans MS',
+                            fontSize: 14,
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+
+                    // Campo de texto para el nombre del Veterinario (ahora editable por el dueño)
+                    // MODIFICADO: Uso de los nuevos parámetros de posicionamiento para el icono
+                    _buildTextFormFieldWithIcon(
+                      controller: _veterinarianNameController,
+                      labelText: 'Nombre del Veterinario',
+                      assetIconPath: 'assets/images/veterinario.png', // Asegúrate de tener este icono
+                      validator: (v) => v!.isEmpty ? 'Ingrese nombre del veterinario' : null,
+                      iconWidth: 40, iconHeight: 40.0,
+                      iconPositionedTop: 5.0, // Coloca el icono a 10px del top del Container (centrado verticalmente para campos de 60px de alto con icono de 40px)
+                      // iconPositionedBottom: null, // No es necesario especificar si iconPositionedTop ya está
+                      // iconPositionedLeft: 5.0, // Puedes ajustarlo si deseas moverlo horizontalmente
                     ),
 
                     // Campos de texto para la visita
@@ -485,15 +763,15 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                       controller: _diagnosticoController,
                       labelText: 'Diagnóstico',
                       assetIconPath: 'assets/images/diagnostico.png',
-                      iconWidth: 35.2, iconHeight: 40.0,
-                      maxLines: 3, // Para permitir texto largo
+                      iconWidth: 40.0, iconHeight: 40.0,
+                      maxLines: 3,
                       validator: (v) => v!.isEmpty ? 'Ingrese diagnóstico' : null,
                     ),
                     _buildTextFormFieldWithIcon(
                       controller: _tratamientoController,
                       labelText: 'Tratamiento',
                       assetIconPath: 'assets/images/tratamiento.png',
-                      iconWidth: 35.2, iconHeight: 40.0,
+                      iconWidth: 40.0, iconHeight: 40.0,
                       maxLines: 3,
                       validator: (v) => v!.isEmpty ? 'Ingrese tratamiento' : null,
                     ),
@@ -501,41 +779,43 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                       controller: _medicamentosController,
                       labelText: 'Medicamentos',
                       assetIconPath: 'assets/images/medicamentos.png',
-                      iconWidth: 35.2, iconHeight: 40.0,
+                      iconWidth: 40.0, iconHeight: 40.0,
                       maxLines: 3,
                     ),
                     _buildTextFormFieldWithIcon(
                       controller: _observacionesController,
                       labelText: 'Observaciones',
                       assetIconPath: 'assets/images/observaciones.png',
-                      iconWidth: 35.2, iconHeight: 40.0,
+                      iconWidth: 40.0, iconHeight: 40.0,
                       maxLines: 3,
                     ),
                     _buildTextFormFieldWithIcon(
                       controller: _costoController,
                       labelText: 'Costo (\$)',
                       assetIconPath: 'assets/images/costo.png',
-                      iconWidth: 35.2, iconHeight: 40.0,
+                      iconWidth: 40.0, iconHeight: 40.0,
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
                       validator: (v) => v!.isEmpty ? 'Ingrese costo' : (double.tryParse(v.replaceAll(',', '.')) == null ? 'Número inválido' : null),
                     ),
                     const SizedBox(height: 20),
 
-                    // Botón para guardar visita
+                    // Botón para guardar visita - ¡MODIFICADO CON EL NUEVO ICONO!
                     GestureDetector(
                       onTap: _isSaving ? null : _saveVisit,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          Container(
-                            width: 127.3, height: 120.0,
-                            decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/guardar.png'), fit: BoxFit.fill)), // Asume que tienes un icono de guardar
+                          Image.asset(
+                            'assets/images/visitavet.png', // Nuevo icono para crear la visita
+                            width: 120.0, // Ancho de 120
+                            height: 120.0, // Altura de 120 (para que sea cuadrado)
+                            fit: BoxFit.fill,
                           ),
                           if (_isSaving) const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 30), // Espacio al final del scroll
                   ],
                 ),
               ),

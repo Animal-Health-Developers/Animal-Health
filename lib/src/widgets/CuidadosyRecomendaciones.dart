@@ -26,7 +26,7 @@ import '../models/animal.dart'; // Importa tu modelo Animal para leer especies y
 // --- CONFIGURACIÓN DE API KEYS ---
 // Asegúrate de que estas claves sean las correctas y válidas para tu proyecto.
 // Una clave que empiece por AIzaSy... es el formato correcto, pero el valor debe ser tu propia clave.
-const String GEMINI_API_KEY_CARE = 'AAIzaSyCwyNmyfXy9dAeRLKj6fHaTKzJRiaG5ZcE'; // <<< VERIFICAR ESTA CLAVE
+const String GEMINI_API_KEY_CARE = 'AIzaSyArtAEpXDnH_T9kBM6EW7kD9meZIGyGstA'; // <<< VERIFICAR ESTA CLAVE
 const String THE_DOG_API_KEY = 'live_vkA9cQvaiI3cmRM7qiNqgvFPtyApnTvGQzTtVuEK6evCT1yTzFyUIXEW2l4JPCAU';
 const String THE_CAT_API_KEY = 'live_cfM38FCZX4mhnH3NqCwMXMOLWMiSygx6x8Nh3q1Uaubz3eI6pOtc1l8Ls05XzHp'; // Asegúrate de que esta sea la clave correcta
 const String UNSPLASH_ACCESS_KEY = 'bmwT3dUY0JzWsIV1DqP8rhKKbQhLPMD9xThDow4TzXg';

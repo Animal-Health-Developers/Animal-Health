@@ -27,6 +27,7 @@ const Color APP_PRIMARY_COLOR = Color(0xff4ec8dd);
 const Color APP_TEXT_COLOR = Color(0xff000000);
 const String APP_FONT_FAMILY = 'Comic Sans MS';
 
+
 class CompradeProductos extends StatefulWidget {
   const CompradeProductos({
     Key? key,
@@ -38,24 +39,69 @@ class CompradeProductos extends StatefulWidget {
 
 class _CompradeProductosState extends State<CompradeProductos> {
   final TextEditingController _searchController = TextEditingController();
-  String _searchTerm = '';
+  String _currentInputText = '';
+
+  final ValueNotifier<String> _searchTermNotifier = ValueNotifier<String>('');
+
+  bool _isSearching = false;
+
   final CartService _cartService = CartService();
+
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> _productsStream;
+
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() {
-      if (mounted) {
-        setState(() {
-          _searchTerm = _searchController.text;
-        });
-      }
-    });
+    developer.log('CompradeProductos initState: Initializing _productsStream');
+    _productsStream = FirebaseFirestore.instance.collection('products').orderBy('creationDate', descending: true).snapshots();
+
+    _searchController.addListener(_onSearchInputChanged);
+    _currentInputText = _searchController.text;
+  }
+
+  void _onSearchInputChanged() {
+    if (mounted) {
+      setState(() {
+        _currentInputText = _searchController.text;
+      });
+    }
+  }
+
+  void _performSearch() async {
+    developer.log('CompradeProductos _performSearch: Starting search for: "${_searchController.text.trim()}"');
+    FocusScope.of(context).unfocus(); // Ocultar el teclado
+
+    if (mounted) {
+      setState(() {
+        _isSearching = true;
+      });
+    }
+
+    // Pequeño retraso para que la animación de carga sea visible.
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (mounted) {
+      _searchTermNotifier.value = _searchController.text.trim();
+      setState(() {
+        _isSearching = false;
+        developer.log("CompradeProductos _performSearch: Search completed. Current term: \"${_searchTermNotifier.value}\"");
+      });
+    }
+  }
+
+  void _clearSearch() {
+    developer.log('CompradeProductos _clearSearch: Clearing search bar');
+    _searchController.clear();
+    _performSearch();
   }
 
   @override
   void dispose() {
+    developer.log('CompradeProductos dispose: Disposing controllers and notifiers');
+    _searchController.removeListener(_onSearchInputChanged);
     _searchController.dispose();
+    _searchTermNotifier.dispose();
     super.dispose();
   }
 
@@ -560,17 +606,9 @@ class _CompradeProductosState extends State<CompradeProductos> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0, right: 6.0),
-                    child: Image.asset(
-                      'assets/images/busqueda1.png',
-                      width: 31.0,
-                      height: 31.0,
-                      fit: BoxFit.fill,
-                    ),
-                  ),
                   Expanded(
-                    child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12.0),
                       child: TextField(
                         controller: _searchController,
                         textAlignVertical: TextAlignVertical.center,
@@ -590,28 +628,37 @@ class _CompradeProductosState extends State<CompradeProductos> {
                           ),
                           border: InputBorder.none,
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+                          // Ajuste aquí para el padding interno del TextField
+                          contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
                         ),
                         textInputAction: TextInputAction.search,
                         onSubmitted: (value) {
-                          developer.log("Búsqueda enviada (onSubmitted): $value");
+                          _performSearch();
                         },
                       ),
                     ),
                   ),
-                  if (_searchController.text.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4.0),
-                      child: IconButton(
-                        icon: Icon(Icons.clear, color: Colors.grey[600], size: 20),
-                        onPressed: () {
-                          _searchController.clear();
-                        },
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                        splashRadius: 18,
+                  if (_currentInputText.isNotEmpty)
+                    IconButton(
+                      icon: Icon(Icons.clear, color: Colors.grey[600], size: 22),
+                      onPressed: _clearSearch,
+                      tooltip: 'Limpiar búsqueda',
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      splashRadius: 20,
+                    ),
+                  GestureDetector(
+                    onTap: _performSearch,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8.0, left: 6.0),
+                      child: Image.asset(
+                        'assets/images/busqueda1.png',
+                        width: 31.0,
+                        height: 31.0,
+                        fit: BoxFit.fill,
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -679,74 +726,131 @@ class _CompradeProductosState extends State<CompradeProductos> {
           Pinned.fromPins(
             Pin(start: 8.0, end: 8.0),
             Pin(start: 270.0, end: 0.0),
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance.collection('products').orderBy('creationDate', descending: true).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
-                }
-                if (snapshot.hasError) {
-                  developer.log('Error cargando productos: ${snapshot.error} ${snapshot.stackTrace}');
-                  return const Center(
-                      child: Text('Error al cargar productos.',
-                          style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
-                }
-                if (!snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                      child: Text('No hay productos disponibles.',
-                          style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
-                }
-
-                final allProducts = snapshot.data!.docs.map((doc) {
-                  try {
-                    final data = doc.data();
-                    final id = doc.id;
-                    return Product.fromFirestore(data, id);
-                  } catch (e, s) {
-                    developer.log('Error al parsear producto ${doc.id} (CompraProductos): $e\nStackTrace: $s\nDatos: ${doc.data()}');
-                    return null;
-                  }
-                }).whereType<Product>().toList();
-
-                final filteredProducts = _searchTerm.isEmpty
-                    ? allProducts
-                    : allProducts.where((product) {
-                  final searchTermLower = _searchTerm.toLowerCase();
-                  final categoryLower = (product.category).toLowerCase();
-                  final nameMatch = product.name.toLowerCase().contains(searchTermLower);
-                  final descriptionMatch = product.description.toLowerCase().contains(searchTermLower);
-                  final categoryMatch = categoryLower.contains(searchTermLower);
-                  final sellerMatch = product.seller.toLowerCase().contains(searchTermLower);
-                  return nameMatch || descriptionMatch || categoryMatch || sellerMatch;
-                }).toList();
-
-                if (filteredProducts.isEmpty) {
-                  if (_searchTerm.isNotEmpty) {
-                    return Center(
-                        child: Text('No se encontraron productos para "$_searchTerm".',
-                            style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)));
-                  } else {
-                    return const Center(
-                        child: Text('Aún no hay productos publicados.',
-                            style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)));
-                  }
-                }
-
-                return GridView.builder(
-                  padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0, bottom: 80.0),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.60,
-                    crossAxisSpacing: 8.0,
-                    mainAxisSpacing: 8.0,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.05),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
                   ),
-                  itemCount: filteredProducts.length,
-                  itemBuilder: (context, index) {
-                    final product = filteredProducts[index];
-                    return _buildProductCard(context, product);
-                  },
                 );
               },
+              child: _isSearching
+                  ? Container(
+                key: const ValueKey<String>('loading_products_state'),
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                      SizedBox(height: 16),
+                      Text('Buscando productos...', style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)),
+                    ],
+                  ),
+                ),
+              )
+                  : ValueListenableBuilder<String>(
+                valueListenable: _searchTermNotifier,
+                builder: (context, currentSearchTerm, child) {
+                  developer.log('ValueListenableBuilder: Filtering with term: "$currentSearchTerm"');
+
+                  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    key: ValueKey<String>('product_grid_for_term_${currentSearchTerm.isEmpty ? 'all' : currentSearchTerm}'),
+                    stream: _productsStream,
+                    builder: (context, snapshot) {
+                      developer.log('StreamBuilder: Connection state: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, hasError: ${snapshot.hasError}');
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
+                      }
+                      if (snapshot.hasError) {
+                        developer.log('StreamBuilder Error: ${snapshot.error} ${snapshot.stackTrace}');
+                        return const Center(
+                            child: Text('Error al cargar productos. Por favor, revisa tu conexión a internet.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
+                      }
+                      if (!snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
+                        return const Center(
+                            child: Text('No hay productos disponibles en la base de datos.',
+                                style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
+                      }
+
+                      final allProducts = snapshot.data!.docs.map((doc) {
+                        try {
+                          final data = doc.data();
+                          final id = doc.id;
+                          return Product.fromFirestore(data, id);
+                        } catch (e, s) {
+                          developer.log('ERROR al parsear producto ${doc.id}: $e\nStackTrace: $s\nDatos: ${doc.data()}');
+                          return null;
+                        }
+                      }).whereType<Product>().toList();
+
+                      developer.log('StreamBuilder: Total products fetched: ${allProducts.length}');
+
+                      // Si después de parsear, la lista de productos está vacía, puede que todos hayan fallado en el parseo
+                      if (allProducts.isEmpty) {
+                        return const Center(
+                            child: Text('No se pudieron cargar productos válidos de la base de datos. Por favor, revisa tus datos.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
+                      }
+
+
+                      final filteredProducts = currentSearchTerm.isEmpty
+                          ? allProducts
+                          : allProducts.where((product) {
+                        final searchTermLower = currentSearchTerm.toLowerCase();
+                        final nameLower = (product.name).toLowerCase();
+                        final descriptionLower = (product.description).toLowerCase();
+                        final categoryLower = (product.category).toLowerCase();
+                        final sellerLower = (product.seller).toLowerCase();
+
+                        return nameLower.contains(searchTermLower) ||
+                            descriptionLower.contains(searchTermLower) ||
+                            categoryLower.contains(searchTermLower) ||
+                            sellerLower.contains(searchTermLower);
+                      }).toList();
+
+                      developer.log('StreamBuilder: Filtered products count for "$currentSearchTerm": ${filteredProducts.length}');
+
+                      if (filteredProducts.isEmpty) {
+                        if (currentSearchTerm.isNotEmpty) {
+                          return Center(
+                              child: Text('No se encontraron productos para "$currentSearchTerm".',
+                                  style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)));
+                        } else {
+                          // Este caso no debería alcanzarse si allProducts no está vacío
+                          return const Center(
+                              child: Text('Aún no hay productos publicados.',
+                                  style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)));
+                        }
+                      }
+
+                      return GridView.builder(
+                        padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0, bottom: 80.0),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.60,
+                          crossAxisSpacing: 8.0,
+                          mainAxisSpacing: 8.0,
+                        ),
+                        itemCount: filteredProducts.length,
+                        itemBuilder: (context, index) {
+                          final product = filteredProducts[index];
+                          return _buildProductCard(context, product);
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -886,22 +990,18 @@ class _MisProductosModalWidget extends StatelessWidget {
                     .orderBy('creationDate', descending: true)
                     .snapshots(),
                 builder: (streamBuilderContext, snapshot) {
-                  // --- INICIO DE CAMBIOS DE DEPURACIÓN ---
-                  developer.log('Mis Productos Modal - Consulta para userId: $userId');
-                  // --- FIN DE CAMBIOS DE DEPURACIÓN ---
-
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
                   }
                   if (snapshot.hasError) {
-                    developer.log('Error cargando mis productos (modal): ${snapshot.error}');
+                    developer.log('Error cargando mis productos (modal) para user $userId: ${snapshot.error}');
                     return const Center(
-                        child: Text('Error al cargar tus productos. Por favor, revisa tu conexión a internet.', // Mensaje más descriptivo
+                        child: Text('Error al cargar tus productos. Por favor, revisa tu conexión a internet.',
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    developer.log('No hay productos para el usuario ${userId}');
+                    developer.log('No se encontraron productos para el usuario: $userId');
                     return const Center(
                         child: Padding(
                           padding: EdgeInsets.all(20.0),
@@ -914,17 +1014,25 @@ class _MisProductosModalWidget extends StatelessWidget {
                   final userProducts = snapshot.data!.docs.map((doc) {
                     try {
                       final data = doc.data();
-                      developer.log('Producto cargado en modal: ${data['name']} (ID: ${doc.id}, userId: ${data['userId']})');
                       return Product.fromFirestore(data, doc.id);
                     } catch (e, s) {
-                      developer.log('Error parseando producto en modal: ${doc.id}, Error: $e, Stack: $s, Data: ${doc.data()}');
+                      developer.log('Error parseando producto en modal (ID: ${doc.id}): $e, Stack: $s, Data: ${doc.data()}');
                       return null;
                     }
                   }).whereType<Product>().toList();
 
-                  // --- INICIO DE CAMBIOS DE DEPURACIÓN ---
                   developer.log('Mis Productos Modal - Se encontraron ${userProducts.length} productos para el userId: $userId');
-                  // --- FIN DE CAMBIOS DE DEPURACIÓN ---
+
+                  if (userProducts.isEmpty) {
+                    return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Text('No se pudieron cargar tus productos válidos.\nRevisa la estructura de tus datos.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: APP_FONT_FAMILY, fontWeight: FontWeight.w600)),
+                        ));
+                  }
+
 
                   return ListView.builder(
                     padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 60.0),
@@ -970,9 +1078,9 @@ class _MisProductosModalWidget extends StatelessWidget {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             onSelected: (String value) {
                               if (value == 'editar_modal') {
-                                Navigator.of(modalSheetContext).pop(); // Cierra el modal actual
+                                Navigator.of(modalSheetContext).pop();
                                 showModalBottomSheet(
-                                  context: parentContextForSnackbars, // Usa el contexto principal para mostrar el nuevo modal
+                                  context: parentContextForSnackbars,
                                   isScrollControlled: true,
                                   backgroundColor: Colors.transparent,
                                   builder: (BuildContext editModalCtx) {
@@ -1011,9 +1119,9 @@ class _MisProductosModalWidget extends StatelessWidget {
                             ],
                           ),
                           onTap: () {
-                            Navigator.of(modalSheetContext).pop(); // Cierra el modal actual
+                            Navigator.of(modalSheetContext).pop();
                             Navigator.push(
-                              parentContextForSnackbars, // Usa el contexto principal para la navegación
+                              parentContextForSnackbars,
                               MaterialPageRoute(
                                 builder: (_) => DetallesdelProducto(
                                   key: Key('DetallesModalList_${product.id}'),
