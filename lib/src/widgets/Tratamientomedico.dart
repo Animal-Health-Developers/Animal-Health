@@ -1,6 +1,7 @@
 import 'package:animal_health/src/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
+
 import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
@@ -8,13 +9,17 @@ import './EditarPerfildeAnimal.dart';
 import './FuncionesdelaApp.dart'; // Importante para la navegación de regreso
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
-// import 'package:flutter_svg/flutter_svg.dart'; // No se usó en la implementación final
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart'; // Para formatear fechas
 import '../models/animal.dart';
 
+// NEW IMPORTS FOR NOTIFICATIONS
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 
 // Define constantes para estilos comunes de la aplicación
 const Color APP_PRIMARY_COLOR = Color(0xff4ec8dd);
@@ -82,6 +87,33 @@ class MedicalTreatment {
       isSupplied: data['isSupplied'] ?? false,
     );
   }
+
+  // Método para crear una copia del objeto con valores modificados (útil para inmutabilidad)
+  MedicalTreatment copyWith({
+    String? id,
+    String? medicineName,
+    String? dose,
+    String? duration,
+    String? veterinarian,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? notes,
+    bool? isReminderEnabled,
+    bool? isSupplied,
+  }) {
+    return MedicalTreatment(
+      id: id ?? this.id,
+      medicineName: medicineName ?? this.medicineName,
+      dose: dose ?? this.dose,
+      duration: duration ?? this.duration,
+      veterinarian: veterinarian ?? this.veterinarian,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      notes: notes ?? this.notes,
+      isReminderEnabled: isReminderEnabled ?? this.isReminderEnabled,
+      isSupplied: isSupplied ?? this.isSupplied,
+    );
+  }
 }
 
 // --- Clase Principal Tratamientomedico ---
@@ -101,6 +133,78 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
   final User? currentUser = FirebaseAuth.instance.currentUser;
   bool _showTreatmentForm = false; // Estado para controlar la visibilidad del formulario
 
+  // NEW: Notification plugin instance
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
+  // Store animal name for notification content
+  String _animalName = 'tu animal'; // Default name
+
+  @override
+  void initState() {
+    super.initState();
+    _initNotifications();
+    _loadAnimalName(); // Load animal name when state initializes
+  }
+
+  // NEW: Initialize local notifications
+  Future<void> _initNotifications() async {
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    // Android initialization
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('app_icon'); // Asegúrate de tener 'app_icon.png' en res/drawable
+
+    // iOS initialization
+    const DarwinInitializationSettings initializationSettingsIOS =
+    DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
+    const InitializationSettings initializationSettings =
+    InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
+          // Handle notification taps if needed (e.g., navigate to app section)
+          print('Notification tapped: ${notificationResponse.payload}');
+        });
+
+    // Initialize timezones for scheduled notifications
+    tz.initializeTimeZones();
+    // Set the local location based on device's timezone
+    try {
+      final String currentTimeZone = await FlutterNativeTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(currentTimeZone));
+    } catch (e) {
+      print("Could not set local timezone: $e. Falling back to UTC.");
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
+  }
+
+  // NEW: Load animal name for notifications
+  Future<void> _loadAnimalName() async {
+    if (currentUser == null || widget.animalId.isEmpty) return;
+
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser!.uid)
+          .collection('animals')
+          .doc(widget.animalId)
+          .get();
+      if (doc.exists) {
+        setState(() {
+          _animalName = Animal.fromFirestore(doc).nombre;
+        });
+      }
+    } catch (e) {
+      print("Error loading animal name for notification: $e");
+    }
+  }
+
   // Constantes de posicionamiento para elementos de la UI
   static const double logoBottomY = 115.0;
   static const double spaceAfterLogo = 25.0;
@@ -117,6 +221,165 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
       _showTreatmentForm = !_showTreatmentForm;
     });
   }
+
+  // NEW: Method to toggle supplied status
+  Future<void> _toggleSuppliedStatus(MedicalTreatment treatment) async {
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Usuario no autenticado.')),
+      );
+      return;
+    }
+
+    final String userId = currentUser!.uid;
+    final String animalId = widget.animalId;
+
+    try {
+      // Update the 'isSupplied' field in Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('animals')
+          .doc(animalId)
+          .collection('treatments')
+          .doc(treatment.id)
+          .update({'isSupplied': !treatment.isSupplied});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Tratamiento "${treatment.medicineName}" marcado como ${!treatment.isSupplied ? 'suministrado' : 'pendiente'}',
+            style: const TextStyle(fontFamily: APP_FONT_FAMILY),
+          ),
+          backgroundColor: !treatment.isSupplied ? Colors.green : Colors.orange,
+        ),
+      );
+    } catch (e) {
+      print("Error toggling supplied status: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al actualizar estado: $e', style: const TextStyle(fontFamily: APP_FONT_FAMILY)),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // NEW: Method to toggle reminder status and schedule/cancel notifications
+  Future<void> _toggleReminderStatus(MedicalTreatment treatment) async {
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Usuario no autenticado.')),
+      );
+      return;
+    }
+
+    final String userId = currentUser!.uid;
+    final String animalId = widget.animalId;
+    // Using hashCode of treatment.id as a unique notification ID.
+    // Ensure it's unique across ALL notifications, ideally.
+    // For local notifications, a simple hash is usually sufficient.
+    final int notificationId = treatment.id.hashCode;
+
+    try {
+      // Update isReminderEnabled in Firestore first
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('animals')
+          .doc(animalId)
+          .collection('treatments')
+          .doc(treatment.id)
+          .update({'isReminderEnabled': !treatment.isReminderEnabled});
+
+      if (!treatment.isReminderEnabled) { // If reminder was OFF, now turning ON
+        // Determine start date for scheduling (today if start date is in the past, otherwise treatment start date)
+        DateTime reminderStart = treatment.startDate;
+        if (reminderStart.isBefore(DateTime.now())) {
+          reminderStart = DateTime.now(); // Start reminder from now if start date is in the past
+        }
+
+        // Set reminder time for 9 AM (adjust as needed, e.g., 9, 0, 0 for 9:00:00)
+        DateTime scheduledTime = DateTime(
+          reminderStart.year,
+          reminderStart.month,
+          reminderStart.day,
+          9, // Hour (e.g., 9 for 9 AM)
+          0,  // Minute
+          0,  // Second
+        );
+
+        // If the calculated scheduled time is in the past relative to now, schedule it for tomorrow at the same time
+        if (scheduledTime.isBefore(DateTime.now())) {
+          scheduledTime = scheduledTime.add(const Duration(days: 1));
+        }
+
+        final String notificationTitle = 'Recordatorio: Medicamento para $_animalName';
+        final String notificationBody = '${treatment.medicineName} - Dosis: ${treatment.dose}. Duración: ${treatment.duration}';
+
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          notificationId,
+          notificationTitle,
+          notificationBody,
+          tz.TZDateTime.from(scheduledTime, tz.local),
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'daily_treatment_channel', // id (must be unique)
+              'Recordatorios de Tratamiento Diario', // name
+              channelDescription: 'Recordatorios diarios para la administración de medicamentos a tus animales.', // description
+              importance: Importance.high, // High importance for visible notifications
+              priority: Priority.high,
+              ticker: 'ticker', // Android-specific text in status bar
+              playSound: true,
+              enableVibration: true,
+            ),
+            iOS: DarwinNotificationDetails(
+              sound: 'defaultCritical', // Use 'defaultCritical' for a louder sound on iOS
+              presentAlert: true,
+              presentBadge: true,
+              presentSound: true,
+            ),
+          ),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Allows exact scheduling on Android 12+
+          // uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime, // ELIMINADO: Ya no es necesario en versiones recientes
+          matchDateTimeComponents: DateTimeComponents.time, // This makes the notification repeat daily at the specified time
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Recordatorio para "${treatment.medicineName}" activado. Recibirás una notificación a las ${DateFormat('HH:mm').format(scheduledTime)} cada día.',
+              style: const TextStyle(fontFamily: APP_FONT_FAMILY),
+            ),
+            backgroundColor: Colors.blue,
+          ),
+        );
+        print('Scheduled daily notification with ID: $notificationId for treatment: ${treatment.medicineName} starting at ${scheduledTime.toIso8601String()}');
+
+      } else { // If reminder was ON, now turning OFF
+        await flutterLocalNotificationsPlugin.cancel(notificationId);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Recordatorio para "${treatment.medicineName}" desactivado.',
+              style: const TextStyle(fontFamily: APP_FONT_FAMILY),
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        print('Canceled notification with ID: $notificationId for treatment: ${treatment.medicineName}');
+      }
+    } catch (e) {
+      print("Error toggling reminder status: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al actualizar recordatorio: $e', style: const TextStyle(fontFamily: APP_FONT_FAMILY)),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
 
   // Método para construir una tarjeta individual de tratamiento médico
   Widget _buildTreatmentCard(BuildContext context, MedicalTreatment treatment) {
@@ -163,21 +426,17 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
                 _buildActionButton(
                   iconPath: 'assets/images/recordatorio.png', // Asegúrate de tener estas imágenes
                   label: 'Recordatorio',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Función de recordatorio para ${treatment.medicineName} (¡por implementar!)')),
-                    );
-                  },
+                  isActive: treatment.isReminderEnabled, // Pass current state
+                  onTap: () => _toggleReminderStatus(treatment), // Call new method
+                  activeGlowColor: Colors.deepPurpleAccent.shade100, // Example glow color for reminder
                 ),
                 // Botón/Indicador de Suministrado
                 _buildActionButton(
                   iconPath: 'assets/images/suministrado.png', // Asegúrate de tener estas imágenes
                   label: 'Suministrado',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Marcar como suministrado para ${treatment.medicineName} (¡por implementar!)')),
-                    );
-                  },
+                  isActive: treatment.isSupplied, // Pass current state
+                  onTap: () => _toggleSuppliedStatus(treatment), // Call new method
+                  activeGlowColor: Colors.lightGreenAccent, // Example glow color for supplied
                 ),
               ],
             ),
@@ -220,8 +479,15 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
     );
   }
 
-  // Widget auxiliar para construir botones de acción con icono y texto
-  Widget _buildActionButton({required String iconPath, required String label, required VoidCallback onTap}) {
+  // UPDATED: Widget auxiliar para construir botones de acción con icono y texto
+  // Now takes `isActive` and `activeGlowColor` to indicate state
+  Widget _buildActionButton({
+    required String iconPath,
+    required String label,
+    required bool isActive, // NEW: Indicates if the action is active (e.g., reminder enabled, supplied)
+    required VoidCallback onTap,
+    Color activeGlowColor = Colors.white, // NEW: Color for the glow when active
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -234,15 +500,36 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
                 image: AssetImage(iconPath),
                 fit: BoxFit.fill,
               ),
+              borderRadius: BorderRadius.circular(10.0), // Rounded corners for the container
+              // NEW: Add a glow/border effect if active
+              boxShadow: isActive
+                  ? [
+                BoxShadow(
+                  color: activeGlowColor.withOpacity(0.8),
+                  blurRadius: 8.0,
+                  spreadRadius: 3.0,
+                  offset: const Offset(0, 0),
+                ),
+                BoxShadow(
+                  color: activeGlowColor.withOpacity(0.4),
+                  blurRadius: 15.0,
+                  spreadRadius: 8.0,
+                  offset: const Offset(0, 0),
+                ),
+              ]
+                  : [], // No shadow if not active
+              border: isActive
+                  ? Border.all(color: activeGlowColor, width: 2.0)
+                  : Border.all(color: Colors.transparent, width: 0.0), // No border if not active
             ),
           ),
           const SizedBox(height: 5),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle( // Changed to TextStyle to apply color dynamically
               fontFamily: APP_FONT_FAMILY,
               fontSize: 16,
-              color: APP_TEXT_COLOR,
+              color: isActive ? activeGlowColor.darken(0.3) : APP_TEXT_COLOR, // Make text slightly darker than glow
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
@@ -424,6 +711,14 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
                 Animal animalData;
                 try {
                   animalData = Animal.fromFirestore(snapshot.data!);
+                  // Update _animalName here too, in case _loadAnimalName hasn't finished or failed
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && _animalName != animalData.nombre) {
+                      setState(() {
+                        _animalName = animalData.nombre;
+                      });
+                    }
+                  });
                 } catch (e) {
                   print("Error al deserializar datos del animal (ID: ${widget.animalId}): $e. Data: ${snapshot.data!.data()}");
                   return Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.orange[100], child: Icon(Icons.report_problem_outlined, size: 50, color: Colors.orange[700])));
@@ -598,6 +893,17 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
     );
   }
 }
+
+// Extension to darken colors for text (used for the action button labels)
+extension ColorExtension on Color {
+  Color darken([double amount = .1]) {
+    assert(amount >= 0 && amount <= 1);
+    final hsl = HSLColor.fromColor(this);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
+  }
+}
+
 
 // --- Clase del Formulario de Creación de Tratamiento ---
 // Esta es una clase interna y privada, por lo que su nombre empieza con '_'.
