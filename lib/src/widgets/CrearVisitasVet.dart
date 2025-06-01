@@ -1,10 +1,10 @@
-// lib/src/widgets/CrearVisitaVeterinariaScreen.dart
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'dart:developer' as developer; // Para logs
 
 // NEW IMPORTS FOR LOCATION AND IMAGE CACHING
 import 'package:geolocator/geolocator.dart'; // Para geolocalización
@@ -37,18 +37,26 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
   final TextEditingController _costoController = TextEditingController();
   final TextEditingController _veterinarianNameController = TextEditingController();
 
+  // NUEVOS CONTROLADORES PARA LA DIRECCIÓN DEL CENTRO DE ATENCIÓN
+  final TextEditingController _centerNameController = TextEditingController(); // Nombre del Centro de Atención
+  String? _selectedAddressType; // Tipo de vía (Calle, Carrera, Av, etc.)
+  final TextEditingController _addressNumberController = TextEditingController(); // Número principal (ej: 74)
+  final TextEditingController _addressComplementController = TextEditingController(); // Números complementarios (ej: 114-35)
+
+  // AÑADIDO: Controladores para Fecha y Hora
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
+
+
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-  String? _selectedClinicId;
-  String? _selectedClinicName;
-  String? _selectedClinicAddress;
 
-  List<Map<String, dynamic>> _clinics = [];
   bool _isLoading = true;
   bool _isSaving = false;
 
   // NUEVAS VARIABLES DE ESTADO PARA UBICACIÓN Y DATOS DEL ANIMAL
   Position? _currentPosition;
+  String _currentLocationString = "Obteniendo ubicación..."; // Coordenadas GPS
   String? _locationError;
   bool _isLocationLoading = false; // Para indicar si la ubicación se está cargando
   Animal? _animalData; // Para almacenar los datos del animal
@@ -57,9 +65,12 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
   void initState() {
     super.initState();
     _loadAllData(); // Carga todos los datos necesarios al iniciar la pantalla
+    // Inicializar controladores de fecha y hora (aunque al principio estén vacíos)
+    _dateController.text = _selectedDate != null ? DateFormat('dd/MM/yyyy').format(_selectedDate!) : '';
+    _timeController.text = _selectedTime != null ? _selectedTime!.format(context) : '';
   }
 
-  // Método unificado para cargar datos (ubicación, animal, clínicas)
+  // Método unificado para cargar datos (ubicación, animal)
   Future<void> _loadAllData() async {
     if (!mounted) return;
     setState(() {
@@ -75,37 +86,41 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
 
       serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _locationError = 'Los servicios de ubicación están deshabilitados. No se pueden buscar clínicas cercanas.';
-        print(_locationError);
-        // No se retorna, se intentará cargar todas las clínicas sin filtrar por ubicación.
+        _locationError = 'Los servicios de ubicación están deshabilitados. No se pueden obtener coordenadas.';
+        developer.log(_locationError!);
       }
 
       permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          _locationError = 'Permiso de ubicación denegado. No se pueden buscar clínicas cercanas.';
-          print(_locationError);
+          _locationError = 'Permiso de ubicación denegado. No se pueden obtener coordenadas.';
+          developer.log(_locationError!);
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
         _locationError = 'Los permisos de ubicación están denegados permanentemente. Por favor, habilítelos desde la configuración de su dispositivo.';
-        print(_locationError);
+        developer.log(_locationError!);
       }
 
       if (_locationError == null && serviceEnabled && (permission == LocationPermission.whileInUse || permission == LocationPermission.always)) {
         try {
-          _currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-          print("Ubicación actual: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}");
+          Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+          if (!mounted) return;
+          setState(() {
+            _currentPosition = position;
+            _currentLocationString = "Lat: ${position.latitude.toStringAsFixed(4)}, Lon: ${position.longitude.toStringAsFixed(4)}";
+          });
+          developer.log("Ubicación actual: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}");
         } catch (e) {
           _locationError = 'Error al obtener la ubicación: $e';
-          print(_locationError);
+          developer.log(_locationError!);
         }
       }
     } catch (e) {
       _locationError = 'Error con la geolocalización: $e';
-      print("Error durante la inicialización de geolocator: $e");
+      developer.log("Error durante la inicialización de geolocator: $e");
     } finally {
       if (mounted) {
         setState(() {
@@ -114,7 +129,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
       }
     }
 
-    // 2. Cargar datos del animal (copiado de VisitasalVeterinario.dart)
+    // 2. Cargar datos del animal
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId != null && widget.animalId.isNotEmpty) {
@@ -127,54 +142,19 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
         if (animalDoc.exists) {
           _animalData = Animal.fromFirestore(animalDoc);
         } else {
-          print("Documento del animal con ID ${widget.animalId} no encontrado.");
+          developer.log("Documento del animal con ID ${widget.animalId} no encontrado.");
         }
       } else {
-        print("Usuario no autenticado o animalId vacío.");
+        developer.log("Usuario no autenticado o animalId vacío.");
       }
     } catch (e) {
-      print("Error cargando datos del animal: $e");
+      developer.log("Error cargando datos del animal: $e");
     }
 
-    // 3. Cargar Clínicas (y filtrar si la ubicación está disponible)
-    try {
-      final clinicSnapshot = await FirebaseFirestore.instance.collection('clinics').get();
-      List<Map<String, dynamic>> fetchedClinics = clinicSnapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-
-      if (_currentPosition != null) {
-        // Calcular distancias y ordenar
-        fetchedClinics.forEach((clinic) {
-          if (clinic['latitude'] != null && clinic['longitude'] != null) {
-            double distance = Geolocator.distanceBetween(
-              _currentPosition!.latitude,
-              _currentPosition!.longitude,
-              clinic['latitude'],
-              clinic['longitude'],
-            );
-            clinic['distance'] = distance; // Distancia en metros
-          } else {
-            clinic['distance'] = double.infinity; // Clínicas sin coordenadas al final
-          }
-        });
-
-        // Ordenar por distancia (las más cercanas primero)
-        fetchedClinics.sort((a, b) => (a['distance'] as double).compareTo(b['distance'] as double));
-
-        // Opcional: filtrar por una distancia máxima (ej. 50 km)
-        // _clinics = fetchedClinics.where((clinic) => clinic['distance'] <= 50000).toList();
-        _clinics = fetchedClinics; // Se muestran todas, pero ordenadas por distancia
-      } else {
-        _clinics = fetchedClinics; // Si no hay ubicación, se cargan todas sin ordenar por distancia
-      }
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false; // Finaliza la carga general
-        });
-      }
-    } catch (e) {
-      print("Error cargando clínicas: $e");
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al cargar datos iniciales: $e')));
+    if (mounted) {
+      setState(() {
+        _isLoading = false; // Finaliza la carga general
+      });
     }
   }
 
@@ -201,6 +181,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+        _dateController.text = DateFormat('dd/MM/yyyy').format(picked); // ACTUALIZAR CONTROLADOR DE FECHA
       });
     }
   }
@@ -226,8 +207,21 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
     if (picked != null && picked != _selectedTime) {
       setState(() {
         _selectedTime = picked;
+        _timeController.text = picked.format(context); // ACTUALIZAR CONTROLADOR DE HORA
       });
     }
+  }
+
+  // Helper para construir la dirección completa a partir de los campos estructurados
+  String _buildFullAddress() {
+    String fullAddress = "";
+    if (_selectedAddressType != null && _addressNumberController.text.isNotEmpty) {
+      fullAddress = "${_selectedAddressType} ${_addressNumberController.text}";
+      if (_addressComplementController.text.isNotEmpty) {
+        fullAddress += " - ${_addressComplementController.text}";
+      }
+    }
+    return fullAddress.trim();
   }
 
   Future<void> _saveVisit() async {
@@ -238,10 +232,16 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor, seleccione la fecha y hora de la visita.')));
       return;
     }
-    if (_selectedClinicId == null || _selectedClinicId!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor, seleccione un centro de atención.')));
+    // Validar que se haya ingresado el nombre del centro y al menos el tipo y número de vía
+    if (_centerNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor, ingrese el nombre del centro de atención.')));
       return;
     }
+    if (_selectedAddressType == null || _addressNumberController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor, ingrese la dirección completa del centro de atención.')));
+      return;
+    }
+
 
     if (!mounted) return;
     setState(() {
@@ -272,10 +272,13 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
           .collection('visits')
           .add({
         'fecha': visitDateTime,
-        'hora': _selectedTime!.format(context),
-        'centroAtencionId': _selectedClinicId,
-        'centroAtencionNombre': _selectedClinicName,
-        'centroAtencionDireccion': _selectedClinicAddress,
+        'hora': _selectedTime!.format(context), // Opcional: guardar como string también
+        'centroAtencionNombre': _centerNameController.text.trim(), // Nombre del centro de atención
+        'centroAtencionTipoVia': _selectedAddressType, // Tipo de vía
+        'centroAtencionNumeroVia': _addressNumberController.text.trim(), // Número de vía
+        'centroAtencionComplemento': _addressComplementController.text.trim(), // Complemento
+        'centroAtencionDireccionCompleta': _buildFullAddress(), // Dirección completa para mostrar fácilmente
+        'centroAtencionCoordenadas': _currentLocationString, // Coordenadas GPS
         'veterinarioId': userId, // Se registra el UID del dueño del animal como quien creó la entrada
         'veterinarioNombre': _veterinarianNameController.text.trim(), // Nombre del veterinario ingresado por el dueño
         'diagnostico': _diagnosticoController.text.trim(),
@@ -291,7 +294,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
         Navigator.pop(context, true);
       }
     } catch (e) {
-      print("Error al guardar visita: $e");
+      developer.log("Error al guardar visita: $e");
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al crear visita: $e')));
     } finally {
       if (mounted) setState(() {
@@ -308,87 +311,76 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
     _observacionesController.dispose();
     _costoController.dispose();
     _veterinarianNameController.dispose();
+    _centerNameController.dispose();
+    _addressNumberController.dispose();
+    _addressComplementController.dispose();
+    // AÑADIDO: Disponer los controladores de fecha y hora
+    _dateController.dispose();
+    _timeController.dispose();
     super.dispose();
   }
 
-  // MODIFICADO: Añadidos nuevos parámetros para la posición del icono (iconPositionedTop, iconPositionedBottom, iconPositionedLeft)
-  Widget _buildTextFormFieldWithIcon({
-    required TextEditingController controller,
-    required String labelText,
-    required String assetIconPath,
-    required double iconWidth,
-    required double iconHeight,
+  Widget _buildFormField({
+    TextEditingController? controller,
+    required String label, // Este es el parámetro que se usa para el título del campo
+    required String iconAsset,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
-    int maxLines = 1,
-    bool enabled = true,
-    // Nuevos parámetros para la posición explícita del icono
-    double? iconPositionedTop,
-    double? iconPositionedBottom,
-    double? iconPositionedLeft,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    int? maxLines = 1,
+    Widget? suffixIcon, // Para iconos al final, como en Date/Time pickers
+    // String? initialValue, // ELIMINADO: Ya no se usa si hay un controller
   }) {
-    // Determinar la posición real del icono, dando prioridad a los parámetros explícitos
-    double? actualTop;
-    double? actualBottom;
-    double actualLeft = iconPositionedLeft ?? 5; // Usa el valor proporcionado o el predeterminado de 5
-
-    if (iconPositionedTop != null) {
-      actualTop = iconPositionedTop;
-      actualBottom = null; // Si se especifica 'top', 'bottom' se deja nulo (a menos que también se especifique)
-    } else if (iconPositionedBottom != null) {
-      actualBottom = iconPositionedBottom;
-      actualTop = null; // Si se especifica 'bottom', 'top' se deja nulo
-    } else {
-      // Si no se especifica 'top' ni 'bottom', se usa la lógica original basada en maxLines
-      actualTop = maxLines > 1 ? 10 : 0;
-      actualBottom = maxLines > 1 ? null : 10;
-    }
+    const double iconSize = 42.0; // Altura base para todos los íconos
+    const double iconLeftPadding = 10.0;
+    const double textFieldLeftPadding = iconLeftPadding + iconSize + 10.0; // Padding del contenido para el texto
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 18.0),
       child: Stack(
+        alignment: Alignment.centerLeft,
         children: [
           TextFormField(
-            controller: controller,
-            decoration: InputDecoration(
-              labelText: labelText,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.95),
-              contentPadding: const EdgeInsets.only(left: 50.0, right: 15.0, top: 15, bottom: 15),
-              floatingLabelBehavior: FloatingLabelBehavior.auto,
-            ),
+            controller: controller, // USANDO EL CONTROLADOR
+            readOnly: readOnly,
+            onTap: onTap,
             keyboardType: keyboardType,
-            validator: validator,
-            style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16),
-            enabled: enabled,
             maxLines: maxLines,
+            // initialValue: initialValue, // Comentado o eliminado, ya que controller lo maneja
+            style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 15, color: Colors.black87),
+            decoration: InputDecoration(
+              labelText: label, // Aquí se usa el parámetro 'label' para el título
+              labelStyle: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black54, fontSize: 15),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade400)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade500)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1.5)),
+              filled: true,
+              fillColor: readOnly ? Colors.grey[200] : Colors.white.withOpacity(0.9),
+              contentPadding: EdgeInsets.only(left: textFieldLeftPadding, top: maxLines! > 1 ? 18 : 18, bottom: maxLines > 1 ? 18 : 18, right: 15),
+              floatingLabelBehavior: FloatingLabelBehavior.auto,
+              suffixIcon: suffixIcon,
+            ),
+            validator: validator,
           ),
-          Positioned(
-            left: actualLeft,
-            top: actualTop,
-            bottom: actualBottom,
-            child: Align(
-              // El Alignment se ajusta. Si top/bottom explícitos, se centra. Si no, usa la lógica anterior.
-              alignment: (iconPositionedTop != null || iconPositionedBottom != null)
-                  ? Alignment.centerLeft
-                  : (maxLines > 1 ? Alignment.topLeft : Alignment.centerLeft),
-              child: Container(
-                width: iconWidth,
-                height: iconHeight,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(assetIconPath),
-                    fit: BoxFit.fill,
-                  ),
-                ),
-              ),
+          Padding(
+            padding: EdgeInsets.only(left: iconLeftPadding),
+            child: Image.asset(
+              iconAsset,
+              width: iconSize,
+              height: iconSize,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                developer.log("Error cargando icono de formulario: $iconAsset, $error");
+                return Icon(Icons.error_outline, color: Colors.red, size: iconSize - 10);
+              },
             ),
           ),
         ],
       ),
     );
   }
+
 
   // Método auxiliar para mostrar imagen grande (copiado de VisitasalVeterinario.dart)
   void _showLargeImage(String imageUrl) {
@@ -500,7 +492,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
             ),
           ),
 
-          // NUEVO: Foto y Nombre del Animal (copiado de VisitasalVeterinario.dart)
+          // NUEVO: Foto y Nombre del Animal
           Positioned(
             top: animalPhotoTop, // Posición ajustada para el diseño actual
             left: 0,
@@ -529,7 +521,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                             imageUrl: _animalData!.fotoPerfilUrl!, fit: BoxFit.cover,
                             placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                             errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
-                            : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                            : const Icon(Icons.pets, size: 50, color: Colors.grey),
                       ),
                     ),
                     if (_animalData!.nombre.isNotEmpty)
@@ -595,140 +587,117 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                     const SizedBox(height: 30),
 
                     // Selector de fecha
-                    Container(
-                      height: 60,
-                      margin: const EdgeInsets.only(bottom: 20),
-                      child: Stack(
-                        children: [
-                          InkWell(
-                            onTap: () => _selectDate(context),
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                labelText: 'Fecha de la Visita',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                filled: true,
-                                fillColor: Colors.white.withOpacity(0.95),
-                                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 15.0),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _selectedDate != null ? DateFormat('dd/MM/yyyy').format(_selectedDate!) : 'Seleccionar fecha',
-                                    style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: _selectedDate != null ? Colors.black87 : Colors.grey.shade700),
-                                  ),
-                                  const Icon(Icons.calendar_today, color: Colors.grey),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 5, top: 0, bottom: 10,
-                            child: Align(alignment: Alignment.centerLeft, child: Container(width: 35.2, height: 40.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/fecha.png'), fit: BoxFit.fill)))),
-                          ),
-                        ],
-                      ),
+                    _buildFormField(
+                      controller: _dateController, // USANDO EL CONTROLADOR
+                      label: 'Fecha de la Visita',
+                      iconAsset: 'assets/images/fechavisita.png',
+                      readOnly: true,
+                      onTap: () => _selectDate(context),
+                      // initialValue: _selectedDate != null ? DateFormat('dd/MM/yyyy').format(_selectedDate!) : '', // ELIMINADO
+                      suffixIcon: const Icon(Icons.calendar_today, color: Colors.grey),
                     ),
 
                     // Selector de hora
-                    Container(
-                      height: 60,
-                      margin: const EdgeInsets.only(bottom: 20),
-                      child: Stack(
-                        children: [
-                          InkWell(
-                            onTap: () => _selectTime(context),
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                labelText: 'Hora de la Visita',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                filled: true,
-                                fillColor: Colors.white.withOpacity(0.95),
-                                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 15.0),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _selectedTime != null ? _selectedTime!.format(context) : 'Seleccionar hora',
-                                    style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: _selectedTime != null ? Colors.black87 : Colors.grey.shade700),
-                                  ),
-                                  const Icon(Icons.access_time, color: Colors.grey),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 5, top: 0, bottom: 10,
-                            child: Align(alignment: Alignment.centerLeft, child: Container(width: 35.2, height: 40.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/hora.png'), fit: BoxFit.fill)))),
-                          ),
-                        ],
-                      ),
+                    _buildFormField(
+                      controller: _timeController, // USANDO EL CONTROLADOR
+                      label: 'Hora de la Visita',
+                      iconAsset: 'assets/images/horavisita.png',
+                      readOnly: true,
+                      onTap: () => _selectTime(context),
+                      // initialValue: _selectedTime != null ? _selectedTime!.format(context) : '', // ELIMINADO
+                      suffixIcon: const Icon(Icons.access_time, color: Colors.grey),
                     ),
 
-                    // Selector de Centro de Atención - Altura consistente con fecha y hora
+                    // Campo: Nombre del Centro de Atención
+                    _buildFormField(
+                      controller: _centerNameController,
+                      label: 'Nombre del Centro de Atención',
+                      iconAsset: 'assets/images/centrodeatencion.png',
+                      validator: (v) => v!.isEmpty ? 'Ingrese el nombre del centro de atención' : null,
+                    ),
+
+                    // --- Bloque de Dirección Estructurada para el Centro de Atención ---
                     Container(
-                      height: 60, // Mantiene la misma altura que Fecha y Hora
-                      margin: const EdgeInsets.only(bottom: 20),
+                      margin: const EdgeInsets.only(bottom: 18.0),
                       child: Stack(
+                        alignment: Alignment.centerLeft,
                         children: [
                           DropdownButtonFormField<String>(
-                            value: _selectedClinicId,
                             decoration: InputDecoration(
-                              labelText: _isLocationLoading
-                                  ? 'Cargando centros de atención...'
-                                  : (_locationError ?? 'Centro de Atención'), // Muestra error o etiqueta normal
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              labelText: 'Tipo de Vía',
+                              labelStyle: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black54, fontSize: 15),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade400)),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade500)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1.5)),
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.95),
-                              // Padding de contenido consistente con los campos de fecha/hora
-                              contentPadding: const EdgeInsets.only(left: 50.0, right: 15.0, top: 15, bottom: 15),
+                              fillColor: Colors.white.withOpacity(0.9),
+                              contentPadding: const EdgeInsets.only(left: 55.0, right: 10.0, top: 18, bottom: 18),
                             ),
-                            items: _clinics.map((clinic) {
-                              String clinicName = clinic['name'] ?? 'Clínica desconocida';
-                              String distanceText = '';
-                              if (clinic['distance'] != null && clinic['distance'] != double.infinity) {
-                                // Convertir metros a km y formatear a 1 decimal
-                                double distanceKm = clinic['distance'] / 1000;
-                                distanceText = ' (${distanceKm.toStringAsFixed(1)} km)';
-                              }
-                              return DropdownMenuItem<String>(
-                                value: clinic['id'] as String,
-                                child: Text('$clinicName$distanceText', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
-                              );
+                            hint: Text('Seleccione el tipo de vía', style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.grey[600], fontSize: 15)),
+                            value: _selectedAddressType,
+                            isExpanded: true,
+                            icon: const Icon(Icons.arrow_drop_down, color: Color(0xff4ec8dd)),
+                            style: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black87, fontSize: 15),
+                            dropdownColor: Colors.white,
+                            items: ['Calle', 'Carrera', 'Avenida', 'Diagonal', 'Transversal', 'Circular', 'Autopista', 'Vereda', 'Kilómetro'].map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(value: value, child: Text(value));
                             }).toList(),
-                            onChanged: _isLoading || _isLocationLoading ? null : (value) { // Deshabilitar si se está cargando
+                            onChanged: (String? newValue) {
                               setState(() {
-                                _selectedClinicId = value;
-                                final selectedClinic = _clinics.firstWhere((clinic) => clinic['id'] == value);
-                                _selectedClinicName = selectedClinic['name'] as String?;
-                                _selectedClinicAddress = selectedClinic['address'] as String?;
+                                _selectedAddressType = newValue;
                               });
                             },
-                            validator: (value) => value == null ? 'Seleccione un centro' : null,
-                            isExpanded: true,
+                            validator: (value) => value == null ? 'Seleccione el tipo de vía' : null,
                           ),
-                          Positioned(
-                            left: 5, top: 0, bottom: 10,
-                            child: Align(alignment: Alignment.centerLeft, child: Container(width: 35.2, height: 40.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/ubicacion.png'), fit: BoxFit.fill)))),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 10.0),
+                            child: Image.asset('assets/images/ubicacion.png', width: 42, height: 42, fit: BoxFit.contain),
                           ),
-                          if (_isLocationLoading) // Muestra un pequeño indicador de carga junto a la etiqueta
-                            Positioned(
-                              right: 40, // Ajusta la posición según sea necesario
-                              top: 0,
-                              bottom: 0,
-                              child: Center(
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2.0, valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade600)),
-                                ),
-                              ),
-                            ),
                         ],
                       ),
                     ),
+                    _buildFormField(
+                      controller: _addressNumberController,
+                      label: 'Número de Vía (Ej: 74)',
+                      iconAsset: 'assets/images/calle.png',
+                      keyboardType: TextInputType.number,
+                      validator: (v) => v!.isEmpty ? 'Ingrese el número de vía' : null,
+                    ),
+                    _buildFormField(
+                      controller: _addressComplementController,
+                      label: 'Números Complementarios (Ej: # 114-35)',
+                      iconAsset: 'assets/images/#.png',
+                      // No se requiere validator si es opcional, pero lo mantengo si se espera siempre
+                      // validator: (v) => v!.isEmpty ? 'Ingrese los números complementarios' : null,
+                    ),
+                    // --- Fin del Bloque de Dirección Estructurada ---
 
+                    // Coordenadas GPS
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 18.0),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                            labelText: 'Coordenadas GPS',
+                            labelStyle: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black54, fontSize: 15),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade400)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade500)),
+                            filled: true,
+                            fillColor: Colors.grey[200], // Fondo gris para solo lectura
+                            contentPadding: const EdgeInsets.only(left: 55.0, top: 18, bottom: 18, right: 15),
+                            prefixIconConstraints: const BoxConstraints(minWidth: 52, minHeight: 52),
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.only(left: 10.0, right:0.0),
+                              child: Image.asset('assets/images/coordenada.png', width: 42, height: 42, fit: BoxFit.contain),
+                            )
+                        ),
+                        child: _isLocationLoading
+                            ? const SizedBox(height: 20, width:20, child: Center(child: CircularProgressIndicator(strokeWidth: 2.0, valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))))
+                            : Padding(
+                          padding: const EdgeInsets.only(top: 1.0),
+                          child: Text(_currentLocationString, style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 15, color: Colors.black87)),
+                        ),
+                      ),
+                    ),
                     // Muestra el error de ubicación si existe
                     if (_locationError != null && !_isLocationLoading)
                       Padding(
@@ -745,61 +714,51 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                         ),
                       ),
 
-                    // Campo de texto para el nombre del Veterinario (ahora editable por el dueño)
-                    // MODIFICADO: Uso de los nuevos parámetros de posicionamiento para el icono
-                    _buildTextFormFieldWithIcon(
+                    // Campo de texto para el nombre del Veterinario
+                    _buildFormField(
                       controller: _veterinarianNameController,
-                      labelText: 'Nombre del Veterinario',
-                      assetIconPath: 'assets/images/veterinario.png', // Asegúrate de tener este icono
+                      label: 'Nombre del Veterinario',
+                      iconAsset: 'assets/images/veterinario.png',
                       validator: (v) => v!.isEmpty ? 'Ingrese nombre del veterinario' : null,
-                      iconWidth: 40, iconHeight: 40.0,
-                      iconPositionedTop: 5.0, // Coloca el icono a 10px del top del Container (centrado verticalmente para campos de 60px de alto con icono de 40px)
-                      // iconPositionedBottom: null, // No es necesario especificar si iconPositionedTop ya está
-                      // iconPositionedLeft: 5.0, // Puedes ajustarlo si deseas moverlo horizontalmente
                     ),
 
                     // Campos de texto para la visita
-                    _buildTextFormFieldWithIcon(
+                    _buildFormField(
                       controller: _diagnosticoController,
-                      labelText: 'Diagnóstico',
-                      assetIconPath: 'assets/images/diagnostico.png',
-                      iconWidth: 40.0, iconHeight: 40.0,
+                      label: 'Diagnóstico',
+                      iconAsset: 'assets/images/diagnostico.png',
                       maxLines: 3,
                       validator: (v) => v!.isEmpty ? 'Ingrese diagnóstico' : null,
                     ),
-                    _buildTextFormFieldWithIcon(
+                    _buildFormField(
                       controller: _tratamientoController,
-                      labelText: 'Tratamiento',
-                      assetIconPath: 'assets/images/tratamiento.png',
-                      iconWidth: 40.0, iconHeight: 40.0,
+                      label: 'Tratamiento',
+                      iconAsset: 'assets/images/tratamiento.png',
                       maxLines: 3,
                       validator: (v) => v!.isEmpty ? 'Ingrese tratamiento' : null,
                     ),
-                    _buildTextFormFieldWithIcon(
+                    _buildFormField(
                       controller: _medicamentosController,
-                      labelText: 'Medicamentos',
-                      assetIconPath: 'assets/images/medicamentos.png',
-                      iconWidth: 40.0, iconHeight: 40.0,
+                      label: 'Medicamentos',
+                      iconAsset: 'assets/images/medicamentos.png',
                       maxLines: 3,
                     ),
-                    _buildTextFormFieldWithIcon(
+                    _buildFormField(
                       controller: _observacionesController,
-                      labelText: 'Observaciones',
-                      assetIconPath: 'assets/images/observaciones.png',
-                      iconWidth: 40.0, iconHeight: 40.0,
+                      label: 'Observaciones',
+                      iconAsset: 'assets/images/observaciones.png',
                       maxLines: 3,
                     ),
-                    _buildTextFormFieldWithIcon(
+                    _buildFormField(
                       controller: _costoController,
-                      labelText: 'Costo (\$)',
-                      assetIconPath: 'assets/images/costo.png',
-                      iconWidth: 40.0, iconHeight: 40.0,
+                      label: 'Costo (\$)',
+                      iconAsset: 'assets/images/costo.png',
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
                       validator: (v) => v!.isEmpty ? 'Ingrese costo' : (double.tryParse(v.replaceAll(',', '.')) == null ? 'Número inválido' : null),
                     ),
                     const SizedBox(height: 20),
 
-                    // Botón para guardar visita - ¡MODIFICADO CON EL NUEVO ICONO!
+                    // Botón para guardar visita
                     GestureDetector(
                       onTap: _isSaving ? null : _saveVisit,
                       child: Stack(
@@ -807,8 +766,8 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                         children: [
                           Image.asset(
                             'assets/images/visitavet.png', // Nuevo icono para crear la visita
-                            width: 120.0, // Ancho de 120
-                            height: 120.0, // Altura de 120 (para que sea cuadrado)
+                            width: 120.0,
+                            height: 120.0,
                             fit: BoxFit.fill,
                           ),
                           if (_isSaving) const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),

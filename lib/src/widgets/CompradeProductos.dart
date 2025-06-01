@@ -50,6 +50,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
   late final Stream<QuerySnapshot<Map<String, dynamic>>> _productsStream;
 
 
+  /// Inicializa el estado del widget, configurando el stream de productos y los listeners del controlador de búsqueda.
   @override
   void initState() {
     super.initState();
@@ -60,6 +61,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
     _currentInputText = _searchController.text;
   }
 
+  /// Callback que se ejecuta cuando el texto del campo de búsqueda cambia, actualizando la variable local.
   void _onSearchInputChanged() {
     if (mounted) {
       setState(() {
@@ -68,6 +70,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
     }
   }
 
+  /// Realiza la acción de búsqueda de productos, ocultando el teclado y actualizando el término de búsqueda.
   void _performSearch() async {
     developer.log('CompradeProductos _performSearch: Starting search for: "${_searchController.text.trim()}"');
     FocusScope.of(context).unfocus(); // Ocultar el teclado
@@ -90,12 +93,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
     }
   }
 
+  /// Limpia el campo de búsqueda y vuelve a realizar la búsqueda (mostrando todos los productos).
   void _clearSearch() {
     developer.log('CompradeProductos _clearSearch: Clearing search bar');
     _searchController.clear();
     _performSearch();
   }
 
+  /// Libera los controladores y notifiers cuando el widget es desechado.
   @override
   void dispose() {
     developer.log('CompradeProductos dispose: Disposing controllers and notifiers');
@@ -105,6 +110,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
     super.dispose();
   }
 
+  /// Muestra un modal (bottom sheet) con la lista de productos publicados por el usuario actual.
   Future<void> _mostrarModalMisProductos() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
@@ -131,6 +137,8 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
+  /// Muestra un modal (bottom sheet) para editar un producto específico.
+  /// Verifica si el usuario actual es el propietario del producto antes de permitir la edición.
   Future<void> _mostrarModalEditarProducto(Product product, BuildContext cardContext) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null || currentUser.uid != product.userId) {
@@ -155,11 +163,19 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
+  /// Constructor de widget para una tarjeta individual de producto en la cuadrícula principal.
+  /// Incluye lógica para mostrar opciones de edición/eliminación si el usuario es el propietario.
+  ///
+  /// Parámetros:
+  /// - `context`: El BuildContext actual.
+  /// - `product`: El objeto Product a mostrar en la tarjeta.
   Widget _buildProductCard(BuildContext context, Product product) {
     String? imageUrl = product.images.isNotEmpty ? product.images.first.url : null;
     final currentUser = FirebaseAuth.instance.currentUser;
     final bool isOwner = currentUser != null && product.userId.isNotEmpty && product.userId == currentUser.uid;
 
+    /// Función interna para eliminar un producto de la base de datos y Storage.
+    /// Muestra un diálogo de confirmación antes de proceder con la eliminación.
     Future<void> _deleteProduct(String productId, String productName) async {
       bool? confirmDelete = await showDialog<bool>(
         context: context,
@@ -402,6 +418,8 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
+  /// Construye la interfaz de usuario principal de la pantalla de compra de productos.
+  /// Contiene la barra de búsqueda, iconos de navegación y la cuadrícula de productos.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -859,6 +877,8 @@ class _CompradeProductosState extends State<CompradeProductos> {
   }
 }
 
+/// Widget modal para mostrar los productos publicados por un usuario específico.
+/// Recibe el ID del usuario y un BuildContext padre para mostrar SnackBar.
 class _MisProductosModalWidget extends StatelessWidget {
   final String userId;
   final BuildContext parentContextForSnackbars;
@@ -869,6 +889,14 @@ class _MisProductosModalWidget extends StatelessWidget {
     required this.parentContextForSnackbars,
   }) : super(key: key);
 
+  /// Método estático para eliminar un producto desde dentro del modal "Mis Productos".
+  /// Incluye validación de permisos y confirmación de eliminación.
+  ///
+  /// Parámetros:
+  /// - `contextForDialogsAndSnackbars`: Contexto para mostrar diálogos y SnackBar.
+  /// - `productId`: ID del producto a eliminar.
+  /// - `productName`: Nombre del producto a eliminar (para confirmación).
+  /// - `userIdOfProduct`: ID del usuario propietario del producto.
   static Future<void> _deleteProductFromModal(
       BuildContext contextForDialogsAndSnackbars,
       String productId,
@@ -944,6 +972,8 @@ class _MisProductosModalWidget extends StatelessWidget {
     }
   }
 
+  /// Construye la interfaz de usuario del modal "Mis Productos Publicados".
+  /// Muestra una lista de productos del usuario y permite editar o eliminar cada uno.
   @override
   Widget build(BuildContext modalSheetContext) {
     return FractionallySizedBox(
@@ -995,10 +1025,13 @@ class _MisProductosModalWidget extends StatelessWidget {
                   }
                   if (snapshot.hasError) {
                     developer.log('Error cargando mis productos (modal) para user $userId: ${snapshot.error}');
-                    return const Center(
-                        child: Text('Error al cargar tus productos. Por favor, revisa tu conexión a internet.',
+                    // MODIFICACIÓN: Mensaje de error más informativo
+                    final errorMessage = 'Error al cargar tus productos. Esto puede deberse a problemas de conexión, permisos o la configuración de tus reglas en Firebase (posiblemente falta un índice compuesto para userId y creationDate). Por favor, intenta de nuevo o revisa la consola de depuración para más detalles.';
+                    return Center(
+                        child: Text(
+                            errorMessage,
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
+                            style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)));
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     developer.log('No se encontraron productos para el usuario: $userId');
@@ -1072,49 +1105,62 @@ class _MisProductosModalWidget extends StatelessWidget {
                               Text('Stock: ${product.stock}', style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR, fontSize: 13)),
                             ],
                           ),
-                          trailing: PopupMenuButton<String>(
-                            icon: Icon(Icons.more_vert, color: APP_TEXT_COLOR.withOpacity(0.7)),
-                            color: const Color(0xffa0f4fe).withOpacity(0.95),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            onSelected: (String value) {
-                              if (value == 'editar_modal') {
-                                Navigator.of(modalSheetContext).pop();
-                                showModalBottomSheet(
-                                  context: parentContextForSnackbars,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (BuildContext editModalCtx) {
-                                    return _EditarProductoModalWidget(
-                                      key: Key('edit_product_modal_list_${product.id}'),
-                                      productToEdit: product,
-                                      parentContextForSnackbars: parentContextForSnackbars,
+                          // MODIFICACIÓN: Se añade un Row para contener múltiples acciones en el trailing.
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min, // Para que el Row ocupe solo el espacio necesario
+                            children: [
+                              // Botón de opciones (ahora solo para editar)
+                              PopupMenuButton<String>(
+                                icon: Icon(Icons.more_vert, color: APP_TEXT_COLOR.withOpacity(0.7)),
+                                color: const Color(0xffa0f4fe).withOpacity(0.95),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                onSelected: (String value) {
+                                  if (value == 'editar_modal') {
+                                    // Cierra el modal actual para abrir el de edición desde el contexto padre
+                                    Navigator.of(modalSheetContext).pop();
+                                    showModalBottomSheet(
+                                      context: parentContextForSnackbars,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (BuildContext editModalCtx) {
+                                        return _EditarProductoModalWidget(
+                                          key: Key('edit_product_modal_list_${product.id}'),
+                                          productToEdit: product,
+                                          parentContextForSnackbars: parentContextForSnackbars,
+                                        );
+                                      },
                                     );
-                                  },
-                                );
-                              } else if (value == 'eliminar_modal') {
-                                _MisProductosModalWidget._deleteProductFromModal(itemBuildContext, product.id, product.name, product.userId);
-                              }
-                            },
-                            itemBuilder: (BuildContext popupCtx) => <PopupMenuEntry<String>>[
-                              const PopupMenuItem<String>(
-                                value: 'editar_modal',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.edit_outlined, color: APP_TEXT_COLOR, size: 20),
-                                    SizedBox(width: 8),
-                                    Text('Editar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
-                                  ],
-                                ),
+                                  }
+                                  // La opción 'eliminar_modal' se ha movido a un botón directo
+                                },
+                                itemBuilder: (BuildContext popupCtx) => <PopupMenuEntry<String>>[
+                                  const PopupMenuItem<String>(
+                                    value: 'editar_modal',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit_outlined, color: APP_TEXT_COLOR, size: 20),
+                                        SizedBox(width: 8),
+                                        Text('Editar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const PopupMenuItem<String>(
-                                value: 'eliminar_modal',
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.delete_sweep_outlined, color: Colors.red, size: 20),
-                                    SizedBox(width: 8),
-                                    Text('Eliminar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.red)),
-                                  ],
+                              // Botón de eliminar directo con imagen personalizada
+                              IconButton(
+                                icon: Image.asset(
+                                  'assets/images/eliminar.png',
+                                  height: 50.0, // Altura deseada
+                                  width: 50.0,  // Ancho para mantener la proporción si es necesario
+                                  fit: BoxFit.contain, // Ajuste de la imagen dentro del espacio
                                 ),
+                                onPressed: () {
+                                  // Llama a la función estática para eliminar el producto
+                                  _MisProductosModalWidget._deleteProductFromModal(itemBuildContext, product.id, product.name, product.userId);
+                                },
+                                tooltip: 'Eliminar producto', // Etiqueta para accesibilidad
+                                padding: EdgeInsets.zero, // Elimina el padding interno predeterminado del IconButton
+                                constraints: const BoxConstraints(minWidth: 50, minHeight: 50), // Asegura que el área del botón sea de al menos 50x50
                               ),
                             ],
                           ),
@@ -1144,6 +1190,8 @@ class _MisProductosModalWidget extends StatelessWidget {
   }
 }
 
+/// Widget modal para editar los detalles de un producto existente.
+/// Recibe el producto a editar y un BuildContext padre para mostrar SnackBar.
 class _EditarProductoModalWidget extends StatefulWidget {
   final Product productToEdit;
   final BuildContext parentContextForSnackbars;
@@ -1158,6 +1206,7 @@ class _EditarProductoModalWidget extends StatefulWidget {
   __EditarProductoModalWidgetState createState() => __EditarProductoModalWidgetState();
 }
 
+/// Clase de estado para el widget _EditarProductoModalWidget.
 class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
@@ -1170,6 +1219,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
 
+  /// Inicializa los controladores de texto con los datos del producto a editar.
   @override
   void initState() {
     super.initState();
@@ -1181,6 +1231,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     _currentImagesInfo = List.from(widget.productToEdit.images);
   }
 
+  /// Libera los controladores de texto cuando el widget es desechado.
   @override
   void dispose() {
     _nameController.dispose();
@@ -1191,6 +1242,8 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     super.dispose();
   }
 
+  /// Permite al usuario seleccionar nuevas imágenes desde la galería o cámara.
+  /// Añade las imágenes seleccionadas a la lista de nuevas imágenes.
   Future<void> _pickImages() async {
     try {
       final List<XFile> pickedFiles = await _picker.pickMultiImage(imageQuality: 70, maxWidth: 1024);
@@ -1209,18 +1262,27 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     }
   }
 
+  /// Elimina una imagen existente (ya subida a Storage) de la lista a mostrar.
   void _removeExistingImage(int index) {
     setState(() {
       _currentImagesInfo.removeAt(index);
     });
   }
 
+  /// Elimina una imagen recién seleccionada (aún no subida a Storage).
   void _removeNewImage(int index) {
     setState(() {
       _newImageFiles.removeAt(index);
     });
   }
 
+  /// Sube una imagen individual a Firebase Storage.
+  /// Retorna un objeto ProductImage con la URL de descarga y el publicId.
+  ///
+  /// Parámetros:
+  /// - `imageFile`: El archivo de imagen a subir.
+  /// - `productId`: El ID del producto al que pertenece la imagen (para la ruta de almacenamiento).
+  /// - `index`: El índice de la imagen (para el nombre del archivo).
   Future<ProductImage> _uploadImage(XFile imageFile, String productId, int index) async {
     String fileExtension = imageFile.name.split('.').last.toLowerCase();
     String fileName = 'products/$productId/image_${DateTime.now().millisecondsSinceEpoch}_$index.$fileExtension';
@@ -1239,6 +1301,8 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     return ProductImage(publicId: fileName, url: downloadUrl);
   }
 
+  /// Guarda los cambios del producto, subiendo nuevas imágenes, eliminando las antiguas si es necesario,
+  /// y actualizando los datos en Firestore.
   Future<void> _saveProductChanges() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -1250,11 +1314,13 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     try {
       List<ProductImage> finalImageInfos = List.from(_currentImagesInfo);
 
+      // Sube las nuevas imágenes y las añade a la lista final
       for (int i = 0; i < _newImageFiles.length; i++) {
         ProductImage newProductImage = await _uploadImage(_newImageFiles[i], widget.productToEdit.id, i);
         finalImageInfos.add(newProductImage);
       }
 
+      // Identifica y elimina las imágenes que ya no están en la lista actual
       List<String> originalUrls = widget.productToEdit.images.map((img) => img.url).toList();
       List<String> remainingUrls = _currentImagesInfo.map((img) => img.url).toList();
       List<String> urlsToDeleteFromStorage = originalUrls.where((url) => !remainingUrls.contains(url)).toList();
@@ -1270,6 +1336,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
         }
       }
 
+      // Prepara los datos actualizados para Firestore
       Map<String, dynamic> updatedData = {
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
@@ -1280,13 +1347,14 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
         'lastUpdated': FieldValue.serverTimestamp(),
       };
 
+      // Actualiza el documento del producto en Firestore
       await FirebaseFirestore.instance.collection('products').doc(widget.productToEdit.id).update(updatedData);
 
       if (mounted) {
         ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
           const SnackBar(content: Text('Producto actualizado correctamente.', style: TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.green),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // Cierra el modal después de guardar
       }
     } catch (e) {
       developer.log("Error actualizando producto: $e");
@@ -1297,11 +1365,19 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
       }
     } finally {
       if (mounted) {
-        setState(() => _isUploading = false);
+        setState(() => _isUploading = false); // Finaliza el estado de carga
       }
     }
   }
 
+  /// Widget auxiliar para construir un campo de texto con estilo.
+  ///
+  /// Parámetros:
+  /// - `controller`: El controlador de texto para el campo.
+  /// - `label`: La etiqueta del campo.
+  /// - `keyboardType`: Tipo de teclado a usar (por defecto TextInputType.text).
+  /// - `maxLines`: Número máximo de líneas (por defecto 1).
+  /// - `validator`: Función de validación personalizada para el campo.
   Widget _buildTextField({required TextEditingController controller, required String label, TextInputType keyboardType = TextInputType.text, int maxLines = 1, String? Function(String?)? validator}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -1339,6 +1415,8 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     );
   }
 
+  /// Construye la interfaz de usuario del modal de edición de producto.
+  /// Contiene un formulario para editar los detalles del producto y la gestión de imágenes.
   @override
   Widget build(BuildContext modalEditContext) {
     return FractionallySizedBox(
@@ -1410,6 +1488,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                             spacing: 10.0,
                             runSpacing: 10.0,
                             children: [
+                              // Muestra las imágenes existentes (ya subidas)
                               ...List.generate(_currentImagesInfo.length, (index) {
                                 final imageInfo = _currentImagesInfo[index];
                                 return Stack(
@@ -1438,6 +1517,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                                   ],
                                 );
                               }),
+                              // Muestra las nuevas imágenes seleccionadas (aún no subidas)
                               ...List.generate(_newImageFiles.length, (index) {
                                 return Stack(
                                   clipBehavior: Clip.none,

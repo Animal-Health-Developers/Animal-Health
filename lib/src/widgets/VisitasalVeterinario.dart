@@ -1,4 +1,3 @@
-// lib/src/widgets/VisitasalVeterinario.dart
 import 'package:animal_health/src/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
@@ -16,7 +15,7 @@ import 'package:cached_network_image/cached_network_image.dart'; // Para mostrar
 import 'package:intl/intl.dart'; // Para formatear la fecha
 
 // Importamos la nueva pantalla para crear visitas
-import 'CrearVisitasVet.dart';
+import 'CrearVisitasVet.dart'; // Corregido: Era 'CrearVisitasVet.dart'
 import 'FuncionesdelaApp.dart';
 import '../models/animal.dart'; // Importación para el modelo Animal
 
@@ -108,13 +107,33 @@ class _VisitasalVeterinarioState extends State<VisitasalVeterinario> {
     if (visitData['fecha'] is Timestamp) {
       visitDateTime = (visitData['fecha'] as Timestamp).toDate();
     } else if (visitData['fecha'] is String) {
+      // Intentar parsear si está como String, aunque debería ser Timestamp
       visitDateTime = DateTime.tryParse(visitData['fecha']) ?? DateTime.now();
     } else {
       visitDateTime = DateTime.now();
     }
 
     final String formattedDate = DateFormat('dd/MM/yyyy').format(visitDateTime);
-    final String formattedTime = visitData['hora'] ?? 'N/A';
+    // Asegurarse de que 'hora' siempre sea un string o 'N/A'
+    final String formattedTime = visitData['hora'] is String ? visitData['hora'] : TimeOfDay.fromDateTime(visitDateTime).format(context);
+
+
+    // OBTENER LA DIRECCIÓN COMPLETA
+    String fullAddress = visitData['centroAtencionDireccionCompleta'] ?? '';
+    // Si la dirección completa no existe (para registros antiguos o si hay un error),
+    // intentar construirla a partir de los campos individuales.
+    if (fullAddress.isEmpty) {
+      String? tipoVia = visitData['centroAtencionTipoVia'];
+      String? numeroVia = visitData['centroAtencionNumeroVia'];
+      String? complemento = visitData['centroAtencionComplemento'];
+      if (tipoVia != null && numeroVia != null) {
+        fullAddress = '$tipoVia $numeroVia';
+        if (complemento != null && complemento.isNotEmpty) {
+          fullAddress += ' - $complemento';
+        }
+      }
+    }
+
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
@@ -128,11 +147,21 @@ class _VisitasalVeterinarioState extends State<VisitasalVeterinario> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          _buildInfoRow(iconPath: 'assets/images/fecha.png', iconWidth: 35.2, iconHeight: 40.0, text: 'Fecha: $formattedDate'),
+          // ICONO DE FECHA CAMBIADO A fechavisita.png
+          _buildInfoRow(iconPath: 'assets/images/fechavisita.png', iconWidth: 35.2, iconHeight: 40.0, text: 'Fecha: $formattedDate'),
           const SizedBox(height: 10),
-          _buildInfoRow(iconPath: 'assets/images/hora.png', iconWidth: 35.2, iconHeight: 40.0, text: 'Hora: $formattedTime'),
+          // ICONO DE HORA CAMBIADO A horavisita.png
+          _buildInfoRow(iconPath: 'assets/images/horavisita.png', iconWidth: 35.2, iconHeight: 40.0, text: 'Hora: $formattedTime'),
           const SizedBox(height: 10),
-          _buildInfoRow(iconPath: 'assets/images/ubicacion.png', iconWidth: 35.2, iconHeight: 40.0, text: 'Centro: ${visitData['centroAtencionNombre'] ?? 'N/A'}\n${visitData['centroAtencionDireccion'] ?? ''}', maxLines: 3),
+          // ICONO DE CENTRO DE ATENCIÓN CAMBIADO A centrodeatencion.png
+          // Y CAMPO DE DIRECCIÓN A centroAtencionDireccionCompleta
+          _buildInfoRow(
+            iconPath: 'assets/images/centrodeatencion.png',
+            iconWidth: 35.2,
+            iconHeight: 40.0,
+            text: 'Centro: ${visitData['centroAtencionNombre'] ?? 'N/A'}\n${fullAddress.isNotEmpty ? fullAddress : 'Dirección no disponible'}',
+            maxLines: 3,
+          ),
           const SizedBox(height: 10),
           _buildInfoRow(iconPath: 'assets/images/veterinario.png', iconWidth: 35.2, iconHeight: 40.0, text: 'Veterinario: ${visitData['veterinarioNombre'] ?? 'N/A'}'),
           const SizedBox(height: 10),

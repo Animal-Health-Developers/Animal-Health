@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb; // Para verificar si es we
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // Aunque no se use directamente aquí, es bueno mantenerlo si otras partes del proyecto lo usan
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -231,112 +231,163 @@ class _VenderProductosState extends State<VenderProductos> {
     }
   }
 
-  // --- MÉTODO _buildTextField RESTAURADO ---
+  // --- MÉTODO _buildTextField con icono ---
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
-    required String originalHint, // Renombrado de hintText a originalHint para evitar colisión
+    required String originalHint,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
     int maxLines = 1,
+    required String iconPath, // Nuevo parámetro para la ruta del icono
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR),
-        decoration: InputDecoration(
-          labelText: labelText,
-          labelStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Colors.black54),
-          hintText: originalHint, // Usar el originalHint
-          hintStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w700),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-            borderSide: const BorderSide(color: Color(0xff707070)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-            borderSide: const BorderSide(color: Color(0xff707070), width: 1.0),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-            borderSide: const BorderSide(color: APP_PRIMARY_COLOR, width: 2.0),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: SizedBox(
+        height: maxLines > 1 ? null : 60.0, // Altura ajustada para campos de una línea
+        child: Stack(
+          children: [
+            TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              maxLines: maxLines,
+              minLines: maxLines > 1 ? 3 : 1, // Asegura altura mínima para multilinea
+              style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR),
+              decoration: InputDecoration(
+                labelText: labelText,
+                labelStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Colors.black54),
+                hintText: originalHint,
+                hintStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w700),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: Color(0xff707070)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: Color(0xff707070), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: APP_PRIMARY_COLOR, width: 2.0),
+                ),
+                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 16.0), // Espacio para el icono
+              ),
+              validator: validator ??
+                      (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, ingresa $labelText';
+                    }
+                    if (labelText.toLowerCase().contains("precio") || labelText.toLowerCase().contains("cantidad")) {
+                      if (double.tryParse(value) == null) {
+                        return 'Por favor, ingresa un número válido';
+                      }
+                      if (double.parse(value) < 0) {
+                        return 'El valor no puede ser negativo';
+                      }
+                    }
+                    return null;
+                  },
+            ),
+            Positioned(
+              left: 5,
+              top: maxLines > 1 ? 10 : 0, // Ajusta la posición superior para multilinea
+              bottom: maxLines > 1 ? null : 10, // Ajusta la posición inferior para una línea
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 37.0, // Ancho del icono
+                  height: 40.0, // Alto del icono
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(iconPath),
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        validator: validator ?? // Permite un validador personalizado
-                (value) { // Validador por defecto
-              if (value == null || value.isEmpty) {
-                return 'Por favor, ingresa $labelText';
-              }
-              // Validación específica para precio y cantidad
-              if (labelText.toLowerCase().contains("precio") || labelText.toLowerCase().contains("cantidad")) {
-                if (double.tryParse(value) == null) {
-                  return 'Por favor, ingresa un número válido';
-                }
-                if (double.parse(value) < 0) {
-                  return 'El valor no puede ser negativo';
-                }
-              }
-              return null;
-            },
       ),
     );
   }
   // --- FIN MÉTODO _buildTextField ---
 
-  // --- MÉTODO _buildCategoryDropdown RESTAURADO ---
-  Widget _buildCategoryDropdown() {
+  // --- MÉTODO _buildCategoryDropdown con icono ---
+  Widget _buildCategoryDropdown({required String iconPath}) { // Nuevo parámetro
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: DropdownButtonFormField<String>(
-        value: _categoriaSeleccionada,
-        isExpanded: true, // Para que el dropdown ocupe el ancho disponible
-        decoration: InputDecoration(
-          labelText: 'Categoría',
-          labelStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Colors.black54),
-          hintText: 'Selecciona una categoría', // Placeholder
-          hintStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w700),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-            borderSide: const BorderSide(color: Color(0xff707070)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-            borderSide: const BorderSide(color: Color(0xff707070), width: 1.0),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-            borderSide: const BorderSide(color: APP_PRIMARY_COLOR, width: 2.0),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Ajuste de padding
+      child: SizedBox(
+        height: 60.0, // Altura fija para el dropdown
+        child: Stack(
+          children: [
+            DropdownButtonFormField<String>(
+              value: _categoriaSeleccionada,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: 'Categoría',
+                labelStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Colors.black54),
+                hintText: 'Selecciona una categoría',
+                hintStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w700),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: Color(0xff707070)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: Color(0xff707070), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: APP_PRIMARY_COLOR, width: 2.0),
+                ),
+                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 16.0), // Espacio para el icono
+              ),
+              icon: const Icon(Icons.arrow_drop_down_circle, color: APP_PRIMARY_COLOR),
+              style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR),
+              dropdownColor: Colors.white,
+              items: _listaDeCategorias.map((String category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category, style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR)),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _categoriaSeleccionada = newValue;
+                });
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor, selecciona una categoría';
+                }
+                return null;
+              },
+            ),
+            Positioned(
+              left: 5,
+              top: 0,
+              bottom: 10,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 40.0, // Ancho del icono
+                  height: 40.0, // Alto del icono
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(iconPath),
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        icon: const Icon(Icons.arrow_drop_down_circle, color: APP_PRIMARY_COLOR), // Icono personalizado
-        style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR), // Estilo del texto seleccionado
-        dropdownColor: Colors.white, // Color de fondo del menú desplegable
-        items: _listaDeCategorias.map((String category) {
-          return DropdownMenuItem<String>(
-            value: category,
-            child: Text(category, style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR)),
-          );
-        }).toList(),
-        onChanged: (String? newValue) {
-          setState(() {
-            _categoriaSeleccionada = newValue;
-          });
-        },
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Por favor, selecciona una categoría';
-          }
-          return null;
-        },
       ),
     );
   }
@@ -652,35 +703,42 @@ class _VenderProductosState extends State<VenderProductos> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    // --- CAMPOS DEL FORMULARIO RESTAURADOS ---
+                    // --- CAMPOS DEL FORMULARIO CON ICONOS ---
                     _buildTextField(
                       controller: _nombreController,
                       labelText: 'Nombre del Producto',
                       originalHint: 'Nombre del Producto',
+                      iconPath: 'assets/images/nombreproducto.png',
                     ),
                     _buildTextField(
                       controller: _descripcionController,
                       labelText: 'Descripción del Producto',
                       originalHint: 'Detalles, características...',
                       maxLines: 3,
+                      iconPath: 'assets/images/infoproducto.png',
                     ),
-                    _buildCategoryDropdown(),
+                    _buildCategoryDropdown(
+                      iconPath: 'assets/images/category.png',
+                    ),
                     _buildTextField(
                       controller: _precioController,
                       labelText: 'Precio',
                       originalHint: 'Precio',
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      iconPath: 'assets/images/price.png',
                     ),
                     _buildTextField(
                       controller: _cantidadController,
                       labelText: 'Cantidad de Productos',
                       originalHint: 'Cantidad de Productos',
                       keyboardType: TextInputType.number,
+                      iconPath: 'assets/images/stock.png',
                     ),
                     _buildTextField(
                       controller: _empresaController,
                       labelText: 'Nombre de la Empresa o Negocio',
                       originalHint: 'Nombre de la Empresa o Negocio',
+                      iconPath: 'assets/images/company.png',
                     ),
                     // --- FIN CAMPOS DEL FORMULARIO ---
                     const SizedBox(height: 16.0),
@@ -742,7 +800,7 @@ class _VenderProductosState extends State<VenderProductos> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20.0), // Espacio al final del scroll
+                    const SizedBox(height: 0.0), // Espacio al final del scroll
                   ],
                 ),
               ),

@@ -23,11 +23,6 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:developer' as developer;
 
-// Usaremos el mismo modelo de campo que en ServiciodeAmbulancia
-// si los campos son idénticos o muy similares.
-// Si son diferentes, podrías crear un AtencionEnCasaField.
-// Por simplicidad, reusaremos AmbulanceServiceField renombrándolo mentalmente.
-
 class AtencionenCasa extends StatefulWidget {
   const AtencionenCasa({
     required Key key,
@@ -49,6 +44,12 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
   final TextEditingController _anchoController = TextEditingController();
   final TextEditingController _otroProblemaController = TextEditingController();
 
+  // Controladores y variable para la nueva dirección estructurada
+  String? _selectedAddressType; // Tipo de vía (Calle, Carrera, Av, etc.)
+  final TextEditingController _addressNumberController = TextEditingController(); // Número principal (ej: 74)
+  final TextEditingController _addressComplementController = TextEditingController(); // Números complementarios (ej: 114-35)
+
+
   final List<String> _healthProblems = [ // Puedes personalizar esta lista para atención en casa
     'Chequeo General', 'Vacunación', 'Desparasitación', 'Curación de Herida Leve',
     'Problema Digestivo Leve', 'Problema de Piel Leve', 'Consulta de Comportamiento',
@@ -58,13 +59,14 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
   String? _selectedHealthProblem;
   bool _showOtroProblemaField = false;
 
-  String _currentLocationString = "Obteniendo ubicación...";
+  String _currentLocationString = "Obteniendo ubicación..."; // Coordenadas GPS
   bool _isLocationLoading = true;
 
   Map<String, String> _contactInfo = {
     'name': 'Cargando...',
     'email': 'Cargando...',
-    'document': 'Cargando...',
+    'documento': 'Cargando...',
+    'contacto': 'Cargando...',
   };
   bool _isContactInfoLoading = true;
 
@@ -137,7 +139,8 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
         setState(() {
           _contactInfo['name'] = userDoc.get('displayName') ?? currentUser.displayName ?? 'No disponible';
           _contactInfo['email'] = currentUser.email ?? 'No disponible';
-          _contactInfo['document'] = userDoc.get('documentId') ?? 'No disponible';
+          _contactInfo['documento'] = userDoc.get('documentId') ?? 'No disponible';
+          _contactInfo['contacto'] = userDoc.get('contacto') ?? 'No disponible';
           _isContactInfoLoading = false;
         });
       } catch (e) {
@@ -146,7 +149,8 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
         setState(() {
           _contactInfo['name'] = currentUser.displayName ?? 'Error al cargar';
           _contactInfo['email'] = currentUser.email ?? 'Error al cargar';
-          _contactInfo['document'] = 'Error al cargar';
+          _contactInfo['documento'] = 'Error al cargar';
+          _contactInfo['contacto'] = 'Error al cargar';
           _isContactInfoLoading = false;
         });
       }
@@ -155,7 +159,8 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
       setState(() {
         _contactInfo['name'] = 'Usuario no autenticado';
         _contactInfo['email'] = 'N/A';
-        _contactInfo['document'] = 'N/A';
+        _contactInfo['documento'] = 'N/A';
+        _contactInfo['contacto'] = 'N/A';
         _isContactInfoLoading = false;
       });
     }
@@ -237,6 +242,16 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
           return;
         }
       }
+
+      // Construir la dirección estructurada
+      String fullAddress = "";
+      if (_selectedAddressType != null && _addressNumberController.text.isNotEmpty) {
+        fullAddress = "${_selectedAddressType} ${_addressNumberController.text}";
+        if (_addressComplementController.text.isNotEmpty) {
+          fullAddress += " - ${_addressComplementController.text}";
+        }
+      }
+
       final solicitudData = {
         'tipoServicio': 'AtencionEnCasa', // Para diferenciar de ambulancia
         'nombreAnimal': _nombreAnimalController.text,
@@ -247,10 +262,12 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
         'largoAnimal': _largoController.text,
         'anchoAnimal': _anchoController.text,
         'problemaMotivo': _selectedHealthProblem == 'Otro (especificar)' ? _otroProblemaController.text : _selectedHealthProblem,
-        'direccionAtencion': _currentLocationString, // Etiqueta más apropiada
+        'direccionAtencion': fullAddress, // Dirección estructurada ingresada
+        'coordenadasAtencion': _currentLocationString, // Coordenadas GPS obtenidas automáticamente
         'contactoNombre': _contactInfo['name'],
         'contactoEmail': _contactInfo['email'],
-        'contactoDocumento': _contactInfo['document'],
+        'contactoDocumento': _contactInfo['documento'],
+        'contactoTelefono': _contactInfo['contacto'],
         'historiaClinicaUrl': historiaClinicaUrl,
         'fechaSolicitud': FieldValue.serverTimestamp(),
         'solicitanteId': FirebaseAuth.instance.currentUser?.uid,
@@ -260,7 +277,6 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
       developer.log("Datos de solicitud de Atención en Casa: $solicitudData");
 
       try {
-        // Considera una colección diferente o un campo para diferenciar el tipo de solicitud
         await FirebaseFirestore.instance.collection('solicitudes_atencion_casa').add(solicitudData);
         if(mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -275,8 +291,11 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
           _largoController.clear();
           _anchoController.clear();
           _otroProblemaController.clear();
+          _addressNumberController.clear(); // Limpiar campos de dirección
+          _addressComplementController.clear(); // Limpiar campos de dirección
           setState(() {
             _selectedHealthProblem = null;
+            _selectedAddressType = null; // Resetear tipo de vía
             _historiaClinicaBytes = null;
             _historiaClinicaFile = null;
             _historiaClinicaFileName = null;
@@ -301,6 +320,8 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
     _largoController.dispose();
     _anchoController.dispose();
     _otroProblemaController.dispose();
+    _addressNumberController.dispose(); // Disponer controladores de dirección
+    _addressComplementController.dispose(); // Disponer controladores de dirección
     super.dispose();
   }
 
@@ -339,7 +360,7 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
     VoidCallback? onTap,
     int? maxLines = 1,
   }) {
-    const double iconSize = 42.0;
+    const double iconSize = 42.0; // Altura base para todos los íconos
     const double iconLeftPadding = 10.0;
     const double textFieldLeftPadding = iconLeftPadding + iconSize + 10.0;
 
@@ -372,8 +393,8 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
             padding: EdgeInsets.only(left: iconLeftPadding),
             child: Image.asset(
               iconAsset,
-              width: iconSize,
-              height: iconSize,
+              width: iconSize, // Usar iconSize para mantener la misma altura
+              height: iconSize, // Usar iconSize para mantener la misma altura
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
                 developer.log("Error cargando icono de formulario: $iconAsset, $error");
@@ -606,11 +627,66 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
                       if (_showOtroProblemaField)
                         _buildFormField(controller: _otroProblemaController, label: 'Especifique el motivo', iconAsset: 'assets/images/motivoconsulta.png', validator: (v) => v!.isEmpty ? 'Especifique el motivo' : null, maxLines: 3),
 
+                      // --- Nuevo Bloque de Dirección Estructurada ---
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 18.0),
+                        child: Stack(
+                          alignment: Alignment.centerLeft,
+                          children: [
+                            DropdownButtonFormField<String>(
+                              decoration: InputDecoration(
+                                labelText: 'Tipo de Vía',
+                                labelStyle: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black54, fontSize: 15),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade400)),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade500)),
+                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1.5)),
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.9),
+                                contentPadding: const EdgeInsets.only(left: 55.0, right: 10.0, top: 18, bottom: 18),
+                              ),
+                              hint: Text('Seleccione el tipo de vía', style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.grey[600], fontSize: 15)),
+                              value: _selectedAddressType,
+                              isExpanded: true,
+                              icon: const Icon(Icons.arrow_drop_down, color: Color(0xff4ec8dd)),
+                              style: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black87, fontSize: 15),
+                              dropdownColor: Colors.white,
+                              items: ['Calle', 'Carrera', 'Avenida', 'Diagonal', 'Transversal', 'Circular', 'Autopista', 'Vereda', 'Kilómetro'].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(value: value, child: Text(value));
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedAddressType = newValue;
+                                });
+                              },
+                              validator: (value) => value == null ? 'Seleccione tipo de vía' : null,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10.0),
+                              child: Image.asset('assets/images/ubicacion.png', width: 42, height: 42, fit: BoxFit.contain, errorBuilder: (c,e,s) => Icon(Icons.location_on_outlined, size: 38)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _buildFormField(
+                        controller: _addressNumberController,
+                        label: 'Número de Vía (Ej: 74)',
+                        iconAsset: 'assets/images/calle.png',
+                        keyboardType: TextInputType.number,
+                        validator: (v) => v!.isEmpty ? 'Ingrese el número de vía' : null,
+                      ),
+                      _buildFormField(
+                        controller: _addressComplementController,
+                        label: 'Números Complementarios (Ej: # 114-35)',
+                        iconAsset: 'assets/images/#.png',
+                        validator: (v) => v!.isEmpty ? 'Ingrese los números complementarios' : null,
+                      ),
+                      // --- Fin del Bloque de Dirección Estructurada ---
+
                       Padding(
                         padding: const EdgeInsets.only(bottom: 18.0),
                         child: InputDecorator(
                           decoration: InputDecoration(
-                              labelText: 'Dirección de Atención', // Etiqueta cambiada
+                              labelText: 'Coordenadas GPS', // Etiqueta para las coordenadas
                               labelStyle: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black54, fontSize: 15),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade400)),
                               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade500)),
@@ -620,7 +696,7 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
                               prefixIconConstraints: BoxConstraints(minWidth: 52, minHeight: 52),
                               prefixIcon: Padding(
                                 padding: const EdgeInsets.only(left: 10.0, right:0.0),
-                                child: Image.asset('assets/images/ubicacion.png', width: 42, height: 42, fit: BoxFit.contain, errorBuilder: (c,e,s) => Icon(Icons.location_on_outlined, size: 38)),
+                                child: Image.asset('assets/images/coordenada.png', width: 42, height: 42, fit: BoxFit.contain, errorBuilder: (c,e,s) => Icon(Icons.gps_fixed, size: 38)), // <--- ÍCONO ACTUALIZADO AQUÍ
                               )
                           ),
                           child: _isLocationLoading
@@ -657,7 +733,8 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
                             children: [
                               Text("Nombre: ${_contactInfo['name']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
                               Text("Email: ${_contactInfo['email']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
-                              Text("Documento: ${_contactInfo['document']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
+                              Text("Documento: ${_contactInfo['documento']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
+                              Text("Teléfono: ${_contactInfo['contacto']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
                             ],
                           ),
                         ),

@@ -23,26 +23,6 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:developer' as developer;
 
-class AmbulanceServiceField {
-  final String label;
-  final String iconAsset;
-  final String keyPrefix;
-  final bool isDropdown;
-  final List<String>? dropdownItems;
-  final bool isLocation;
-  final bool isContactInfo;
-
-  AmbulanceServiceField({
-    required this.label,
-    required this.iconAsset,
-    required this.keyPrefix,
-    this.isDropdown = false,
-    this.dropdownItems,
-    this.isLocation = false,
-    this.isContactInfo = false,
-  });
-}
-
 class ServiciodeAmbulancia extends StatefulWidget {
   const ServiciodeAmbulancia({
     required Key key,
@@ -64,6 +44,12 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
   final TextEditingController _anchoController = TextEditingController();
   final TextEditingController _otroProblemaController = TextEditingController();
 
+  // Controladores y variable para la nueva dirección estructurada
+  String? _selectedAddressType; // Tipo de vía (Calle, Carrera, Av, etc.)
+  final TextEditingController _addressNumberController = TextEditingController(); // Número principal (ej: 74)
+  final TextEditingController _addressComplementController = TextEditingController(); // Números complementarios (ej: 114-35)
+
+
   final List<String> _healthProblems = [
     'Atragantamiento', 'Fractura Expuesta', 'Fractura Interna', 'Golpe de Calor',
     'Herida Abierta Sangrante', 'Herida Leve', 'Intoxicación / Envenenamiento',
@@ -75,7 +61,7 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
   String? _selectedHealthProblem;
   bool _showOtroProblemaField = false;
 
-  String _currentLocationString = "Obteniendo ubicación...";
+  String _currentLocationString = "Obteniendo ubicación..."; // Coordenadas GPS
   bool _isLocationLoading = true;
 
   Map<String, String> _contactInfo = {
@@ -160,8 +146,8 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
         setState(() {
           _contactInfo['name'] = userDoc.get('displayName') ?? currentUser.displayName ?? 'No disponible';
           _contactInfo['email'] = currentUser.email ?? 'No disponible';
-          _contactInfo['documento'] = userDoc.get('documento') ?? 'No disponible';
-          _contactInfo['contacto'] = userDoc.get('contacto')?? 'No disponible';
+          _contactInfo['documento'] = userDoc.get('documentId') ?? 'No disponible';
+          _contactInfo['contacto'] = userDoc.get('contacto') ?? 'No disponible';
           _isContactInfoLoading = false;
         });
       } catch (e) {
@@ -171,7 +157,7 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
           _contactInfo['name'] = currentUser.displayName ?? 'Error al cargar';
           _contactInfo['email'] = currentUser.email ?? 'Error al cargar';
           _contactInfo['documento'] = 'Error al cargar';
-          _contactInfo['contacto'] = currentUser.contacto ?? 'No disponible';
+          _contactInfo['contacto'] = 'Error al cargar';
           _isContactInfoLoading = false;
         });
       }
@@ -180,7 +166,8 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
       setState(() {
         _contactInfo['name'] = 'Usuario no autenticado';
         _contactInfo['email'] = 'N/A';
-        _contactInfo['document'] = 'N/A';
+        _contactInfo['documento'] = 'N/A';
+        _contactInfo['contacto'] = 'N/A';
         _isContactInfoLoading = false;
       });
     }
@@ -208,11 +195,11 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
 
   Future<String?> _uploadHistoriaClinica() async {
     if (_historiaClinicaBytes == null && _historiaClinicaFile == null) return null;
-    if (!mounted) return null; // CORRECCIÓN: Devolver null explícitamente
+    if (!mounted) return null;
 
     setState(() { _isUploadingHistoria = true; });
 
-    String? downloadUrl; // Variable para almacenar la URL
+    String? downloadUrl;
 
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -239,14 +226,9 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
       if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al subir archivo: $e')));
       return null;
     } finally {
-      if (mounted) { // Solo ejecutar setState si el widget está montado
+      if (mounted) {
         setState(() { _isUploadingHistoria = false; });
       }
-      // No es necesario un 'return' aquí si el flujo principal ya retorna,
-      // A menos que quieras forzar un valor desde el finally (lo cual es raro).
-      // Si el widget se desmonta y esta parte del finally se ejecuta ANTES
-      // de que el try/catch retorne, entonces sí necesitarías un return null aquí
-      // para cumplir el tipo String?. Pero con los checks de mounted arriba, debería estar bien.
     }
   }
 
@@ -267,6 +249,16 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
           return;
         }
       }
+
+      // Construir la dirección estructurada
+      String fullAddress = "";
+      if (_selectedAddressType != null && _addressNumberController.text.isNotEmpty) {
+        fullAddress = "${_selectedAddressType} ${_addressNumberController.text}";
+        if (_addressComplementController.text.isNotEmpty) {
+          fullAddress += " - ${_addressComplementController.text}";
+        }
+      }
+
       final solicitudData = {
         'nombreAnimal': _nombreAnimalController.text,
         'edadAnimal': _edadController.text,
@@ -276,10 +268,12 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
         'largoAnimal': _largoController.text,
         'anchoAnimal': _anchoController.text,
         'problemaMotivo': _selectedHealthProblem == 'Otro (especificar)' ? _otroProblemaController.text : _selectedHealthProblem,
-        'ubicacionRecogida': _currentLocationString,
+        'ubicacionRecogida': fullAddress, // Dirección estructurada ingresada
+        'coordenadasRecogida': _currentLocationString, // Coordenadas GPS obtenidas automáticamente
         'contactoNombre': _contactInfo['name'],
         'contactoEmail': _contactInfo['email'],
-        'contactoDocumento': _contactInfo['document'],
+        'contactoDocumento': _contactInfo['documento'],
+        'contactoTelefono': _contactInfo['contacto'],
         'historiaClinicaUrl': historiaClinicaUrl,
         'fechaSolicitud': FieldValue.serverTimestamp(),
         'solicitanteId': FirebaseAuth.instance.currentUser?.uid,
@@ -303,13 +297,15 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
           _largoController.clear();
           _anchoController.clear();
           _otroProblemaController.clear();
+          _addressNumberController.clear(); // Limpiar campos de dirección
+          _addressComplementController.clear(); // Limpiar campos de dirección
           setState(() {
             _selectedHealthProblem = null;
+            _selectedAddressType = null; // Resetear tipo de vía
             _historiaClinicaBytes = null;
             _historiaClinicaFile = null;
             _historiaClinicaFileName = null;
             _showOtroProblemaField = false;
-            // No recargar la ubicación ni info de contacto, ya están cargadas.
           });
         }
       } catch (e) {
@@ -330,6 +326,8 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
     _largoController.dispose();
     _anchoController.dispose();
     _otroProblemaController.dispose();
+    _addressNumberController.dispose(); // Disponer controladores de dirección
+    _addressComplementController.dispose(); // Disponer controladores de dirección
     super.dispose();
   }
 
@@ -368,11 +366,14 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
     VoidCallback? onTap,
     int? maxLines = 1, // Añadido para controlar maxLines
   }) {
+    const double iconSize = 42.0; // Altura base para todos los íconos
+    const double iconLeftPadding = 10.0;
+    const double textFieldLeftPadding = iconLeftPadding + iconSize + 10.0;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 18.0),
-      // La altura se ajustará si maxLines es > 1
-      // height: maxLines == 1 ? 60 : null,
       child: Stack(
+        alignment: Alignment.centerLeft,
         children: [
           TextFormField(
             controller: controller,
@@ -389,26 +390,22 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1.5)),
               filled: true,
               fillColor: readOnly ? Colors.grey[200] : Colors.white.withOpacity(0.9),
-              contentPadding: const EdgeInsets.only(left: 50.0, top: 18, bottom: 18, right: 15), // Ajustar padding
+              contentPadding: EdgeInsets.only(left: textFieldLeftPadding, top: 18, bottom: 18, right: 15),
               floatingLabelBehavior: FloatingLabelBehavior.auto,
             ),
             validator: validator,
           ),
-          Positioned(
-            left: 8,
-            top: maxLines == 1 ? 0 : 12, // Ajusta la posición del icono si el campo es multilínea
-            bottom: maxLines == 1 ? 0 : null,
-            child: Center(
-              child: Image.asset(
-                iconAsset,
-                width: 40,
-                height: 40,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  developer.log("Error cargando icono de formulario: $iconAsset, $error");
-                  return Icon(Icons.error_outline, color: Colors.red, size: 30);
-                },
-              ),
+          Padding(
+            padding: EdgeInsets.only(left: iconLeftPadding),
+            child: Image.asset(
+              iconAsset,
+              width: iconSize, // Usar iconSize para mantener la misma altura
+              height: iconSize, // Usar iconSize para mantener la misma altura
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                developer.log("Error cargando icono de formulario: $iconAsset, $error");
+                return Icon(Icons.error_outline, color: Colors.red, size: iconSize - 10);
+              },
             ),
           ),
         ],
@@ -595,7 +592,6 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
 
                       Container(
                         margin: const EdgeInsets.only(bottom: 18.0),
-                        // height: 65, // Altura flexible para el dropdown
                         child: Stack(
                             children: [
                               DropdownButtonFormField<String>(
@@ -636,12 +632,66 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
                       if (_showOtroProblemaField)
                         _buildFormField(controller: _otroProblemaController, label: 'Especifique el problema', iconAsset: 'assets/images/motivoconsulta.png', validator: (v) => v!.isEmpty ? 'Especifique el problema' : null, maxLines: 3),
 
+                      // --- Nuevo Bloque de Dirección Estructurada ---
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 18.0),
+                        child: Stack(
+                          alignment: Alignment.centerLeft,
+                          children: [
+                            DropdownButtonFormField<String>(
+                              decoration: InputDecoration(
+                                labelText: 'Tipo de Vía',
+                                labelStyle: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black54, fontSize: 15),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade400)),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade500)),
+                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1.5)),
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.9),
+                                contentPadding: const EdgeInsets.only(left: 55.0, right: 10.0, top: 18, bottom: 18),
+                              ),
+                              hint: Text('Seleccione el tipo de vía', style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.grey[600], fontSize: 15)),
+                              value: _selectedAddressType,
+                              isExpanded: true,
+                              icon: const Icon(Icons.arrow_drop_down, color: Color(0xff4ec8dd)),
+                              style: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black87, fontSize: 15),
+                              dropdownColor: Colors.white,
+                              items: ['Calle', 'Carrera', 'Avenida', 'Diagonal', 'Transversal', 'Circular', 'Autopista', 'Vereda', 'Kilómetro'].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(value: value, child: Text(value));
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedAddressType = newValue;
+                                });
+                              },
+                              validator: (value) => value == null ? 'Seleccione tipo de vía' : null,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10.0),
+                              child: Image.asset('assets/images/ubicacion.png', width: 42, height: 42, fit: BoxFit.contain, errorBuilder: (c,e,s) => Icon(Icons.location_on_outlined, size: 38)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _buildFormField(
+                        controller: _addressNumberController,
+                        label: 'Número de Vía (Ej: 74)',
+                        iconAsset: 'assets/images/calle.png',
+                        keyboardType: TextInputType.number,
+                        validator: (v) => v!.isEmpty ? 'Ingrese el número de vía' : null,
+                      ),
+                      _buildFormField(
+                        controller: _addressComplementController,
+                        label: 'Números Complementarios (Ej: # 114-35)',
+                        iconAsset: 'assets/images/#.png',
+                        validator: (v) => v!.isEmpty ? 'Ingrese los números complementarios' : null,
+                      ),
+                      // --- Fin del Bloque de Dirección Estructurada ---
 
                       Padding(
                         padding: const EdgeInsets.only(bottom: 18.0),
                         child: InputDecorator(
                           decoration: InputDecoration(
-                              labelText: 'Ubicación de Recogida',
+                              labelText: 'Coordenadas GPS', // Etiqueta para las coordenadas
                               labelStyle: const TextStyle(fontFamily: 'Comic Sans MS', color: Colors.black54, fontSize: 15),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade400)),
                               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade500)),
@@ -651,7 +701,7 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
                               prefixIconConstraints: BoxConstraints(minWidth: 45, minHeight: 45),
                               prefixIcon: Padding(
                                 padding: const EdgeInsets.only(left: 8.0, right:10.0),
-                                child: Image.asset('assets/images/ubicacion.png', width: 30, height: 30, fit: BoxFit.contain, errorBuilder: (c,e,s) => Icon(Icons.location_on_outlined, size: 30)),
+                                child: Image.asset('assets/images/coordenada.png', width: 40, height: 40, fit: BoxFit.contain, errorBuilder: (c,e,s) => Icon(Icons.gps_fixed, size: 30)), // <--- ÍCONO ACTUALIZADO AQUÍ
                               )
                           ),
                           child: _isLocationLoading
@@ -685,7 +735,8 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
                             children: [
                               Text("Nombre: ${_contactInfo['name']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
                               Text("Email: ${_contactInfo['email']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
-                              Text("Documento: ${_contactInfo['document']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
+                              Text("Documento: ${_contactInfo['documento']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
+                              Text("Teléfono: ${_contactInfo['contacto']}", style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14, color: Colors.black87)),
                             ],
                           ),
                         ),
@@ -757,8 +808,4 @@ class _ServiciodeAmbulanciaState extends State<ServiciodeAmbulancia> {
       ),
     );
   }
-}
-
-extension on User {
-  get contacto => 'contacto';
 }
