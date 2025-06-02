@@ -1,7 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -294,48 +294,53 @@ class _CompradeProductosState extends State<CompradeProductos> {
                       ),
                     ),
                   ),
-                  if (isOwner)
+                  // MODIFICACIÓN: Reemplazar PopupMenuButton con iconos directos de editar y eliminar
+                  if (isOwner) ...[
+                    // Icono de Eliminar
                     Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: PopupMenuButton<String>(
-                          icon: Icon(Icons.more_vert, color: Colors.white, shadows: [Shadow(color: Colors.black.withOpacity(0.7), blurRadius: 2)]),
-                          color: const Color(0xffa0f4fe).withOpacity(0.95),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          onSelected: (String value) {
-                            if (value == 'editar_card') {
-                              _mostrarModalEditarProducto(product, context);
-                            } else if (value == 'eliminar_card') {
-                              _deleteProduct(product.id, product.name);
-                            }
+                      top: 3,
+                      right: 2,
+                      child: Tooltip(
+                        message: 'Eliminar Producto',
+                        child: IconButton(
+                          icon: Image.asset(
+                            'assets/images/eliminar.png',
+                            width: 28.0, // Tamaño del icono
+                            height: 28.0,
+                            fit: BoxFit.contain,
+                          ),
+                          onPressed: () {
+                            _deleteProduct(product.id, product.name);
                           },
-                          itemBuilder: (BuildContext popupContext) => <PopupMenuEntry<String>>[
-                            const PopupMenuItem<String>(
-                              value: 'editar_card',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.edit_outlined, color: APP_TEXT_COLOR, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Editar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem<String>(
-                              value: 'eliminar_card',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete_forever, color: Colors.red, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Eliminar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.red)),
-                                ],
-                              ),
-                            ),
-                          ],
+                          padding: EdgeInsets.zero, // Eliminar padding por defecto del IconButton
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32), // Área de toque mínima
+                          splashRadius: 20, // Radio del efecto de "splash" al tocar
                         ),
                       ),
                     ),
+                    // Icono de Editar
+                    Positioned(
+                      top: 3,
+                      right: 2 + 28 + 4, // 2px de right + ancho del icono de eliminar (28px) + un padding de 4px
+                      child: Tooltip(
+                        message: 'Editar Producto',
+                        child: IconButton(
+                          icon: Image.asset(
+                            'assets/images/editar.png',
+                            width: 28.0, // Tamaño del icono
+                            height: 28.0,
+                            fit: BoxFit.contain,
+                          ),
+                          onPressed: () {
+                            _mostrarModalEditarProducto(product, context);
+                          },
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          splashRadius: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -402,11 +407,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
                 child: SizedBox(
                   height: 30.0,
                   child: Center(
-                    child: Image.asset(
-                      'assets/images/carrito.png',
-                      height: 22.0,
-                      width: 22.0,
-                      fit: BoxFit.contain,
+                    child: Tooltip( // Añadir Tooltip al botón de añadir al carrito
+                      message: 'Añadir al Carrito',
+                      child: Image.asset(
+                        'assets/images/carrito.png',
+                        height: 22.0,
+                        width: 22.0,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
@@ -443,11 +451,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Home(key: const Key("HomeFromCompraProductosV4")),
                 ),
               ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/back.png'),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el botón de retroceso
+                message: 'Volver a Inicio',
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/back.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -465,14 +476,17 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Home(key: const Key('HomeLogoFromCompraProductosV4')),
                 ),
               ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/logo.png'),
-                    fit: BoxFit.cover,
+              child: Tooltip( // Tooltip para el logo/home
+                message: 'Ir a Inicio',
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/logo.png'),
+                      fit: BoxFit.cover,
+                    ),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
                   ),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
                 ),
               ),
             ),
@@ -489,11 +503,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Carritodecompras(key: const Key('CarritoIconFromCompraProductosV4')),
                 ),
               ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/carrito.png'),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el icono de carrito
+                message: 'Ver Carrito de Compras',
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/carrito.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -511,11 +528,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Ayuda(key: const Key('AyudaFromCompraProductosV4')),
                 ),
               ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el icono de ayuda
+                message: 'Ayuda',
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/help.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -533,11 +553,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Configuraciones(key: const Key('SettingsFromCompraProductosV4'), authService: AuthService()),
                 ),
               ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el icono de configuración
+                message: 'Configuración',
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/settingsbutton.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -575,36 +598,39 @@ class _CompradeProductosState extends State<CompradeProductos> {
                       pageBuilder: () => PerfilPublico(key: const Key('PerfilPublicoFromCompraProductosV4')),
                     ),
                   ],
-                  child: Container(
-                    width: 60.0,
-                    height: 60.0,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(10.0),
-                      border: Border.all(color: APP_TEXT_COLOR, width: 0.5),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.0),
-                      child: (profilePhotoUrl != null && profilePhotoUrl.isNotEmpty)
-                          ? CachedNetworkImage(
-                        imageUrl: profilePhotoUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.0,
-                            valueColor: AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR),
+                  child: Tooltip( // Tooltip para el icono de perfil
+                    message: 'Ver Perfil Público',
+                    child: Container(
+                      width: 60.0,
+                      height: 60.0,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(10.0),
+                        border: Border.all(color: APP_TEXT_COLOR, width: 0.5),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10.0),
+                        child: (profilePhotoUrl != null && profilePhotoUrl.isNotEmpty)
+                            ? CachedNetworkImage(
+                          imageUrl: profilePhotoUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.0,
+                              valueColor: AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR),
+                            ),
                           ),
-                        ),
-                        errorWidget: (context, url, error) => const Icon(
+                          errorWidget: (context, url, error) => const Icon(
+                            Icons.person,
+                            size: 40.0,
+                            color: Colors.grey,
+                          ),
+                        )
+                            : const Icon(
                           Icons.person,
                           size: 40.0,
                           color: Colors.grey,
                         ),
-                      )
-                          : const Icon(
-                        Icons.person,
-                        size: 40.0,
-                        color: Colors.grey,
                       ),
                     ),
                   ),
@@ -660,7 +686,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                     IconButton(
                       icon: Icon(Icons.clear, color: Colors.grey[600], size: 22),
                       onPressed: _clearSearch,
-                      tooltip: 'Limpiar búsqueda',
+                      tooltip: 'Limpiar búsqueda', // Tooltip ya existente
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
                       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                       splashRadius: 20,
@@ -669,11 +695,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
                     onTap: _performSearch,
                     child: Padding(
                       padding: const EdgeInsets.only(right: 8.0, left: 6.0),
-                      child: Image.asset(
-                        'assets/images/busqueda1.png',
-                        width: 31.0,
-                        height: 31.0,
-                        fit: BoxFit.fill,
+                      child: Tooltip( // Tooltip para el icono de búsqueda
+                        message: 'Buscar',
+                        child: Image.asset(
+                          'assets/images/busqueda1.png',
+                          width: 31.0,
+                          height: 31.0,
+                          fit: BoxFit.fill,
+                        ),
                       ),
                     ),
                   ),
@@ -693,11 +722,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimalesFromCompraProductosV4')),
                 ),
               ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/listaanimales.png'),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el icono de lista de animales
+                message: 'Ver Lista de Animales',
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/listaanimales.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -715,11 +747,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => VenderProductos(key: const Key('VenderProductosDesdeCompraV4')),
                 ),
               ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/vender.png'),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el icono de vender productos
+                message: 'Vender un Producto',
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/vender.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -730,12 +765,15 @@ class _CompradeProductosState extends State<CompradeProductos> {
             Pin(size: 55.0, start: 200.5),
             child: GestureDetector(
               onTap: _mostrarModalMisProductos,
-              child: Container(
-                padding: const EdgeInsets.all(4.0),
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/misproductos.png'),
-                    fit: BoxFit.contain,
+              child: Tooltip( // Tooltip para el icono de mis productos
+                message: 'Mis Productos Publicados',
+                child: Container(
+                  padding: const EdgeInsets.all(4.0),
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/misproductos.png'),
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
@@ -1000,6 +1038,7 @@ class _MisProductosModalWidget extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.of(modalSheetContext).pop(),
+                tooltip: 'Cerrar', // Tooltip para el botón de cerrar modal
               )
             ],
           ),
@@ -1158,7 +1197,7 @@ class _MisProductosModalWidget extends StatelessWidget {
                                   // Llama a la función estática para eliminar el producto
                                   _MisProductosModalWidget._deleteProductFromModal(itemBuildContext, product.id, product.name, product.userId);
                                 },
-                                tooltip: 'Eliminar producto', // Etiqueta para accesibilidad
+                                tooltip: 'Eliminar producto', // Etiqueta para accesibilidad (ya existente)
                                 padding: EdgeInsets.zero, // Elimina el padding interno predeterminado del IconButton
                                 constraints: const BoxConstraints(minWidth: 50, minHeight: 50), // Asegura que el área del botón sea de al menos 50x50
                               ),
@@ -1443,6 +1482,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.of(modalEditContext).pop(),
+                tooltip: 'Cerrar', // Tooltip para el botón de cerrar modal
               )
             ],
           ),
@@ -1507,10 +1547,13 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                                       top: -10, right: -10,
                                       child: InkWell(
                                         onTap: () => _removeExistingImage(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(2),
-                                          decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), shape: BoxShape.circle),
-                                          child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                        child: Tooltip( // Tooltip para eliminar imagen
+                                          message: 'Eliminar imagen',
+                                          child: Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), shape: BoxShape.circle),
+                                            child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -1540,10 +1583,13 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                                       top: -10, right: -10,
                                       child: InkWell(
                                         onTap: () => _removeNewImage(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(2),
-                                          decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), shape: BoxShape.circle),
-                                          child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                        child: Tooltip( // Tooltip para eliminar nueva imagen
+                                          message: 'Eliminar nueva imagen',
+                                          child: Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), shape: BoxShape.circle),
+                                            child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                          ),
                                         ),
                                       ),
                                     ),

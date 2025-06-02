@@ -500,7 +500,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
             child: _animalData != null
                 ? Center(
               child: GestureDetector(
-                onTap: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
+                onTap: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl.isNotEmpty)
                     ? () => _showLargeImage(_animalData!.fotoPerfilUrl!)
                     : null,
                 child: Column(

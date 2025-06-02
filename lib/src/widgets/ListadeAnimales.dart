@@ -44,7 +44,10 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
         color: Colors.white.withOpacity(0.7),
         border: Border.all(color: Colors.white, width: 2),
       ),
-      child: Icon(Icons.pets, size: 40, color: Colors.blueGrey),
+      child: Tooltip( // Tooltip para el placeholder
+        message: 'Imagen no disponible',
+        child: Icon(Icons.pets, size: 40, color: Colors.blueGrey),
+      ),
     );
   }
 
@@ -57,12 +60,15 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
         color: Colors.white.withOpacity(0.7),
         border: Border.all(color: Colors.red, width: 2),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error, size: 30, color: Colors.red),
-          Text('Error', style: TextStyle(fontSize: 10, color: Colors.red)),
-        ],
+      child: Tooltip( // Tooltip para el placeholder de error
+        message: 'Error al cargar imagen',
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, size: 30, color: Colors.red),
+            Text('Error', style: TextStyle(fontSize: 10, color: Colors.red)),
+          ],
+        ),
       ),
     );
   }
@@ -198,6 +204,7 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
             if (widget.isSelectionMode) {
               Navigator.pop(context, animalObjeto);
             } else {
+              // Navega a editar al tocar la tarjeta, si no es modo de selección
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -232,36 +239,62 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
                 ),
                 if (!widget.isSelectionMode)
                   Positioned(
-                    top: 5,
-                    right: 5,
-                    child: PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert, size: 20, color: Colors.black.withOpacity(0.6)),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem<String>(value: 'editar', child: Text('Editar perfil')),
-                        const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar perfil')),
-                      ],
-                      onSelected: (value) {
-                        if (value == 'eliminar') {
-                          _eliminarAnimal(animalDoc.id, context);
-                        } else if (value == 'editar') {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditarPerfildeAnimal(
-                                key: Key('EditarPerfildeAnimal_${animalDoc.id}'),
-                                animalId: animalDoc.id,
-                              ),
+                    top: 3, // Ajustar posición para los íconos directos
+                    right: 2, // Ajustar posición
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Tooltip( // Tooltip para el icono de Editar
+                          message: 'Editar Perfil',
+                          child: IconButton(
+                            icon: Image.asset(
+                              'assets/images/editar.png',
+                              height: 30, // Ajustar tamaño si es necesario, pero mantener la proporción
+                              width: 30,
                             ),
-                          );
-                        }
-                      },
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EditarPerfildeAnimal(
+                                    key: Key('EditarPerfildeAnimal_${animalDoc.id}'),
+                                    animalId: animalDoc.id,
+                                  ),
+                                ),
+                              );
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            splashRadius: 20,
+                          ),
+                        ),
+                        Tooltip( // Tooltip para el icono de Eliminar
+                          message: 'Eliminar Perfil',
+                          child: IconButton(
+                            icon: Image.asset(
+                              'assets/images/eliminar.png',
+                              height: 30, // Ajustar tamaño
+                              width: 30,
+                            ),
+                            onPressed: () {
+                              _eliminarAnimal(animalDoc.id, context);
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            splashRadius: 20,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 if (widget.isSelectionMode)
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: Icon(Icons.check_circle_outline, color: Theme.of(context).primaryColorDark, size: 28),
+                    child: Tooltip( // Tooltip para el icono de selección
+                      message: 'Seleccionar',
+                      child: Icon(Icons.check_circle_outline, color: Theme.of(context).primaryColorDark, size: 28),
+                    ),
                   ),
               ],
             ),
@@ -276,7 +309,10 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
         child: Card(
           color: Colors.red.withOpacity(0.3),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          child: const Center(child: Text('Error al cargar datos', style: TextStyle(color: Colors.white, fontSize: 12))),
+          child: Tooltip( // Tooltip para la tarjeta de error
+            message: 'Error al cargar animal',
+            child: const Center(child: Text('Error al cargar datos', style: TextStyle(color: Colors.white, fontSize: 12))),
+          ),
         ),
       );
     }
@@ -299,13 +335,16 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Home(key: const Key('Home')))],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+            child: Tooltip( // Tooltip para el logo/botón de Home
+              message: 'Ir a Inicio',
+              child: PageLink(
+                links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Home(key: const Key('Home')))],
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
               ),
             ),
@@ -314,21 +353,30 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
             Pin(size: 52.9, start: 9.1),
             Pin(size: 50.0, start: 49.0),
             child: widget.isSelectionMode
-                ? InkWell(
-              onTap: () => Navigator.pop(context),
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+                ? Tooltip( // Tooltip para el botón de regresar (modo selección)
+              message: 'Volver',
+              child: InkWell(
+                onTap: () => Navigator.pop(context),
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+              ),
             )
-                : PageLink(
-              links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Home(key: const Key('Home')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+                : Tooltip( // Tooltip para el botón de regresar (modo normal)
+              message: 'Volver a Inicio',
+              child: PageLink(
+                links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Home(key: const Key('Home')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Ayuda(key: const Key('Ayuda')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip para el botón de Ayuda
+              message: 'Ayuda',
+              child: PageLink(
+                links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Ayuda(key: const Key('Ayuda')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           if (!widget.isSelectionMode && userId != null)
@@ -343,27 +391,30 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
                     final userData = snapshot.data!.data() as Map<String, dynamic>;
                     profilePhotoUrl = userData['profilePhotoUrl'] as String?;
                   }
-                  return PageLink(
-                    links: [PageLinkInfo(pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')))],
-                    child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10.0),
-                          color: Colors.grey[200],
-                          border: Border.all(color: Colors.white, width: 1.5)
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.5),
-                        child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
-                            ? CachedNetworkImage(
-                            imageUrl: profilePhotoUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
-                            errorWidget: (context, url, error) {
-                              print("Error cargando foto de perfil del usuario (URL: $url): $error");
-                              return const Icon(Icons.person, size: 35, color: Colors.grey);
-                            }
-                        )
-                            : const Icon(Icons.person, size: 35, color: Colors.grey),
+                  return Tooltip( // Tooltip para la foto de perfil del usuario
+                    message: 'Ver tu Perfil',
+                    child: PageLink(
+                      links: [PageLinkInfo(pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')))],
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10.0),
+                            color: Colors.grey[200],
+                            border: Border.all(color: Colors.white, width: 1.5)
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8.5),
+                          child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
+                              ? CachedNetworkImage(
+                              imageUrl: profilePhotoUrl,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
+                              errorWidget: (context, url, error) {
+                                print("Error cargando foto de perfil del usuario (URL: $url): $error");
+                                return const Icon(Icons.person, size: 35, color: Colors.grey);
+                              }
+                          )
+                              : const Icon(Icons.person, size: 35, color: Colors.grey),
+                        ),
                       ),
                     ),
                   );
@@ -374,9 +425,12 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
             Pinned.fromPins(
               Pin(size: 47.2, end: 7.6),
               Pin(size: 50.0, start: 49.0),
-              child: PageLink(
-                links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()))],
-                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+              child: Tooltip( // Tooltip para el botón de Configuración
+                message: 'Configuración',
+                child: PageLink(
+                  links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()))],
+                  child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+                ),
               ),
             ),
           ],
@@ -449,26 +503,30 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
                     padding: const EdgeInsets.only(bottom: 20.0, top: 10),
                     child: Column(
                       children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CrearPerfildeAnimal(
-                                  key: const Key('CrearPerfildeAnimal'),
+                        Tooltip( // Tooltip para el botón de crear perfil de animal
+                          message: 'Crear nuevo perfil de animal',
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CrearPerfildeAnimal(
+                                    key: const Key('CrearPerfildeAnimal'),
+                                  ),
                                 ),
+                              );
+                            },
+                            child: Container(
+                              width: 127.3,
+                              height: 120.0,
+                              decoration: const BoxDecoration(
+                                image: DecorationImage(image: AssetImage('assets/images/crearperfilanimal.png'), fit: BoxFit.fill),
                               ),
-                            );
-                          },
-                          child: Container(
-                            width: 127.3,
-                            height: 120.0,
-                            decoration: const BoxDecoration(
-                              image: DecorationImage(image: AssetImage('assets/images/crearperfilanimal.png'), fit: BoxFit.fill),
                             ),
                           ),
                         ),
                         const SizedBox(height: 10),
+                        // El siguiente contenedor es solo texto, no un icono, no requiere Tooltip a menos que sea interactivo.
                         Container(
                           width: 135.0,
                           height: 35.0,

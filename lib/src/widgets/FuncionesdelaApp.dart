@@ -11,7 +11,7 @@ import './Home.dart';
 import './Ayuda.dart';
 import './EditarPerfildeAnimal.dart';
 import './VisitasalVeterinario.dart'; // Asegúrate que esta ruta es correcta
-import './CarnetdeVacunacin.dart';
+import './CarnetdeVacunacion.dart';
 import './Tratamientomedico.dart';
 import './HistoriaClnica.dart';
 import './IndicedeMasaCoporal.dart';
@@ -323,7 +323,7 @@ class _FuncionesdelaAppState extends State<FuncionesdelaApp> {
                         label: 'Carnet de Vacunación',
                         onTap: () {
                           if (widget.animalId.isNotEmpty) {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => CarnetdeVacunacin(key: const Key('CarnetVac'), animalId: widget.animalId)));
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => CarnetdeVacunacion(key: const Key('CarnetVac'), animalId: widget.animalId)));
                           }
                         },
                       ),

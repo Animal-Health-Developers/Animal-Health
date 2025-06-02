@@ -1,13 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'historia_clinica.dart';
-import 'carnetvacunacion.dart';
+import 'carnetvacunacion.dart'; // Asegúrate de que esta importación sea correcta
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+
 part 'animal.g.dart';
+
+// --- Funciones Helper para JsonKey (nivel superior) ---
+
+// Para CarnetVacunacion:
+// Convierte un mapa JSON en una instancia de CarnetVacunacion
+CarnetVacunacion _carnetVacunacionFromJson(Map<String, dynamic> json) =>
+    CarnetVacunacion.fromMap(json);
+
+// Convierte una instancia de CarnetVacunacion a un mapa JSON para json_serializable.
+// Adapta los Timestamps de Firestore a Strings ISO 8601.
+Map<String, dynamic> _carnetVacunacionToJson(CarnetVacunacion object) {
+  final map = object.toMap(); // Obtiene el mapa con Timestamps de Firestore
+  return map.map((key, value) {
+    if (value is Timestamp) {
+      return MapEntry(key, value.toDate().toIso8601String()); // Convierte Timestamp a String para JSON
+    }
+    return MapEntry(key, value); // Mantiene otros valores sin cambios
+  });
+}
+// --- Fin de funciones Helper ---
 
 @JsonSerializable()
 class Animal {
@@ -19,10 +40,20 @@ class Animal {
   num peso;
   num largo;
   num ancho;
+
+  // Usa JsonKey para decirle a json_serializable que use tus métodos fromMap/toMap (adaptados)
+  @JsonKey(fromJson: _carnetVacunacionFromJson, toJson: _carnetVacunacionToJson)
   CarnetVacunacion carnetVacunacion;
+
+  // HistoriaClinica está marcada con @JsonSerializable(), por lo que
+  // json_serializable puede inferir cómo serializarla/deserializarla sin JsonKey aquí.
   HistoriaClinica historiaClinica;
+
   String fotoPerfilUrl;
+  // Ignora estos campos para la serialización JSON, ya que son temporales o de UI.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   Uint8List? _imagenBytes; // Bytes de la imagen para manejo temporal
+  @JsonKey(includeFromJson: false, includeToJson: false)
   File? _imagenFile; // Archivo de imagen para manejo temporal
 
   static List<String> get especiesDisponibles => [
@@ -49,7 +80,7 @@ class Animal {
   }) : assert(especiesDisponibles.contains(especie),
   "La especie '$especie' no es válida.");
 
-  // Métodos para manejo de imágenes mejorados
+  // Métodos para manejo de imágenes mejorados (sin cambios)
   Future<void> subirFotoPerfil(String userId) async {
     if (_imagenBytes == null && _imagenFile == null) return;
 
@@ -58,7 +89,6 @@ class Animal {
           .ref()
           .child('animal_images/$userId/${DateTime.now().millisecondsSinceEpoch}.jpg');
 
-      // Subir la imagen según la plataforma
       if (kIsWeb && _imagenBytes != null) {
         await storageRef.putData(_imagenBytes!);
       } else if (_imagenFile != null) {
@@ -67,7 +97,6 @@ class Animal {
         return;
       }
 
-      // Obtener la URL de descarga
       fotoPerfilUrl = await storageRef.getDownloadURL();
     } catch (e) {
       debugPrint('Error al subir imagen: $e');
@@ -85,14 +114,11 @@ class Animal {
 
       if (pickedFile != null) {
         if (kIsWeb) {
-          // Para web, manejar como bytes
           final bytes = await pickedFile.readAsBytes();
           _imagenBytes = bytes;
         } else {
-          // Para móvil, manejar como File
           _imagenFile = File(pickedFile.path);
         }
-        // Limpiar la URL antigua si existe
         fotoPerfilUrl = '';
       }
     } catch (e) {
@@ -101,7 +127,6 @@ class Animal {
     }
   }
 
-  // Método para cargar imagen desde URL (útil para edición)
   Future<void> cargarImagenDesdeUrl(String url) async {
     if (url.isEmpty) return;
 
@@ -125,16 +150,15 @@ class Animal {
     }
   }
 
-  // Métodos para obtener la imagen según la plataforma
   Uint8List? get imagenBytes => _imagenBytes;
   File? get imagenFile => _imagenFile;
 
-  // Métodos para calcular edad e IMC
   int get edad {
     final now = DateTime.now();
     int age = now.year - fechaNacimiento.year;
     if (now.month < fechaNacimiento.month ||
-        (now.month == fechaNacimiento.month && now.day < fechaNacimiento.day)) {
+        (now.month == fechaNacimiento.month &&
+            now.day < fechaNacimiento.day)) {
       age--;
     }
     return age;
@@ -142,28 +166,29 @@ class Animal {
 
   double calcularIMC() => peso / (largo * ancho / 10000);
 
-  // Serialización
+  // Serialización para JSON (usará los helpers que definimos y los generados para HistoriaClinica)
   factory Animal.fromJson(Map<String, dynamic> json) => _$AnimalFromJson(json);
 
   Map<String, dynamic> toJson() => _$AnimalToJson(this);
 
+  // Método para guardar en Firestore (usa los toMap() de las clases hijas)
   Map<String, dynamic> toFirestore() {
     return {
       'nombre': nombre,
       'especie': especie,
       'raza': raza,
-      'fechaNacimiento': fechaNacimiento.toIso8601String(),
+      'fechaNacimiento': fechaNacimiento.toIso8601String(), // Firestore puede manejar Strings de fecha
       'peso': peso,
       'largo': largo,
       'ancho': ancho,
-      'carnetVacunacion': carnetVacunacion.toMap(),
-      'historiaClinica': historiaClinica.toMap(),
+      'carnetVacunacion': carnetVacunacion.toMap(), // Usa CarnetVacunacion.toMap() (con Timestamp)
+      'historiaClinica': historiaClinica.toMap(),   // Usa HistoriaClinica.toMap()
       'fotoPerfilUrl': fotoPerfilUrl,
       'id': id,
     };
   }
 
-  // Método para crear desde Firestore
+  // Método para crear desde Firestore (usa los fromMap() de las clases hijas)
   factory Animal.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 

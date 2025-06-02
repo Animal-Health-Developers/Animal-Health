@@ -941,7 +941,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 constraints: BoxConstraints(maxHeight: MediaQuery.of(itemContext).size.height * 0.55),
                 color: Colors.grey[200],
                 child: isVideo
-                    ? _VideoPlayerWidgetFromHome(key: Key('video_pub_perfil_${publicacion.id}_${DateTime.now().millisecondsSinceEpoch}'), videoUrl: mediaUrl!)
+                    ? _VideoPlayerWidgetFromHome(key: Key('video_pub_perfil_${publicacion.id}_${DateTime.now().millisecondsSinceEpoch}'), videoUrl: mediaUrl)
                     : CachedNetworkImage(
                     imageUrl: mediaUrl!,
                     fit: BoxFit.cover,

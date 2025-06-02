@@ -9,10 +9,9 @@ part of 'historia_clinica.dart';
 HistoriaClinica _$HistoriaClinicaFromJson(Map<String, dynamic> json) =>
     HistoriaClinica(
       vacunas:
-          (json['vacunas'] as List<dynamic>?)
-              ?.map((e) => CarnetVacunacion.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
+          json['vacunas'] == null
+              ? const []
+              : _vacunasFromJson(json['vacunas'] as List),
       enfermedades:
           (json['enfermedades'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -29,20 +28,18 @@ HistoriaClinica _$HistoriaClinicaFromJson(Map<String, dynamic> json) =>
               .toList() ??
           const [],
       visitas:
-          (json['visitas'] as Map<String, dynamic>?)?.map(
-            (k, e) => MapEntry(DateTime.parse(k), e as String),
-          ) ??
-          const {},
+          json['visitas'] == null
+              ? const {}
+              : _visitasFromJson(json['visitas'] as Map<String, dynamic>),
       examenes: json['examenes'] as Map<String, dynamic>? ?? const {},
     );
 
-Map<String, dynamic> _$HistoriaClinicaToJson(
-  HistoriaClinica instance,
-) => <String, dynamic>{
-  'vacunas': instance.vacunas,
-  'enfermedades': instance.enfermedades,
-  'tratamientos': instance.tratamientos,
-  'alergias': instance.alergias,
-  'visitas': instance.visitas.map((k, e) => MapEntry(k.toIso8601String(), e)),
-  'examenes': instance.examenes,
-};
+Map<String, dynamic> _$HistoriaClinicaToJson(HistoriaClinica instance) =>
+    <String, dynamic>{
+      'vacunas': _vacunasToJson(instance.vacunas),
+      'enfermedades': instance.enfermedades,
+      'tratamientos': instance.tratamientos,
+      'alergias': instance.alergias,
+      'visitas': _visitasToJson(instance.visitas),
+      'examenes': instance.examenes,
+    };

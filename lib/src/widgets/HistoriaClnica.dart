@@ -23,7 +23,7 @@ import 'package:cached_network_image/cached_network_image.dart'; // Para la foto
 import 'package:url_launcher/url_launcher.dart'; // Para abrir URLs (como PDFs) en aplicaciones externas
 import 'package:intl/intl.dart'; // Para formatear fechas en la visualización del historial
 
-import './CarnetdeVacunacin.dart'; // Asegúrate que esta ruta es correcta
+import './CarnetdeVacunacion.dart'; // Asegúrate que esta ruta es correcta
 
 // Constantes de estilo para mantener la consistencia
 const Color APP_PRIMARY_COLOR = Color(0xff4ec8dd);
@@ -578,7 +578,7 @@ class _HistoriaClnicaState extends State<HistoriaClnica> {
                             ease: Curves.easeOut,
                             duration: 0.3,
                             // Asegúrate de pasar el animalId aquí
-                            pageBuilder: () => CarnetdeVacunacin(key: Key('CarnetdeVacunacin'), animalId: widget.animalId,),
+                            pageBuilder: () => CarnetdeVacunacion(key: Key('CarnetdeVacunacin'), animalId: widget.animalId,),
                           ),
                         ],
                         child: Container(

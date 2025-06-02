@@ -13,7 +13,7 @@ import './Ayuda.dart';
 import './EditarPerfildeAnimal.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
-import './CarnetdeVacunacin.dart'; // Para volver a esta pantalla
+import './CarnetdeVacunacion.dart'; // Para volver a esta pantalla
 import './FuncionesdelaApp.dart';
 import '../models/animal.dart'; // Importar el modelo Animal
 import '../models/carnetvacunacion.dart'; // Importar el modelo CarnetVacunacion
@@ -108,7 +108,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
             .collection('animals')
             .doc(widget.animalId)
             .collection('vaccinations') // Subcolección de vacunas
-            .add(newVaccine.toMap()); // Guarda el mapa de la vacuna
+            .add(newVaccine.toMap()); // Guarda el mapa de la vacuna (ahora con Timestamps)
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Vacuna guardada exitosamente.')),
@@ -118,7 +118,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => CarnetdeVacunacin(
+            builder: (context) => CarnetdeVacunacion(
               key: const Key('CarnetVacFromCrear'),
               animalId: widget.animalId,
             ),

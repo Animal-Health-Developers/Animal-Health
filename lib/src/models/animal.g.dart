@@ -14,7 +14,7 @@ Animal _$AnimalFromJson(Map<String, dynamic> json) => Animal(
   peso: json['peso'] as num,
   largo: json['largo'] as num,
   ancho: json['ancho'] as num,
-  carnetVacunacion: CarnetVacunacion.fromJson(
+  carnetVacunacion: _carnetVacunacionFromJson(
     json['carnetVacunacion'] as Map<String, dynamic>,
   ),
   historiaClinica: HistoriaClinica.fromJson(
@@ -33,7 +33,7 @@ Map<String, dynamic> _$AnimalToJson(Animal instance) => <String, dynamic>{
   'peso': instance.peso,
   'largo': instance.largo,
   'ancho': instance.ancho,
-  'carnetVacunacion': instance.carnetVacunacion,
+  'carnetVacunacion': _carnetVacunacionToJson(instance.carnetVacunacion),
   'historiaClinica': instance.historiaClinica,
   'fotoPerfilUrl': instance.fotoPerfilUrl,
 };

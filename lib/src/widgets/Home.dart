@@ -1,4 +1,3 @@
-// home.dart
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import '../services/auth_service.dart';
@@ -141,6 +140,7 @@ class _HomeState extends State<Home> {
     bool isHighlighted = false,
     double? fixedWidth,
     double height = 60.0,
+    required String tooltipMessage, // Nuevo parámetro
   }) {
     double itemWidth;
     if (fixedWidth != null) {
@@ -154,17 +154,20 @@ class _HomeState extends State<Home> {
       else itemWidth = 60.0;
     }
 
-    return Container(
-      width: itemWidth,
-      height: height,
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage(imagePath),
-          fit: BoxFit.fill,
+    return Tooltip( // Envuelve con Tooltip
+      message: tooltipMessage,
+      child: Container(
+        width: itemWidth,
+        height: height,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(imagePath),
+            fit: BoxFit.fill,
+          ),
+          boxShadow: isHighlighted
+              ? const [BoxShadow(color: Color(0xff9ff1fb), offset: Offset(0, 3), blurRadius: 6)]
+              : null,
         ),
-        boxShadow: isHighlighted
-            ? const [BoxShadow(color: Color(0xff9ff1fb), offset: Offset(0, 3), blurRadius: 6)]
-            : null,
       ),
     );
   }
@@ -226,20 +229,23 @@ class _HomeState extends State<Home> {
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: const Key('Ayuda')),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
+            child: Tooltip( // Tooltip para el botón de Ayuda
+              message: 'Ayuda',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Ayuda(key: const Key('Ayuda')),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/help.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -259,12 +265,15 @@ class _HomeState extends State<Home> {
               ),
               child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Image.asset(
-                      'assets/images/busqueda1.png',
-                      width: 24.0,
-                      height: 24.0,
+                  Tooltip( // Tooltip para el ícono de búsqueda decorativo
+                    message: 'Icono de Búsqueda',
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Image.asset(
+                        'assets/images/busqueda1.png',
+                        width: 24.0,
+                        height: 24.0,
+                      ),
                     ),
                   ),
                   Expanded(
@@ -303,13 +312,16 @@ class _HomeState extends State<Home> {
                       ),
                     )
                   else
-                    IconButton(
-                      icon: const Icon(Icons.search, color: Colors.black54),
-                      onPressed: () {
-                        if (!_isSearching) {
-                          _performSearch(_searchController.text);
-                        }
-                      },
+                    Tooltip( // Tooltip para el botón de búsqueda
+                      message: 'Buscar',
+                      child: IconButton(
+                        icon: const Icon(Icons.search, color: Colors.black54),
+                        onPressed: () {
+                          if (!_isSearching) {
+                            _performSearch(_searchController.text);
+                          }
+                        },
+                      ),
                     ),
                 ],
               ),
@@ -326,38 +338,41 @@ class _HomeState extends State<Home> {
               builder: (context, snapshot) {
                 final data = snapshot.data?.data() as Map<String, dynamic>?;
                 final profilePhotoUrl = data?['profilePhotoUrl'] as String?;
-                return PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')),
-                    ),
-                  ],
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.0),
-                      color: Colors.grey[200],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.0),
-                      child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                          imageUrl: profilePhotoUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)),
+                return Tooltip( // Tooltip para el botón de Perfil Público
+                  message: 'Ver Perfil',
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')),
+                      ),
+                    ],
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        color: Colors.grey[200],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10.0),
+                        child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                            imageUrl: profilePhotoUrl,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)),
+                              ),
                             ),
-                          ),
-                          errorWidget: (context, url, error) {
-                            developer.log('Error CachedNetworkImage (Perfil): $error, URL: $url', name: "Home.ProfilePic");
-                            return const Center(child: Icon(Icons.person, size: 30, color: Colors.grey));
-                          })
-                          : const Center(child: Icon(Icons.person, size: 30, color: Colors.grey)),
+                            errorWidget: (context, url, error) {
+                              developer.log('Error CachedNetworkImage (Perfil): $error, URL: $url', name: "Home.ProfilePic");
+                              return const Center(child: Icon(Icons.person, size: 30, color: Colors.grey));
+                            })
+                            : const Center(child: Icon(Icons.person, size: 30, color: Colors.grey)),
+                      ),
                     ),
                   ),
                 );
@@ -367,18 +382,21 @@ class _HomeState extends State<Home> {
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('Configuraciones'), authService: AuthService()),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill),
+            child: Tooltip( // Tooltip para el botón de Configuración
+              message: 'Configuración',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Configuraciones(key: const Key('Configuraciones'), authService: AuthService()),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill),
+                  ),
                 ),
               ),
             ),
@@ -386,18 +404,21 @@ class _HomeState extends State<Home> {
           Pinned.fromPins(
             Pin(size: 58.5, end: 2.0),
             Pin(size: 60.0, start: 105.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => CompradeProductos(key: const Key('CompradeProductos')),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill),
+            child: Tooltip( // Tooltip para el botón de Tienda/Comprar Productos
+              message: 'Tienda de Productos',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => CompradeProductos(key: const Key('CompradeProductos')),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill),
+                  ),
                 ),
               ),
             ),
@@ -405,18 +426,21 @@ class _HomeState extends State<Home> {
           Pinned.fromPins(
             Pin(size: 60.1, start: 6.0),
             Pin(size: 60.0, start: 44.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimales')),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill),
+            child: Tooltip( // Tooltip para el botón de Lista de Animales
+              message: 'Lista de Animales',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimales')),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill),
+                  ),
                 ),
               ),
             ),
@@ -434,6 +458,7 @@ class _HomeState extends State<Home> {
                   imagePath: 'assets/images/noticias.png',
                   isHighlighted: true,
                   fixedWidth: 54.3,
+                  tooltipMessage: 'Noticias', // Tooltip para Noticias
                 ),
                 PageLink(
                   links: [
@@ -447,6 +472,7 @@ class _HomeState extends State<Home> {
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/cuidadosrecomendaciones.png',
                     fixedWidth: 63.0,
+                    tooltipMessage: 'Cuidados y Recomendaciones', // Tooltip para Cuidados
                   ),
                 ),
                 PageLink(
@@ -461,6 +487,7 @@ class _HomeState extends State<Home> {
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/emergencias.png',
                     fixedWidth: 65.0,
+                    tooltipMessage: 'Emergencias', // Tooltip para Emergencias
                   ),
                 ),
                 PageLink(
@@ -475,6 +502,7 @@ class _HomeState extends State<Home> {
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/comunidad.png',
                     fixedWidth: 67.0,
+                    tooltipMessage: 'Comunidad', // Tooltip para Comunidad
                   ),
                 ),
                 PageLink(
@@ -489,6 +517,7 @@ class _HomeState extends State<Home> {
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/crearpublicacion.png',
                     fixedWidth: 53.6,
+                    tooltipMessage: 'Crear Publicación', // Tooltip para Crear Publicación
                   ),
                 ),
               ],
@@ -557,37 +586,40 @@ class _HomeState extends State<Home> {
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
-                PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => PerfilPublico(key: Key('PerfilPublicoOwner_${postOwnerId ?? "anon"}'), /* userId: postOwnerId */), // Asegúrate de que PerfilPublico pueda manejar un userId
+                Tooltip( // Tooltip para la foto de perfil del propietario
+                  message: 'Ver Perfil del Autor',
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => PerfilPublico(key: Key('PerfilPublicoOwner_${postOwnerId ?? "anon"}'), /* userId: postOwnerId */), // Asegúrate de que PerfilPublico pueda manejar un userId
+                      ),
+                    ],
+                    child: StreamBuilder<DocumentSnapshot>(
+                      stream: FirebaseFirestore.instance.collection('users').doc(postOwnerId).snapshots(),
+                      builder: (context, userSnapshot) {
+                        if (userSnapshot.connectionState == ConnectionState.waiting) {
+                          return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
+                        }
+                        if (userSnapshot.hasError) {
+                          developer.log('Error cargando datos de usuario para publicación: ${userSnapshot.error}', name: "Home.PubUserStream", error: userSnapshot.error);
+                          return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: Icon(Icons.error, color: Colors.white));
+                        }
+                        if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+                          return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: Icon(Icons.person, color: Colors.white));
+                        }
+                        final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
+                        final profilePhotoUrl = userData?['profilePhotoUrl'] as String?;
+                        return CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty ? NetworkImage(profilePhotoUrl) : null,
+                          child: profilePhotoUrl == null || profilePhotoUrl.isEmpty ? const Icon(Icons.person, color: Colors.white) : null,
+                        );
+                      },
                     ),
-                  ],
-                  child: StreamBuilder<DocumentSnapshot>(
-                    stream: FirebaseFirestore.instance.collection('users').doc(postOwnerId).snapshots(),
-                    builder: (context, userSnapshot) {
-                      if (userSnapshot.connectionState == ConnectionState.waiting) {
-                        return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
-                      }
-                      if (userSnapshot.hasError) {
-                        developer.log('Error cargando datos de usuario para publicación: ${userSnapshot.error}', name: "Home.PubUserStream", error: userSnapshot.error);
-                        return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: Icon(Icons.error, color: Colors.white));
-                      }
-                      if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-                        return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: Icon(Icons.person, color: Colors.white));
-                      }
-                      final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
-                      final profilePhotoUrl = userData?['profilePhotoUrl'] as String?;
-                      return CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.grey[200],
-                        backgroundImage: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty ? NetworkImage(profilePhotoUrl) : null,
-                        child: profilePhotoUrl == null || profilePhotoUrl.isEmpty ? const Icon(Icons.person, color: Colors.white) : null,
-                      );
-                    },
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -601,7 +633,10 @@ class _HomeState extends State<Home> {
                       ),
                       Row(
                         children: [
-                          Image.asset('assets/images/publico.png', width: 15, height: 15),
+                          Tooltip( // Tooltip para el ícono de tipo de publicación
+                            message: 'Visibilidad: Público',
+                            child: Image.asset('assets/images/publico.png', width: 15, height: 15),
+                          ),
                           const SizedBox(width: 5),
                           Text(pubDataMap?['tipoPublicacion'] ?? 'Público', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14)),
                         ],
@@ -610,18 +645,41 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 if (isOwnPost)
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: Colors.black),
-                    onSelected: (value) {
-                      if (value == 'eliminar') {
-                        _eliminarPublicacion(publicacion.id, context);
-                      } else if (value == 'editar') {
-                        _mostrarDialogoEditarPublicacion(publicacion);
-                      }
-                    },
-                    itemBuilder: (BuildContext context) => [
-                      const PopupMenuItem<String>(value: 'editar', child: Text('Editar publicación')),
-                      const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar publicación')),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Tooltip( // Tooltip para el botón de Editar
+                        message: 'Editar Publicación',
+                        child: IconButton(
+                          icon: Image.asset(
+                            'assets/images/editar.png',
+                            height: 40, // Altura del icono
+                            width: 40, // Ancho del icono
+                          ),
+                          onPressed: () {
+                            _mostrarDialogoEditarPublicacion(publicacion);
+                          },
+                          padding: EdgeInsets.zero, // Eliminar padding extra
+                          constraints: const BoxConstraints(), // Eliminar constraints mínimos
+                          splashRadius: 20, // Ajustar tamaño del efecto de splash
+                        ),
+                      ),
+                      Tooltip( // Tooltip para el botón de Eliminar
+                        message: 'Eliminar Publicación',
+                        child: IconButton(
+                          icon: Image.asset(
+                            'assets/images/eliminar.png',
+                            height: 40, // Altura del icono
+                            width: 40, // Ancho del icono
+                          ),
+                          onPressed: () {
+                            _eliminarPublicacion(publicacion.id, context);
+                          },
+                          padding: EdgeInsets.zero, // Eliminar padding extra
+                          constraints: const BoxConstraints(), // Eliminar constraints mínimos
+                          splashRadius: 20, // Ajustar tamaño del efecto de splash
+                        ),
+                      ),
                     ],
                   ),
               ],
@@ -631,8 +689,8 @@ class _HomeState extends State<Home> {
             SizedBox(
               width: double.infinity,
               child: isVideo
-                  ? _VideoPlayerWidget(key: Key('video_pub_${publicacion.id}'), videoUrl: mediaUrl!)
-                  : _buildImageWidget(mediaUrl!, context),
+                  ? _VideoPlayerWidget(key: Key('video_pub_${publicacion.id}'), videoUrl: mediaUrl)
+                  : _buildImageWidget(mediaUrl, context),
             )
           else
             _buildNoImageWidget(),
@@ -648,94 +706,104 @@ class _HomeState extends State<Home> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                GestureDetector(
-                  onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, context),
-                  child: Row(
-                    children: [
-                      Image.asset('assets/images/like.png', width: 40, height: 40),
-                      const SizedBox(width: 5),
-                      Text(likes.toString(), style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: Colors.black)),
-                    ],
+                Tooltip( // Tooltip para el botón de Me gusta
+                  message: 'Me gusta',
+                  child: GestureDetector(
+                    onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, context),
+                    child: Row(
+                      children: [
+                        Image.asset('assets/images/like.png', width: 40, height: 40),
+                        const SizedBox(width: 5),
+                        Text(likes.toString(), style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: Colors.black)),
+                      ],
+                    ),
                   ),
                 ),
-                PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () {
-                        String pubId = publicacion.id;
-                        developer.log("Navegando a Detalles: publicationId = '$pubId'", name: "Home.Navigation");
+                Tooltip( // Tooltip para el botón de Comentarios
+                  message: 'Ver Comentarios',
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () {
+                          String pubId = publicacion.id;
+                          developer.log("Navegando a Detalles: publicationId = '$pubId'", name: "Home.Navigation");
 
-                        String? ownerProfilePic;
-                        if (pubDataMap != null && pubDataMap.containsKey('usuarioFotoUrl')) {
-                          ownerProfilePic = pubDataMap['usuarioFotoUrl'] as String?;
-                        } else if (pubDataMap != null && pubDataMap.containsKey('profilePhotoUrl')) { // Fallback por si acaso
-                          ownerProfilePic = pubDataMap['profilePhotoUrl'] as String?;
-                        }
-
-                        return DetallesdeFotooVideo(
-                          key: Key('Detalles_$pubId'),
-                          publicationId: pubId,
-                          mediaUrl: mediaUrl,
-                          isVideo: isVideo,
-                          caption: pubDataMap?['caption'] as String?,
-                          ownerUserId: postOwnerId,
-                          ownerUserName: pubDataMap?['usuarioNombre'] as String?,
-                          ownerUserProfilePic: ownerProfilePic,
-                        );
-                      },
-                    ),
-                  ],
-                  child: Row(
-                    children: [
-                      Image.asset('assets/images/comments.png', width: 40, height: 40),
-                      const SizedBox(width: 5),
-                      // --- INICIO DE LA CORRECCIÓN ---
-                      Builder(
-                          builder: (context) {
-                            final commentsCount = (pubDataMap?['comentariosCount'] as int?) ?? (pubDataMap?['comentarios'] as int?) ?? 0;
-                            return Text(
-                                commentsCount.toString(),
-                                style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)
-                            );
+                          String? ownerProfilePic;
+                          if (pubDataMap != null && pubDataMap.containsKey('usuarioFotoUrl')) {
+                            ownerProfilePic = pubDataMap['usuarioFotoUrl'] as String?;
+                          } else if (pubDataMap != null && pubDataMap.containsKey('profilePhotoUrl')) { // Fallback por si acaso
+                            ownerProfilePic = pubDataMap['profilePhotoUrl'] as String?;
                           }
+
+                          return DetallesdeFotooVideo(
+                            key: Key('Detalles_$pubId'),
+                            publicationId: pubId,
+                            mediaUrl: mediaUrl,
+                            isVideo: isVideo,
+                            caption: pubDataMap?['caption'] as String?,
+                            ownerUserId: postOwnerId,
+                            ownerUserName: pubDataMap?['usuarioNombre'] as String?,
+                            ownerUserProfilePic: ownerProfilePic,
+                          );
+                        },
                       ),
-                      // --- FIN DE LA CORRECCIÓN ---
                     ],
-                  ),
-                ),
-                PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => CompartirPublicacion(
-                        key: Key('Compartir_${publicacion.id}'),
-                        publicationId: publicacion.id,
-                        mediaUrl: mediaUrl,
-                        caption: pubDataMap?['caption'] as String?,
-                      ),
+                    child: Row(
+                      children: [
+                        Image.asset('assets/images/comments.png', width: 40, height: 40),
+                        const SizedBox(width: 5),
+                        Builder(
+                            builder: (context) {
+                              final commentsCount = (pubDataMap?['comentariosCount'] as int?) ?? (pubDataMap?['comentarios'] as int?) ?? 0;
+                              return Text(
+                                  commentsCount.toString(),
+                                  style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)
+                              );
+                            }
+                        ),
+                      ],
                     ),
-                  ],
-                  child: Row(
-                    children: [
-                      Image.asset('assets/images/share.png', width: 40, height: 40),
-                      const SizedBox(width: 5),
-                      const Text('SHARE', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
-                    ],
                   ),
                 ),
-                GestureDetector(
-                  onTap: () => _guardarPublicacion(publicacion.id, context),
-                  child: Row(
-                    children: [
-                      Image.asset('assets/images/save.png', width: 40, height: 40),
-                      const SizedBox(width: 5),
-                      const Text('Guardar', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
+                Tooltip( // Tooltip para el botón de Compartir
+                  message: 'Compartir Publicación',
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => CompartirPublicacion(
+                          key: Key('Compartir_${publicacion.id}'),
+                          publicationId: publicacion.id,
+                          mediaUrl: mediaUrl,
+                          caption: pubDataMap?['caption'] as String?,
+                        ),
+                      ),
                     ],
+                    child: Row(
+                      children: [
+                        Image.asset('assets/images/share.png', width: 40, height: 40),
+                        const SizedBox(width: 5),
+                        const Text('SHARE', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                ),
+                Tooltip( // Tooltip para el botón de Guardar
+                  message: 'Guardar Publicación',
+                  child: GestureDetector(
+                    onTap: () => _guardarPublicacion(publicacion.id, context),
+                    child: Row(
+                      children: [
+                        Image.asset('assets/images/save.png', width: 40, height: 40),
+                        const SizedBox(width: 5),
+                        const Text('Guardar', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -1215,17 +1283,23 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.image, color: Colors.white),
-                          label: const Text('Cambiar Foto', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')),
-                          onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: false),
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff54d1e0), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                        Tooltip( // Tooltip para el botón de Cambiar Foto
+                          message: 'Cambiar Foto',
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.image, color: Colors.white),
+                            label: const Text('Cambiar Foto', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')),
+                            onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: false),
+                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff54d1e0), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                          ),
                         ),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.videocam, color: Colors.white),
-                          label: const Text('Cambiar Video', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')),
-                          onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: true),
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff54d1e0), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                        Tooltip( // Tooltip para el botón de Cambiar Video
+                          message: 'Cambiar Video',
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.videocam, color: Colors.white),
+                            label: const Text('Cambiar Video', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')),
+                            onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: true),
+                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff54d1e0), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                          ),
                         ),
                       ],
                     ),
@@ -1255,23 +1329,29 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
 
                     _isUploading
                         ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff54d1e0))))
-                        : ElevatedButton.icon(
-                      icon: const Icon(Icons.save_outlined, color: Colors.white),
-                      label: const Text('Guardar Cambios', style: TextStyle(color: Colors.white)),
-                      onPressed: _guardarCambios,
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff54d1e0),
-                          padding: const EdgeInsets.symmetric(vertical: 15.0),
-                          textStyle: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, fontWeight: FontWeight.bold),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                        : Tooltip( // Tooltip para el botón Guardar Cambios
+                      message: 'Guardar cambios realizados',
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.save_outlined, color: Colors.white),
+                        label: const Text('Guardar Cambios', style: TextStyle(color: Colors.white)),
+                        onPressed: _guardarCambios,
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff54d1e0),
+                            padding: const EdgeInsets.symmetric(vertical: 15.0),
+                            textStyle: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 18, fontWeight: FontWeight.bold),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text(
-                        'Cancelar',
-                        style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    Tooltip( // Tooltip para el botón Cancelar
+                      message: 'Descartar cambios',
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          'Cancelar',
+                          style: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),

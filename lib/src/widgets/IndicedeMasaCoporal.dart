@@ -406,7 +406,7 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(22.5),
                         child: (_animalData!.fotoPerfilUrl != null &&
-                            _animalData!.fotoPerfilUrl!.isNotEmpty)
+                            _animalData!.fotoPerfilUrl.isNotEmpty)
                             ? CachedNetworkImage(
                           imageUrl: _animalData!.fotoPerfilUrl!,
                           fit: BoxFit.cover,
