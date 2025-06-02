@@ -1148,44 +1148,38 @@ class _MisProductosModalWidget extends StatelessWidget {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min, // Para que el Row ocupe solo el espacio necesario
                             children: [
-                              // Botón de opciones (ahora solo para editar)
-                              PopupMenuButton<String>(
-                                icon: Icon(Icons.more_vert, color: APP_TEXT_COLOR.withOpacity(0.7)),
-                                color: const Color(0xffa0f4fe).withOpacity(0.95),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                onSelected: (String value) {
-                                  if (value == 'editar_modal') {
-                                    // Cierra el modal actual para abrir el de edición desde el contexto padre
-                                    Navigator.of(modalSheetContext).pop();
-                                    showModalBottomSheet(
-                                      context: parentContextForSnackbars,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (BuildContext editModalCtx) {
-                                        return _EditarProductoModalWidget(
-                                          key: Key('edit_product_modal_list_${product.id}'),
-                                          productToEdit: product,
-                                          parentContextForSnackbars: parentContextForSnackbars,
-                                        );
-                                      },
-                                    );
-                                  }
-                                  // La opción 'eliminar_modal' se ha movido a un botón directo
+                              // **INICIO DEL CAMBIO SOLICITADO**
+                              // Icono de Editar directo
+                              IconButton(
+                                icon: Image.asset(
+                                  'assets/images/editar.png',
+                                  height: 50.0, // Altura deseada (mismo tamaño que eliminar.png)
+                                  width: 50.0,  // Ancho para mantener la proporción si es necesario
+                                  fit: BoxFit.contain, // Ajuste de la imagen dentro del espacio
+                                ),
+                                onPressed: () {
+                                  // Cierra el modal actual para abrir el de edición desde el contexto padre
+                                  Navigator.of(modalSheetContext).pop();
+                                  showModalBottomSheet(
+                                    context: parentContextForSnackbars,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (BuildContext editModalCtx) {
+                                      return _EditarProductoModalWidget(
+                                        key: Key('edit_product_modal_list_${product.id}'),
+                                        productToEdit: product,
+                                        parentContextForSnackbars: parentContextForSnackbars,
+                                      );
+                                    },
+                                  );
                                 },
-                                itemBuilder: (BuildContext popupCtx) => <PopupMenuEntry<String>>[
-                                  const PopupMenuItem<String>(
-                                    value: 'editar_modal',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.edit_outlined, color: APP_TEXT_COLOR, size: 20),
-                                        SizedBox(width: 8),
-                                        Text('Editar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                                tooltip: 'Editar producto', // Etiqueta para accesibilidad
+                                padding: EdgeInsets.zero, // Elimina el padding interno predeterminado del IconButton
+                                constraints: const BoxConstraints(minWidth: 50, minHeight: 50), // Asegura que el área del botón sea de al menos 50x50
                               ),
-                              // Botón de eliminar directo con imagen personalizada
+                              // **FIN DEL CAMBIO SOLICITADO**
+
+                              // Botón de eliminar directo con imagen personalizada (ya existía así)
                               IconButton(
                                 icon: Image.asset(
                                   'assets/images/eliminar.png',
