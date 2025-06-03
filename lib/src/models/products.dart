@@ -1,30 +1,59 @@
+// src/models/products.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer' as developer;
 
-class ProductImageInfo {
+// Clase para representar una imagen de producto
+class ProductImage {
+  String publicId;
   String url;
-  String? description;
 
-  ProductImageInfo({required this.url, this.description});
+  ProductImage({required this.publicId, required this.url});
 
-  // Factory constructor para crear una instancia desde un mapa (Firestore)
-  factory ProductImageInfo.fromMap(Map<String, dynamic> map) {
-    return ProductImageInfo(
-      url: map['url'] as String,
-      description: map['description'] as String?,
-    );
-  }
-
-  // Método para convertir la instancia a un mapa (para guardar en Firestore)
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
+      'public_id': publicId,
       'url': url,
-      'description': description,
     };
   }
+
+  factory ProductImage.fromJson(Map<String, dynamic> json) {
+    return ProductImage(
+      publicId: json['public_id'] as String? ?? '',
+      url: json['url'] as String? ?? '',
+    );
+  }
 }
+
+class ProductOpinion {
+  String clientName;
+  int rating;
+  String comment;
+
+  ProductOpinion({
+    required this.clientName,
+    required this.rating,
+    required this.comment,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'clientName': clientName,
+      'rating': rating,
+      'comment': comment,
+    };
+  }
+
+  factory ProductOpinion.fromJson(Map<String, dynamic> json) {
+    return ProductOpinion(
+      clientName: json['clientName'] as String? ?? 'Anónimo',
+      rating: (json['rating'] as num?)?.toInt() ?? 0,
+      comment: json['comment'] as String? ?? '',
+    );
+  }
+}
+
 class Product {
-  String id; // Firestore asignará el ID al crear, pero es útil tenerlo si actualizas
+  String id;
   String name;
   double price;
   String description;
@@ -35,11 +64,11 @@ class Product {
   int stock;
   int qualificationsNumber;
   List<ProductOpinion> opinions;
-  String userId; // ID del usuario que creó el producto
+  String userId;
   DateTime creationDate;
 
   Product({
-    required this.id, // Si se crea desde Firestore, este ID vendrá del documento. Si es nuevo, podría ser un placeholder o generarse.
+    required this.id,
     required this.name,
     required this.price,
     required this.description,
@@ -55,7 +84,6 @@ class Product {
   }) : creationDate = creationDate ?? DateTime.now();
 
   Map<String, dynamic> toJson() {
-    // El 'id' del objeto Product no se incluye aquí porque Firestore lo maneja como ID del documento.
     return {
       'name': name,
       'price': price,
@@ -72,19 +100,12 @@ class Product {
     };
   }
 
-  // Método de instancia para guardar este producto en Firestore
-  // Nota: Este método asume que el objeto Product ya tiene un 'id' si es para actualizar,
-  // o si es para crear, Firestore generará un nuevo ID.
-  // Si llamas a este método en un objeto Product nuevo (sin 'id' de Firestore),
-  // el 'id' del objeto no se usará para el ID del documento (Firestore lo genera).
   Future<DocumentReference> crearProductoEnFirestore() async {
-    // No es necesario pasar 'this.id' aquí, ya que toJson() no lo incluye.
-    // Firestore generará un nuevo ID para el documento.
-    // Si quisieras establecer un ID específico, usarías .doc(this.id).set(toJson())
     return FirebaseFirestore.instance.collection('products').add(toJson());
   }
 
-
+  // <--- CORRECCIÓN CLAVE: ESTA ES LA DEFINICIÓN CORRECTA PARA TU PRODUCT.FROMFIRESTORE
+  // Se llama con un Map<String, dynamic> y un String.
   factory Product.fromFirestore(Map<String, dynamic> data, String documentId) {
     developer.log("--- Product.fromFirestore ---");
     developer.log("Parseando producto ID: $documentId");
@@ -145,55 +166,4 @@ class Product {
       creationDate: (data['creationDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
-}
-
-// ... (Clases ProductImage y ProductOpinion sin cambios)
-class ProductImage {
-  String publicId;
-  String url;
-
-  ProductImage({required this.publicId, required this.url});
-
-  Map<String, dynamic> toJson() {
-    return {
-      'public_id': publicId,
-      'url': url,
-    };
-  }
-
-  factory ProductImage.fromJson(Map<String, dynamic> json) {
-    return ProductImage(
-      publicId: json['public_id'] as String? ?? '',
-      url: json['url'] as String? ?? '',
-    );
-  }
-}
-
-class ProductOpinion {
-  String clientName;
-  int rating;
-  String comment;
-
-  ProductOpinion({
-    required this.clientName,
-    required this.rating,
-    required this.comment,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'clientName': clientName,
-      'rating': rating,
-      'comment': comment,
-    };
-  }
-
-  factory ProductOpinion.fromJson(Map<String, dynamic> json) {
-    return ProductOpinion(
-      clientName: json['clientName'] as String? ?? 'Anónimo',
-      rating: (json['rating'] as num?)?.toInt() ?? 0,
-      comment: json['comment'] as String? ?? '',
-    );
-  }
-
 }

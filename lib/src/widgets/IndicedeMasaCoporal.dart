@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'dart:ui' as ui; // Para BackdropFilter
-// import 'package:flutter_svg/flutter_svg.dart'; // ¡Eliminado!
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -175,6 +174,7 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
     bool enabled = true,
+    required String tooltipMessage, // Nuevo parámetro para el Tooltip
   }) {
     return Container(
       height: 60,
@@ -202,13 +202,16 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
             bottom: 10,
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Container(
-                width: iconWidth,
-                height: iconHeight,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(assetIconPath),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el icono
+                message: tooltipMessage,
+                child: Container(
+                  width: iconWidth,
+                  height: iconHeight,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(assetIconPath),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -245,120 +248,120 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
               ),
             ),
           ),
-          // --- Elemento SVG 1 (Removido) ---
-          // Align(
-          //   alignment: Alignment(-0.267, -0.494),
-          //   child: SizedBox(
-          //     width: 1.0,
-          //     height: 1.0,
-          //     child: SvgPicture.string(_svg_a7p9a8, allowDrawingOutsideViewBox: true),
-          //   ),
-          // ),
           // --- Logo de la App (Navega a Home) ---
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: const Key('Home')),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ir a Inicio',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Home(key: const Key('Home')),
+                  ),
+                ],
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
               ),
             ),
           ),
-          // --- Elemento SVG 2 (Removido) ---
-          // Pinned.fromPins(
-          //   Pin(size: 50.0, start: -7.5),
-          //   Pin(size: 1.0, start: 128.0),
-          //   child: SvgPicture.string(_svg_i3j02g, allowDrawingOutsideViewBox: true, fit: BoxFit.fill),
-          // ),
           // --- Botón de Retroceso a FuncionesdelaApp ---
           Pinned.fromPins(
             Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0),
-            child: InkWell(
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FuncionesdelaApp(
-                      key: Key('FuncionesdelaApp_${widget.animalId}'),
-                      animalId: widget.animalId,
+            child: Tooltip( // Tooltip añadido
+              message: 'Volver a Funciones del Animal',
+              child: InkWell(
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FuncionesdelaApp(
+                        key: Key('FuncionesdelaApp_${widget.animalId}'),
+                        animalId: widget.animalId,
+                      ),
                     ),
-                  ),
-                );
-              },
-              child: Container(
-                  decoration: const BoxDecoration(
-                      image: DecorationImage(
-                          image: AssetImage('assets/images/back.png'),
-                          fit: BoxFit.fill))),
+                  );
+                },
+                child: Container(
+                    decoration: const BoxDecoration(
+                        image: DecorationImage(
+                            image: AssetImage('assets/images/back.png'),
+                            fit: BoxFit.fill))),
+              ),
             ),
           ),
           // --- Botón de Ayuda ---
           Pinned.fromPins(
             Pin(size: 40.5, end: 15.0), Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: const Key('Ayuda')),
-                ),
-              ],
-              child: Container(
-                  decoration: const BoxDecoration(
-                      image: DecorationImage(
-                          image: AssetImage('assets/images/help.png'),
-                          fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ayuda y Soporte',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Ayuda(key: const Key('Ayuda')),
+                  ),
+                ],
+                child: Container(
+                    decoration: const BoxDecoration(
+                        image: DecorationImage(
+                            image: AssetImage('assets/images/help.png'),
+                            fit: BoxFit.fill))),
+              ),
             ),
           ),
           // --- Botón de Configuración ---
           Pinned.fromPins(
             Pin(size: 47.2, end: 15.0), Pin(size: 50.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () =>
-                      Configuraciones(key: const Key('Settings'), authService: AuthService()),
-                ),
-              ],
-              child: Container(
-                  decoration: const BoxDecoration(
-                      image: DecorationImage(
-                          image: AssetImage('assets/images/settingsbutton.png'),
-                          fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Configuraciones de la Aplicación',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () =>
+                        Configuraciones(key: const Key('Settings'), authService: AuthService()),
+                  ),
+                ],
+                child: Container(
+                    decoration: const BoxDecoration(
+                        image: DecorationImage(
+                            image: AssetImage('assets/images/settingsbutton.png'),
+                            fit: BoxFit.fill))),
+              ),
             ),
           ),
           // --- Botón de Lista de Animales ---
           Pinned.fromPins(
             Pin(size: 60.1, start: 15.0), Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales')),
-                ),
-              ],
-              child: Container(
-                  decoration: const BoxDecoration(
-                      image: DecorationImage(
-                          image: AssetImage('assets/images/listaanimales.png'),
-                          fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ver todos mis animales',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales')),
+                  ),
+                ],
+                child: Container(
+                    decoration: const BoxDecoration(
+                        image: DecorationImage(
+                            image: AssetImage('assets/images/listaanimales.png'),
+                            fit: BoxFit.fill))),
+              ),
             ),
           ),
 
@@ -374,71 +377,74 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
                     strokeWidth: 2.0))
                 : _animalData != null
                 ? Center(
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditarPerfildeAnimal(
-                        key: Key('EditarPerfilDesdeIMC_${widget.animalId}'),
-                        animalId: widget.animalId,
+              child: Tooltip( // Tooltip para la foto de perfil del animal
+                message: 'Editar perfil de ${_animalData!.nombre}',
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditarPerfildeAnimal(
+                          key: Key('EditarPerfilDesdeIMC_${widget.animalId}'),
+                          animalId: widget.animalId,
+                        ),
                       ),
-                    ),
-                  );
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 90.0,
-                      height: 90.0,
-                      decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(25.0),
-                          border: Border.all(color: Colors.white, width: 2.5),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: const Offset(0, 3))
-                          ]),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(22.5),
-                        child: (_animalData!.fotoPerfilUrl != null &&
-                            _animalData!.fotoPerfilUrl.isNotEmpty)
-                            ? CachedNetworkImage(
-                          imageUrl: _animalData!.fotoPerfilUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2.0)),
-                          errorWidget: (context, url, error) =>
-                          const Icon(Icons.pets,
-                              size: 50, color: Colors.grey),
-                        )
-                            : const Icon(Icons.pets,
-                            size: 50, color: Colors.grey),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        _animalData!.nombre,
-                        style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                  blurRadius: 1.0,
-                                  color: Colors.black.withOpacity(0.5),
-                                  offset: const Offset(1.0, 1.0))
+                    );
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 90.0,
+                        height: 90.0,
+                        decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(25.0),
+                            border: Border.all(color: Colors.white, width: 2.5),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  spreadRadius: 2,
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 3))
                             ]),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22.5),
+                          child: (_animalData!.fotoPerfilUrl != null &&
+                              _animalData!.fotoPerfilUrl!.isNotEmpty)
+                              ? CachedNetworkImage(
+                            imageUrl: _animalData!.fotoPerfilUrl!,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2.0)),
+                            errorWidget: (context, url, error) =>
+                            const Icon(Icons.pets,
+                                size: 50, color: Colors.grey),
+                          )
+                              : const Icon(Icons.pets,
+                              size: 50, color: Colors.grey),
+                        ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          _animalData!.nombre,
+                          style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                    blurRadius: 1.0,
+                                    color: Colors.black,
+                                    offset: const Offset(1.0, 1.0))
+                              ]),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             )
@@ -472,6 +478,7 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
                         if (value == null || value <= 0) return 'Ingrese un número válido y positivo';
                         return null;
                       },
+                      tooltipMessage: 'Peso del animal en kilogramos', // Tooltip
                     ),
                     _buildTextFormFieldWithIcon(
                       controller: _anchoController,
@@ -486,6 +493,7 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
                         if (value == null || value <= 0) return 'Ingrese un número válido y positivo';
                         return null;
                       },
+                      tooltipMessage: 'Ancho del animal en centímetros (medida transversal)', // Tooltip
                     ),
                     _buildTextFormFieldWithIcon(
                       controller: _largoController,
@@ -500,35 +508,39 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
                         if (value == null || value <= 0) return 'Ingrese un número válido y positivo';
                         return null;
                       },
+                      tooltipMessage: 'Largo del animal en centímetros (medida longitudinal)', // Tooltip
                     ),
                     const SizedBox(height: 10),
                     // Botón para calcular IMC
-                    GestureDetector(
-                      onTap: _calculateIMC,
-                      child: Container(
-                        height: 49.0,
-                        decoration: BoxDecoration(
-                          color: const Color(0xff4ec8dd),
-                          borderRadius: BorderRadius.circular(15.0),
-                          border: Border.all(width: 1.0, color: const Color(0xff000000)),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x29000000),
-                              offset: Offset(0, 3),
-                              blurRadius: 6,
-                            ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'Calcular IMC',
-                          style: TextStyle(
-                            fontFamily: 'Comic Sans MS',
-                            fontSize: 20,
-                            color: Color(0xff000000),
-                            fontWeight: FontWeight.w700,
+                    Tooltip( // Tooltip para el botón
+                      message: 'Calcular el Índice de Masa Corporal',
+                      child: GestureDetector(
+                        onTap: _calculateIMC,
+                        child: Container(
+                          height: 49.0,
+                          decoration: BoxDecoration(
+                            color: const Color(0xff4ec8dd),
+                            borderRadius: BorderRadius.circular(15.0),
+                            border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x29000000),
+                                offset: Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
                           ),
-                          textAlign: TextAlign.center,
+                          alignment: Alignment.center,
+                          child: const Text(
+                            'Calcular IMC',
+                            style: TextStyle(
+                              fontFamily: 'Comic Sans MS',
+                              fontSize: 20,
+                              color: Color(0xff000000),
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
                     ),
@@ -618,4 +630,3 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
     );
   }
 }
-

@@ -59,19 +59,19 @@ class ClinicalHistoryEntry {
   }
 }
 
-class HistoriaClnica extends StatefulWidget {
+class HistoriaClinica extends StatefulWidget {
   final String animalId;
 
-  const HistoriaClnica({
+  const HistoriaClinica({
     required Key key,
     required this.animalId,
   }) : super(key: key);
 
   @override
-  _HistoriaClnicaState createState() => _HistoriaClnicaState();
+  _HistoriaClinicaState createState() => _HistoriaClinicaState();
 }
 
-class _HistoriaClnicaState extends State<HistoriaClnica> {
+class _HistoriaClinicaState extends State<HistoriaClinica> {
   String? _animalName;
   String? _animalPhotoUrl;
   bool _isLoadingAnimalData = true;
@@ -288,9 +288,9 @@ class _HistoriaClnicaState extends State<HistoriaClnica> {
         children: <Widget>[
           // --- Fondo de Pantalla ---
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -298,20 +298,23 @@ class _HistoriaClnicaState extends State<HistoriaClnica> {
           // --- Logo de la App (Navega a Home) ---
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: const Key('Home_From_HistoriaClinica')),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ir a Inicio',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Home(key: const Key('Home_From_HistoriaClinica')),
+                  ),
+                ],
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
               ),
             ),
@@ -319,41 +322,53 @@ class _HistoriaClnicaState extends State<HistoriaClnica> {
           // --- Botón de Retroceso (Manteniendo tamaño y posición) ---
           Pinned.fromPins(
             Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0),
-            child: InkWell(
-              onTap: () => Navigator.of(context).pop(),
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Volver a la pantalla anterior',
+              child: InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           // --- Botón de Ayuda (Manteniendo tamaño y posición) ---
           Pinned.fromPins(
             Pin(size: 40.5, end: 15.0), Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda_From_HistoriaClinica')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ayuda y Soporte',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda_From_HistoriaClinica')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           // --- Iconos Laterales (Configuración y Lista General de Animales) ---
           // Ajustados para empezar desde el top 110.0, dejando espacio para la foto del animal
           Pinned.fromPins(
             Pin(size: 47.2, end: 15.0), Pin(size: 50.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  pageBuilder: () => Configuraciones(key: const Key('Settings_From_HistoriaClinica'), authService: AuthService()),
-                ),
-              ],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Configuraciones de la Aplicación',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    pageBuilder: () => Configuraciones(key: const Key('Settings_From_HistoriaClinica'), authService: AuthService()),
+                  ),
+                ],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 60.1, start: 15.0), Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_From_HistoriaClinica')),
-                ),
-              ],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ver todos mis animales',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_From_HistoriaClinica')),
+                  ),
+                ],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
 
@@ -365,56 +380,59 @@ class _HistoriaClnicaState extends State<HistoriaClnica> {
             child: _isLoadingAnimalData // Muestra un indicador de carga mientras se obtienen los datos del animal
                 ? Center(child: CircleAvatar(radius: 45, backgroundColor: Colors.grey[300], child: CircularProgressIndicator(strokeWidth: 2.0, valueColor: AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR))))
                 : Center(
-              child: GestureDetector(
-                onTap: () {
-                  // Navega a EditarPerfildeAnimal para este animal específico
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditarPerfildeAnimal(
-                        key: Key('EditarPerfilDesdeHistoriaClinica_${widget.animalId}'),
-                        animalId: widget.animalId,
-                      ),
-                    ),
-                  );
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 90.0, height: 90.0,
-                      decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(25.0),
-                          border: Border.all(color: Colors.white, width: 2.5),
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: Offset(0,3))]
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(22.5),
-                        child: (_animalPhotoUrl != null && _animalPhotoUrl!.isNotEmpty)
-                            ? CachedNetworkImage(
-                            imageUrl: _animalPhotoUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
-                            errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
-                            : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
-                      ),
-                    ),
-                    if (_animalName != null && _animalName!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          _animalName!,
-                          style: TextStyle(
-                              fontFamily: APP_FONT_FAMILY,
-                              fontSize: 16,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              shadows: [Shadow(blurRadius: 1.0, color: Colors.black.withOpacity(0.5), offset: Offset(1.0,1.0))]
-                          ),
+              child: Tooltip( // Tooltip para la foto de perfil
+                message: 'Editar perfil de ${_animalName ?? "este animal"}',
+                child: GestureDetector(
+                  onTap: () {
+                    // Navega a EditarPerfildeAnimal para este animal específico
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditarPerfildeAnimal(
+                          key: Key('EditarPerfilDesdeHistoriaClinica_${widget.animalId}'),
+                          animalId: widget.animalId,
                         ),
                       ),
-                  ],
+                    );
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 90.0, height: 90.0,
+                        decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(25.0),
+                            border: Border.all(color: Colors.white, width: 2.5),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: Offset(0,3))]
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22.5),
+                          child: (_animalPhotoUrl != null && _animalPhotoUrl!.isNotEmpty)
+                              ? CachedNetworkImage(
+                              imageUrl: _animalPhotoUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                              errorWidget: (context, url, err) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
+                              : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                        ),
+                      ),
+                      if (_animalName != null && _animalName!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            _animalName!,
+                            style: TextStyle(
+                                fontFamily: APP_FONT_FAMILY,
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                shadows: [Shadow(blurRadius: 1.0, color: Colors.black, offset: Offset(1.0,1.0))]
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -443,7 +461,7 @@ class _HistoriaClnicaState extends State<HistoriaClnica> {
                 Pinned.fromPins(
                   Pin(size: 146.0, middle: 0.5),
                   Pin(size: 28.0, start: 4.0),
-                  child: Text(
+                  child: const Text(
                     'Historia Clínica',
                     style: TextStyle(
                       fontFamily: APP_FONT_FAMILY,
@@ -458,52 +476,55 @@ class _HistoriaClnicaState extends State<HistoriaClnica> {
 
                 // Cajón "Cargar Historia"
                 Align(
-                  alignment: Alignment(-1.0, -0.49),
-                  child: GestureDetector(
-                    onTap: _isUploadingFile ? null : _uploadClinicalHistory, // Deshabilita el botón si hay una subida en curso
-                    child: ClipRect(
-                      child: BackdropFilter(
-                        filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                        child: Container(
-                          width: 178.0,
-                          height: 163.0,
-                          decoration: BoxDecoration(
-                            color: const Color(0x5e4ec8dd),
-                            borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xff707070)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0x29000000),
-                                offset: Offset(0, 3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: _isUploadingFile
-                              ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
-                              : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/cargarhistoria.png',
-                                width: 105.5,
-                                height: 120.0,
-                                fit: BoxFit.fill,
-                              ),
-                              SizedBox(height: 8.0),
-                              Text(
-                                'Cargar Historia',
-                                style: TextStyle(
-                                  fontFamily: APP_FONT_FAMILY,
-                                  fontSize: 20,
-                                  color: APP_TEXT_COLOR,
-                                  fontWeight: FontWeight.w700,
+                  alignment: const Alignment(-1.0, -0.49),
+                  child: Tooltip( // Tooltip para el botón de cargar historia
+                    message: 'Cargar un nuevo archivo al historial clínico',
+                    child: GestureDetector(
+                      onTap: _isUploadingFile ? null : _uploadClinicalHistory, // Deshabilita el botón si hay una subida en curso
+                      child: ClipRect(
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                          child: Container(
+                            width: 178.0,
+                            height: 163.0,
+                            decoration: BoxDecoration(
+                              color: const Color(0x5e4ec8dd),
+                              borderRadius: BorderRadius.circular(20.0),
+                              border: Border.all(
+                                  width: 1.0, color: const Color(0xff707070)),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x29000000),
+                                  offset: Offset(0, 3),
+                                  blurRadius: 6,
                                 ),
-                                textAlign: TextAlign.center,
-                                softWrap: false,
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: _isUploadingFile
+                                ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+                                : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/images/cargarhistoria.png',
+                                  width: 105.5,
+                                  height: 120.0,
+                                  fit: BoxFit.fill,
+                                ),
+                                const SizedBox(height: 8.0),
+                                const Text(
+                                  'Cargar Historia',
+                                  style: TextStyle(
+                                    fontFamily: APP_FONT_FAMILY,
+                                    fontSize: 20,
+                                    color: APP_TEXT_COLOR,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  softWrap: false,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -513,50 +534,53 @@ class _HistoriaClnicaState extends State<HistoriaClnica> {
 
                 // Cajón "Ver Historia"
                 Align(
-                  alignment: Alignment(1.0, -0.49),
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                      child: GestureDetector(
-                        onTap: _viewClinicalHistory, // Llama al método para mostrar el modal
-                        child: Container(
-                          width: 178.0,
-                          height: 163.0,
-                          decoration: BoxDecoration(
-                            color: const Color(0x5e4ec8dd),
-                            borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xff707070)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0x29000000),
-                                offset: Offset(0, 3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/verhistoria.png',
-                                width: 118.8,
-                                height: 120.0,
-                                fit: BoxFit.fill,
-                              ),
-                              SizedBox(height: 8.0),
-                              Text(
-                                'Ver Historia',
-                                style: TextStyle(
-                                  fontFamily: APP_FONT_FAMILY,
-                                  fontSize: 20,
-                                  color: APP_TEXT_COLOR,
-                                  fontWeight: FontWeight.w700,
+                  alignment: const Alignment(1.0, -0.49),
+                  child: Tooltip( // Tooltip para el botón de ver historia
+                    message: 'Ver historial clínico cargado',
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                        child: GestureDetector(
+                          onTap: _viewClinicalHistory, // Llama al método para mostrar el modal
+                          child: Container(
+                            width: 178.0,
+                            height: 163.0,
+                            decoration: BoxDecoration(
+                              color: const Color(0x5e4ec8dd),
+                              borderRadius: BorderRadius.circular(20.0),
+                              border: Border.all(
+                                  width: 1.0, color: const Color(0xff707070)),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x29000000),
+                                  offset: Offset(0, 3),
+                                  blurRadius: 6,
                                 ),
-                                textAlign: TextAlign.center,
-                                softWrap: false,
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/images/verhistoria.png',
+                                  width: 118.8,
+                                  height: 120.0,
+                                  fit: BoxFit.fill,
+                                ),
+                                const SizedBox(height: 8.0),
+                                const Text(
+                                  'Ver Historia',
+                                  style: TextStyle(
+                                    fontFamily: APP_FONT_FAMILY,
+                                    fontSize: 20,
+                                    color: APP_TEXT_COLOR,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  softWrap: false,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -568,55 +592,58 @@ class _HistoriaClnicaState extends State<HistoriaClnica> {
                 Pinned.fromPins(
                   Pin(start: 6.0, end: 6.0),
                   Pin(size: 163.0, end: 0.0), // Posicionado al final del Stack
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-                      child: PageLink(
-                        links: [
-                          PageLinkInfo(
-                            transition: LinkTransition.Fade,
-                            ease: Curves.easeOut,
-                            duration: 0.3,
-                            // Asegúrate de pasar el animalId aquí
-                            pageBuilder: () => CarnetdeVacunacion(key: Key('CarnetdeVacunacin'), animalId: widget.animalId,),
-                          ),
-                        ],
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0x5e4ec8dd),
-                            borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(
-                                width: 1.0, color: const Color(0xff707070)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0x29000000),
-                                offset: Offset(0, 3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/carnetvacunacion.png',
-                                width: 114.5,
-                                height: 120.0,
-                                fit: BoxFit.fill,
-                              ),
-                              SizedBox(height: 8.0),
-                              Text(
-                                'Agregar Carnet de Vacunación',
-                                style: TextStyle(
-                                  fontFamily: APP_FONT_FAMILY,
-                                  fontSize: 20,
-                                  color: APP_TEXT_COLOR,
-                                  fontWeight: FontWeight.w700,
+                  child: Tooltip( // Tooltip para el botón de carnet de vacunación
+                    message: 'Gestionar carnet de vacunación',
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ui.ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                        child: PageLink(
+                          links: [
+                            PageLinkInfo(
+                              transition: LinkTransition.Fade,
+                              ease: Curves.easeOut,
+                              duration: 0.3,
+                              // Asegúrate de pasar el animalId aquí
+                              pageBuilder: () => CarnetdeVacunacion(key: Key('CarnetdeVacunacin'), animalId: widget.animalId,),
+                            ),
+                          ],
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0x5e4ec8dd),
+                              borderRadius: BorderRadius.circular(20.0),
+                              border: Border.all(
+                                  width: 1.0, color: const Color(0xff707070)),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x29000000),
+                                  offset: Offset(0, 3),
+                                  blurRadius: 6,
                                 ),
-                                textAlign: TextAlign.center,
-                                softWrap: false,
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/images/carnetvacunacion.png',
+                                  width: 114.5,
+                                  height: 120.0,
+                                  fit: BoxFit.fill,
+                                ),
+                                const SizedBox(height: 8.0),
+                                const Text(
+                                  'Agregar Carnet de Vacunación',
+                                  style: TextStyle(
+                                    fontFamily: APP_FONT_FAMILY,
+                                    fontSize: 20,
+                                    color: APP_TEXT_COLOR,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  softWrap: false,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -735,6 +762,117 @@ class _VisualizaciondeHistoriaClnicaModalState extends State<_VisualizaciondeHis
     }
   }
 
+  // Método para abrir una URL (usado para ver PDFs o imágenes grandes)
+  Future<void> _launchURL(String url, String fileType, String fileName) async {
+    // Si es una imagen, la mostramos en un modal dentro de la app
+    if (fileType.startsWith('image/')) {
+      _showLargeImage(url);
+    }
+    // Si es un PDF, mostramos un modal indicando que se intentará abrir internamente
+    else if (fileType == 'application/pdf') {
+      showDialog(
+        context: context,
+        builder: (BuildContext dialogContext) {
+          return AlertDialog(
+            backgroundColor: const Color(0xe3a0f4fe),
+            title: const Text('Visualizar PDF', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR, fontWeight: FontWeight.bold)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.picture_as_pdf, size: 60, color: Colors.red),
+                const SizedBox(height: 10),
+                Text('El PDF "$fileName" se abrirá en un visor externo.', // Mensaje claro
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
+                const SizedBox(height: 20),
+                // Botón para abrir externamente
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.of(dialogContext).pop(); // Cierra el modal actual
+                    if (!await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('No se pudo abrir el PDF externo.', style: TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.red),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: APP_PRIMARY_COLOR,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Abrir PDF Externamente', style: TextStyle(fontFamily: APP_FONT_FAMILY)),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cerrar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.grey)),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      // Para otros tipos de archivo, intentar abrir externamente
+      if (!await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se pudo abrir el archivo con una aplicación externa.', style: TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+
+  // Método para mostrar la imagen en grande
+  void _showLargeImage(String imageUrl) {
+    showDialog(
+      context: context,
+      useSafeArea: false, // Permite que el diálogo ignore el área segura
+      builder: (BuildContext context) {
+        return GestureDetector(
+          onTap: () => Navigator.of(context).pop(), // Cierra al tocar fuera de la X
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: EdgeInsets.zero,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  color: Colors.black.withOpacity(0.9), // Fondo oscuro
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.contain,
+                    placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR))),
+                    errorWidget: (context, url, error) => const Icon(Icons.error, size: 100, color: Colors.grey),
+                  ),
+                ),
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 10,
+                  right: 10,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
   // Widget para construir una tarjeta individual del historial
   Widget _buildHistoryCard(BuildContext context, ClinicalHistoryEntry entry) {
     bool isImage = entry.fileType.startsWith('image/');
@@ -762,8 +900,8 @@ class _VisualizaciondeHistoriaClnicaModalState extends State<_VisualizaciondeHis
                 : Container(
               color: Colors.grey[300],
               child: isPdf
-                  ? const Icon(Icons.picture_as_pdf, color: Colors.red, size: 40)
-                  : const Icon(Icons.insert_drive_file, color: Colors.grey, size: 40),
+                  ? Tooltip(message: 'Archivo PDF', child: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 40))
+                  : Tooltip(message: 'Archivo genérico', child: const Icon(Icons.insert_drive_file, color: Colors.grey, size: 40)),
             ),
           ),
         ),
@@ -777,54 +915,34 @@ class _VisualizaciondeHistoriaClnicaModalState extends State<_VisualizaciondeHis
             Text('Fecha: ${DateFormat('dd/MM/yyyy HH:mm').format(entry.uploadDate)}', style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR, fontSize: 13)),
           ],
         ),
-        trailing: PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, color: APP_TEXT_COLOR.withOpacity(0.7)),
-          color: const Color(0xffa0f4fe).withOpacity(0.95), // Fondo semitransparente para el menú desplegable
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          onSelected: (String value) {
-            if (value == 'open') {
-              _launchURL(entry.fileUrl);
-            } else if (value == 'delete') {
-              _deleteHistoryEntry(entry.id, entry.fileUrl, entry.fileName);
-            }
-          },
-          itemBuilder: (BuildContext popupCtx) => <PopupMenuEntry<String>>[
-            const PopupMenuItem<String>(
-              value: 'open',
-              child: Row(
-                children: [
-                  Icon(Icons.open_in_new, color: APP_PRIMARY_COLOR, size: 20),
-                  SizedBox(width: 8),
-                  Text('Abrir', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
-                ],
+        trailing: Row( // Reemplazo de PopupMenuButton por Row con IconButtons
+          mainAxisSize: MainAxisSize.min, // Para que ocupe solo el espacio necesario
+          children: [
+            IconButton(
+              icon: Image.asset(
+                'assets/images/abrir.png', // Icono de abrir
+                height: 50, // Altura de 50px
+                width: 50, // Ancho de 50px
+                fit: BoxFit.contain,
               ),
+              tooltip: 'Abrir archivo', // Tooltip para abrir
+              onPressed: () => _launchURL(entry.fileUrl, entry.fileType, entry.fileName),
             ),
-            const PopupMenuItem<String>(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete_sweep_outlined, color: Colors.red, size: 20),
-                  SizedBox(width: 8),
-                  Text('Eliminar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.red)),
-                ],
+            IconButton(
+              icon: Image.asset(
+                'assets/images/eliminar.png', // Icono de eliminar
+                height: 50, // Altura de 50px
+                width: 50, // Ancho de 50px
+                fit: BoxFit.contain,
               ),
+              tooltip: 'Eliminar archivo', // Tooltip para eliminar
+              onPressed: () => _deleteHistoryEntry(entry.id, entry.fileUrl, entry.fileName),
             ),
           ],
         ),
-        onTap: () => _launchURL(entry.fileUrl), // Abre el archivo al tocar la tarjeta
+        onTap: () => _launchURL(entry.fileUrl, entry.fileType, entry.fileName), // Abre el archivo al tocar la tarjeta
       ),
     );
-  }
-
-  // Método para abrir una URL (usado para ver PDFs o imágenes grandes)
-  Future<void> _launchURL(String url) async {
-    if (!await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir el archivo.', style: TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.red),
-        );
-      }
-    }
   }
 
   @override

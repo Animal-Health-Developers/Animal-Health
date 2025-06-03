@@ -23,8 +23,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 
-// Importación para el modelo Animal (asumo que está en lib/models/animal.dart)
-// Si está en otro lugar, ajusta la ruta.
+// Importación para el modelo Animal
 import '../models/animal.dart';
 
 // Define constantes para estilos comunes de la aplicación
@@ -545,6 +544,7 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
                     isActive: treatment.isReminderEnabled,
                     onTap: () => _toggleReminderStatus(treatment),
                     activeGlowColor: Colors.deepPurpleAccent.shade100,
+                    tooltipMessage: treatment.isReminderEnabled ? 'Desactivar recordatorio' : 'Activar recordatorio diario',
                   ),
                   _buildActionButton(
                     iconPath: 'assets/images/suministrado.png',
@@ -552,6 +552,7 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
                     isActive: treatment.isSupplied,
                     onTap: () => _toggleSuppliedStatus(treatment),
                     activeGlowColor: Colors.lightGreenAccent,
+                    tooltipMessage: treatment.isSupplied ? 'Marcar como pendiente' : 'Marcar como suministrado',
                   ),
                 ],
               ),
@@ -629,53 +630,58 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
     required bool isActive,
     required VoidCallback onTap,
     Color activeGlowColor = Colors.white,
+    double imageSize = 70.0, // Default to 70 for consistency, can be overridden
+    required String tooltipMessage, // Added tooltip message
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 70.0,
-            height: 70.0,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(iconPath),
-                fit: BoxFit.fill,
+    return Tooltip( // Tooltip para el botón de acción
+      message: tooltipMessage,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Container(
+              width: imageSize,
+              height: imageSize,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(iconPath),
+                  fit: BoxFit.fill,
+                ),
+                borderRadius: BorderRadius.circular(10.0),
+                boxShadow: isActive
+                    ? [
+                  BoxShadow(
+                    color: activeGlowColor.withOpacity(0.8),
+                    blurRadius: 8.0,
+                    spreadRadius: 3.0,
+                    offset: const Offset(0, 0),
+                  ),
+                  BoxShadow(
+                    color: activeGlowColor.withOpacity(0.4),
+                    blurRadius: 15.0,
+                    spreadRadius: 8.0,
+                    offset: const Offset(0, 0),
+                  ),
+                ]
+                    : [],
+                border: isActive
+                    ? Border.all(color: activeGlowColor, width: 2.0)
+                    : Border.all(color: Colors.transparent, width: 0.0),
               ),
-              borderRadius: BorderRadius.circular(10.0),
-              boxShadow: isActive
-                  ? [
-                BoxShadow(
-                  color: activeGlowColor.withOpacity(0.8),
-                  blurRadius: 8.0,
-                  spreadRadius: 3.0,
-                  offset: const Offset(0, 0),
-                ),
-                BoxShadow(
-                  color: activeGlowColor.withOpacity(0.4),
-                  blurRadius: 15.0,
-                  spreadRadius: 8.0,
-                  offset: const Offset(0, 0),
-                ),
-              ]
-                  : [],
-              border: isActive
-                  ? Border.all(color: activeGlowColor, width: 2.0)
-                  : Border.all(color: Colors.transparent, width: 0.0),
             ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: APP_FONT_FAMILY,
-              fontSize: 16,
-              color: isActive ? activeGlowColor.darken(0.3) : APP_TEXT_COLOR,
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: APP_FONT_FAMILY,
+                fontSize: 16,
+                color: isActive ? activeGlowColor.darken(0.3) : APP_TEXT_COLOR,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -756,65 +762,80 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: const Key('Home_From_Tratamiento')),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ir a Inicio',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Home(key: const Key('Home_From_Tratamiento')),
+                  ),
+                ],
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
               ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0),
-            child: InkWell(
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FuncionesdelaApp(key: const Key('Funciones_BackFromTratamiento'), animalId: widget.animalId),
-                  ),
-                );
-              },
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Volver a Funciones del Animal',
+              child: InkWell(
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FuncionesdelaApp(key: const Key('Funciones_BackFromTratamiento'), animalId: widget.animalId),
+                    ),
+                  );
+                },
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 40.5, end: 15.0), Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda_From_Tratamiento')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ayuda y Soporte',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda_From_Tratamiento')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 47.2, end: 15.0), Pin(size: 50.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  pageBuilder: () => Configuraciones(key: const Key('Settings_From_Tratamiento'), authService: AuthService()),
-                ),
-              ],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Configuraciones de la Aplicación',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    pageBuilder: () => Configuraciones(key: const Key('Settings_From_Tratamiento'), authService: AuthService()),
+                  ),
+                ],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 60.1, start: 15.0), Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_From_Tratamiento')),
-                ),
-              ],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ver todos mis animales',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_From_Tratamiento')),
+                  ),
+                ],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
 
@@ -858,54 +879,58 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
                 }
 
                 return Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditarPerfildeAnimal(
-                            key: Key('EditarPerfilDesdeTratamiento_${widget.animalId}'),
-                            animalId: widget.animalId,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 90.0, height: 90.0,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(25.0),
-                              border: Border.all(color: Colors.white, width: 2.5),
-                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: Offset(0,3))]
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(22.5),
-                            child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
-                                ? CachedNetworkImage(
-                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
-                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
-                                errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
-                                : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
-                          ),
-                        ),
-                        if (animalData.nombre.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              animalData.nombre,
-                              style: const TextStyle(
-                                  fontFamily: APP_FONT_FAMILY,
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [Shadow(blurRadius: 1.0, color: Colors.black, offset: Offset(1.0,1.0))]
-                              ),
+                  child: Tooltip( // Tooltip añadido para la foto de perfil
+                    message: 'Editar perfil de ${animalData.nombre}',
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditarPerfildeAnimal(
+                              key: Key('EditarPerfilDesdeTratamiento_${widget.animalId}'),
+                              animalId: widget.animalId,
                             ),
                           ),
-                      ],
+                        );
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 90.0, height: 90.0,
+                            decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(25.0),
+                                border: Border.all(color: Colors.white, width: 2.5),
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: const Offset(0,3))]
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(22.5),
+                              child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
+                                  ? CachedNetworkImage(
+                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                                errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                              )
+                                  : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                            ),
+                          ),
+                          if (animalData.nombre.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                animalData.nombre,
+                                style: const TextStyle(
+                                    fontFamily: APP_FONT_FAMILY,
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    shadows: [Shadow(blurRadius: 1.0, color: Colors.black, offset: Offset(1.0,1.0))]
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -988,30 +1013,31 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
                     padding: const EdgeInsets.only(bottom: 20.0, top: 20.0),
                     child: SizedBox(
                       width: 152.0,
-                      // Eliminada la altura fija aquí
-                      // height: 170.0, // ESTO SE ELIMINA para evitar el overflow
-                      child: GestureDetector(
-                        onTap: _showCreateTreatmentModal,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min, // Asegura que la columna ocupe el mínimo espacio
-                          children: [
-                            Image.asset(
-                              'assets/images/nuevotratamiento.png',
-                              width: 120.0,
-                              height: 120.0,
-                              fit: BoxFit.fill,
-                            ),
-                            const Text(
-                              'Crear Nuevo Tratamiento',
-                              style: TextStyle(
-                                fontFamily: APP_FONT_FAMILY,
-                                fontSize: 20,
-                                color: APP_TEXT_COLOR,
-                                fontWeight: FontWeight.w700,
+                      child: Tooltip( // Tooltip añadido al botón de crear tratamiento
+                        message: 'Crear un nuevo tratamiento médico',
+                        child: GestureDetector(
+                          onTap: _showCreateTreatmentModal,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min, // Asegura que la columna ocupe el mínimo espacio
+                            children: [
+                              Image.asset(
+                                'assets/images/nuevotratamiento.png',
+                                width: 120.0,
+                                height: 120.0,
+                                fit: BoxFit.fill,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                              const Text(
+                                'Crear Nuevo Tratamiento',
+                                style: TextStyle(
+                                  fontFamily: APP_FONT_FAMILY,
+                                  fontSize: 20,
+                                  color: APP_TEXT_COLOR,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -1246,11 +1272,12 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
     super.dispose();
   }
 
-  // --- NUEVO _buildFormField con Icono ---
+  // --- _buildFormField CON EL PARÁMETRO tooltipMessage ---
   Widget _buildFormField({
     required TextEditingController controller,
     required String labelText,
-    required String iconAsset, // Nuevo parámetro para la ruta del icono
+    required String iconAsset, // Parámetro para la ruta del icono
+    required String tooltipMessage, // <--- AÑADIDO ESTE PARÁMETRO FALTANTE
     String? Function(String?)? validator,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
@@ -1258,13 +1285,13 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
     VoidCallback? onTap,
     Widget? suffixIcon,
   }) {
-    const double iconSize = 40.0; // Altura del icono
+    const double iconSize = 40.0;
     const double iconLeftPadding = 10.0;
-    const double textFieldLeftPadding = iconLeftPadding + iconSize + 10.0; // Espacio para el icono + padding
+    const double textFieldLeftPadding = iconLeftPadding + iconSize + 10.0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Stack( // Usar Stack para posicionar el icono
+      child: Stack(
         alignment: Alignment.centerLeft,
         children: [
           TextFormField(
@@ -1273,7 +1300,7 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
             maxLines: maxLines,
             readOnly: readOnly,
             onTap: onTap,
-            style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: Color(0xff000000)),
+            style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR),
             decoration: InputDecoration(
               labelText: labelText,
               labelStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.black54),
@@ -1284,24 +1311,26 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: const BorderSide(color: APP_PRIMARY_COLOR, width: 2.0)),
               errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.redAccent[700]!, width: 1.5)),
               focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.redAccent[700]!, width: 2.0)),
-              // Ajustar el padding del contenido para dejar espacio al icono
               contentPadding: EdgeInsets.only(left: textFieldLeftPadding, top: maxLines > 1 ? 16 : 12, bottom: maxLines > 1 ? 16 : 12, right: 16),
               suffixIcon: suffixIcon,
-              floatingLabelBehavior: FloatingLabelBehavior.auto, // Asegura que la etiqueta flote al escribir
+              floatingLabelBehavior: FloatingLabelBehavior.auto,
             ),
             validator: validator,
           ),
           Padding(
-            padding: const EdgeInsets.only(left: iconLeftPadding), // Posiciona el icono
-            child: Image.asset(
-              iconAsset,
-              width: iconSize,
-              height: iconSize,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                developer.log("Error cargando icono de formulario: $iconAsset, $error");
-                return Icon(Icons.error_outline, color: Colors.red, size: iconSize - 10);
-              },
+            padding: const EdgeInsets.only(left: iconLeftPadding),
+            child: Tooltip( // Tooltip para el icono del campo de formulario
+              message: tooltipMessage,
+              child: Image.asset(
+                iconAsset,
+                width: iconSize,
+                height: iconSize,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  developer.log("Error cargando icono de formulario: $iconAsset, $error");
+                  return Icon(Icons.error_outline, color: Colors.red, size: iconSize - 10);
+                },
+              ),
             ),
           ),
         ],
@@ -1416,48 +1445,51 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
                 ))
                     : _animalData != null
                     ? Center(
-                  child: GestureDetector(
-                    onTap: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
-                        ? () => _showLargeImage(_animalData!.fotoPerfilUrl!)
-                        : null,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: animalPhotoSize, height: animalPhotoSize,
-                          margin: const EdgeInsets.only(top: 20.0),
-                          decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(25.0),
-                              border: Border.all(color: Colors.white, width: 2.5),
-                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: const Offset(0,3))]
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(22.5),
-                            child: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
-                                ? CachedNetworkImage(
-                              imageUrl: _animalData!.fotoPerfilUrl!, fit: BoxFit.cover,
-                              placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
-                              errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
-                            )
-                                : const Icon(Icons.pets, size: 50, color: Colors.grey),
-                          ),
-                        ),
-                        if (_animalData!.nombre.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              _animalData!.nombre,
-                              style: const TextStyle(
-                                  fontFamily: APP_FONT_FAMILY,
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [Shadow(blurRadius: 1.0, color: Colors.black, offset: Offset(1.0,1.0))]
-                              ),
+                  child: Tooltip( // Tooltip para la foto del animal en el modal
+                    message: 'Ver perfil de ${_animalData!.nombre}',
+                    child: GestureDetector(
+                      onTap: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
+                          ? () => _showLargeImage(_animalData!.fotoPerfilUrl!)
+                          : null,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: animalPhotoSize, height: animalPhotoSize,
+                            margin: const EdgeInsets.only(top: 20.0),
+                            decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(25.0),
+                                border: Border.all(color: Colors.white, width: 2.5),
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: const Offset(0,3))]
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(22.5),
+                              child: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
+                                  ? CachedNetworkImage(
+                                imageUrl: _animalData!.fotoPerfilUrl!, fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                                errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                              )
+                                  : const Icon(Icons.pets, size: 50, color: Colors.grey),
                             ),
                           ),
-                      ],
+                          if (_animalData!.nombre.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                _animalData!.nombre,
+                                style: const TextStyle(
+                                    fontFamily: APP_FONT_FAMILY,
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    shadows: [Shadow(blurRadius: 1.0, color: Colors.black, offset: Offset(1.0,1.0))]
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 )
@@ -1495,7 +1527,7 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
                             style: const TextStyle(
                               fontFamily: APP_FONT_FAMILY,
                               fontSize: 20,
-                              color: Color(0xff000000),
+                              color: APP_TEXT_COLOR,
                               fontWeight: FontWeight.w700,
                             ),
                             textAlign: TextAlign.center,
@@ -1506,24 +1538,28 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
                             labelText: 'Nombre del Medicamento',
                             iconAsset: 'assets/images/nombremedicamento.png',
                             validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
+                            tooltipMessage: 'Nombre del medicamento a registrar',
                           ),
                           _buildFormField(
                             controller: _doseController,
                             labelText: 'Dosis (ej: 30mL cada 8 horas)',
                             iconAsset: 'assets/images/dosismedicamentos.png',
                             validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
+                            tooltipMessage: 'Dosis y frecuencia del medicamento',
                           ),
                           _buildFormField(
                             controller: _durationController,
                             labelText: 'Duración del Tratamiento (ej: 1 semana)',
                             iconAsset: 'assets/images/duracion.png',
                             validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
+                            tooltipMessage: 'Duración total del tratamiento',
                           ),
                           _buildFormField(
                             controller: _veterinarianController,
                             labelText: 'Veterinario Recetante',
                             iconAsset: 'assets/images/veterinario.png',
                             validator: (value) => value == null || value.isEmpty ? 'Campo requerido' : null,
+                            tooltipMessage: 'Nombre del veterinario que recetó el tratamiento',
                           ),
                           _buildFormField(
                             controller: _startDateController,
@@ -1532,6 +1568,7 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
                             readOnly: true,
                             onTap: () => _selectDate(context, isStartDateField: true),
                             suffixIcon: const Icon(Icons.calendar_today, color: Colors.grey),
+                            tooltipMessage: 'Seleccionar la fecha de inicio del tratamiento',
                           ),
                           _buildFormField(
                             controller: _endDateController,
@@ -1540,6 +1577,7 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
                             readOnly: true,
                             onTap: () => _selectDate(context, isStartDateField: false),
                             suffixIcon: const Icon(Icons.calendar_today, color: Colors.grey),
+                            tooltipMessage: 'Seleccionar la fecha de fin del tratamiento (opcional)',
                           ),
                           _buildFormField(
                             controller: _notesController,
@@ -1547,6 +1585,7 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
                             iconAsset: 'assets/images/notas.png',
                             maxLines: 3,
                             keyboardType: TextInputType.multiline,
+                            tooltipMessage: 'Notas o comentarios adicionales sobre el tratamiento',
                           ),
                           const SizedBox(height: 20),
                           _isSaving
@@ -1555,30 +1594,38 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () => Navigator.of(context).pop(false),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                // CORREGIDO: Envuelto en Tooltip
+                                child: Tooltip(
+                                  message: 'Cancelar y cerrar el formulario',
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.grey,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
+                                    icon: const Icon(Icons.cancel_outlined, size: 24),
+                                    label: const Text('Cancelar', style: TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 16)),
                                   ),
-                                  icon: const Icon(Icons.cancel_outlined, size: 24),
-                                  label: const Text('Cancelar', style: TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 16)),
                                 ),
                               ),
                               const SizedBox(width: 15),
                               Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: _upsertTreatment,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                // CORREGIDO: Envuelto en Tooltip
+                                child: Tooltip(
+                                  message: 'Guardar los cambios del tratamiento',
+                                  child: ElevatedButton.icon(
+                                    onPressed: _upsertTreatment,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
+                                    icon: const Icon(Icons.save_outlined, size: 24),
+                                    label: const Text('Guardar', style: TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 16)),
                                   ),
-                                  icon: const Icon(Icons.save_outlined, size: 24),
-                                  label: const Text('Guardar', style: TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 16)),
                                 ),
                               ),
                             ],

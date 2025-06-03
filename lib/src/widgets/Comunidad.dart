@@ -66,10 +66,8 @@ class _ComunidadState extends State<Comunidad> {
 
   void _loadFriendRequests() {
     // Simulación: En una app real, cargarías esto desde Firestore
-    // Por ahora, la dejamos vacía.
     // Para probar, puedes añadir datos aquí temporalmente:
-    /*
-    if (mounted) {
+    if (mounted) { // Asegúrate de que el widget esté montado antes de llamar a setState
       setState(() {
         _friendRequests = [
           {'id': 'user123', 'name': 'Usuario Prueba 1', 'time': 'Hace 1 día', 'profilePicUrl': 'https://via.placeholder.com/150/92c952'},
@@ -77,7 +75,6 @@ class _ComunidadState extends State<Comunidad> {
         ];
       });
     }
-    */
   }
 
   Future<void> _performSearch(String query) async {
@@ -150,6 +147,7 @@ class _ComunidadState extends State<Comunidad> {
   // Método para construir los items de la barra de navegación
   Widget _buildNavigationButtonItem({
     required String imagePath,
+    required String label, // <--- Nuevo parámetro para el tooltip
     bool isHighlighted = false,
     double? fixedWidth,
     double height = 60.0,
@@ -167,17 +165,21 @@ class _ComunidadState extends State<Comunidad> {
       else itemWidth = 60.0; // Default
     }
 
-    return Container(
-      width: itemWidth,
-      height: height,
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage(imagePath),
-          fit: BoxFit.fill,
+    // <--- ENVOLVER CON TOOLTIP
+    return Tooltip(
+      message: label,
+      child: Container(
+        width: itemWidth,
+        height: height,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(imagePath),
+            fit: BoxFit.fill,
+          ),
+          boxShadow: isHighlighted
+              ? const [BoxShadow(color: Color(0xff9dedf9), offset: Offset(0, 3), blurRadius: 6)]
+              : null,
         ),
-        boxShadow: isHighlighted
-            ? const [BoxShadow(color: Color(0xff9dedf9), offset: Offset(0, 3), blurRadius: 6)]
-            : null,
       ),
     );
   }
@@ -199,32 +201,41 @@ class _ComunidadState extends State<Comunidad> {
               fit: BoxFit.cover,
             ),
           ),
+          // Logo (Ir a Inicio)
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Ir a Inicio',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
               ),
             ),
           ),
+          // Botón de ayuda
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const Ayuda(key: Key('Ayuda')))],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill),
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Ayuda',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => const Ayuda(key: Key('Ayuda')))],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill),
+                  ),
                 ),
               ),
             ),
           ),
+          //Barra de busqueda
           Pinned.fromPins(
             Pin(size: 307.0, middle: 0.5),
             Pin(size: 45.0, start: 150.0), // Consistente con otras pantallas
@@ -257,11 +268,15 @@ class _ComunidadState extends State<Comunidad> {
                   if (_isSearching)
                     const Padding(padding: EdgeInsets.all(8.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.0)))
                   else
-                    IconButton(icon: const Icon(Icons.search, color: Colors.black54), onPressed: () { if (!_isSearching) _performSearch(_searchController.text); }),
+                    Tooltip( // <--- Tooltip para el icono de búsqueda en el TextField
+                      message: 'Realizar búsqueda',
+                      child: IconButton(icon: const Icon(Icons.search, color: Colors.black54), onPressed: () { if (!_isSearching) _performSearch(_searchController.text); }),
+                    ),
                 ],
               ),
             ),
           ),
+          //Mini foto de perfil (Ver mi perfil)
           Pinned.fromPins(
             Pin(size: 60.0, start: 6.0),
             Pin(size: 60.0, middle: 0.1947), // Mantener su posición original
@@ -269,52 +284,67 @@ class _ComunidadState extends State<Comunidad> {
               stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
               builder: (context, snapshot) {
                 final profilePhotoUrl = snapshot.data?['profilePhotoUrl'] as String?;
-                return PageLink(
-                  links: [PageLinkInfo(pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')))],
-                  child: Container(
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.grey[200]),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.0),
-                      child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                        imageUrl: profilePhotoUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
-                        errorWidget: (context, url, error) => const Icon(Icons.person, size: 30, color: Colors.grey),
-                      )
-                          : const Icon(Icons.person, size: 30, color: Colors.grey),
+                return Tooltip( // <--- Tooltip agregado
+                  message: 'Ver mi perfil',
+                  child: PageLink(
+                    links: [PageLinkInfo(pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')))],
+                    child: Container(
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.grey[200]),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10.0),
+                        child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                          imageUrl: profilePhotoUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
+                          errorWidget: (context, url, error) => const Icon(Icons.person, size: 30, color: Colors.grey),
+                        )
+                            : const Icon(Icons.person, size: 30, color: Colors.grey),
+                      ),
                     ),
                   ),
                 );
               },
             ),
           ),
+          // Botón de configuración
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Configuración',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
+          // Botón de lista de animales
           Pinned.fromPins(
             Pin(size: 60.1, start: 6.0),
             Pin(size: 60.0, start: 44.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Mi lista de animales',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
+          // Botón de tienda
           Pinned.fromPins(
             Pin(size: 58.5, end: 2.0),
             Pin(size: 60.0, start: 105.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const CompradeProductos(key: Key('CompradeProductos')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Tienda de productos',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => const CompradeProductos(key: Key('CompradeProductos')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
 
-          // --- NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+          // --- SECCIÓN DE BOTONES DE NAVEGACIÓN ---
           Positioned(
             top: navBarTopPosition, // Posición vertical fija
             left: 16.0,
@@ -328,6 +358,7 @@ class _ComunidadState extends State<Comunidad> {
                   links: [PageLinkInfo(pageBuilder: () => const Home(key: Key('Home')))],
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/noticias.png',
+                    label: 'Noticias y Novedades', // <--- Label para Tooltip
                     fixedWidth: 54.3,
                   ),
                 ),
@@ -335,6 +366,7 @@ class _ComunidadState extends State<Comunidad> {
                   links: [PageLinkInfo(pageBuilder: () => const CuidadosyRecomendaciones(key: Key('CuidadosyRecomendaciones')))],
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/cuidadosrecomendaciones.png',
+                    label: 'Cuidados y Recomendaciones', // <--- Label para Tooltip
                     fixedWidth: 63.0,
                   ),
                 ),
@@ -342,11 +374,14 @@ class _ComunidadState extends State<Comunidad> {
                   links: [PageLinkInfo(pageBuilder: () => const Emergencias(key: Key('Emergencias')))],
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/emergencias.png',
+                    label: 'Emergencias', // <--- Label para Tooltip
                     fixedWidth: 65.0,
                   ),
                 ),
-                _buildNavigationButtonItem( // Botón de Comunidad (resaltado)
+                // Botón de Comunidad (resaltado)
+                _buildNavigationButtonItem(
                   imagePath: 'assets/images/comunidad.png',
+                  label: 'Comunidad', // <--- Label para Tooltip
                   isHighlighted: true,
                   fixedWidth: 67.0,
                 ),
@@ -354,13 +389,14 @@ class _ComunidadState extends State<Comunidad> {
                   links: [PageLinkInfo(pageBuilder: () => const Crearpublicaciones(key: Key('Crearpublicaciones')))],
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/crearpublicacion.png',
+                    label: 'Crear Publicación', // <--- Label para Tooltip
                     fixedWidth: 53.6,
                   ),
                 ),
               ],
             ),
           ),
-          // --- FIN DE NUEVA SECCIÓN DE BOTONES DE NAVEGACIÓN ---
+          // --- FIN DE SECCIÓN DE BOTONES DE NAVEGACIÓN ---
 
           Positioned(
             top: topOffsetForCommunityBlock, // Usar la variable calculada
@@ -447,6 +483,7 @@ class _ComunidadState extends State<Comunidad> {
   }
 
   Widget _buildCommunityTabButton(String title, bool isSelected, VoidCallback onPressed) {
+    // Estos son botones con texto, no iconos puros, así que no necesitan Tooltip adicional.
     return InkWell(
       onTap: onPressed,
       child: Container(
@@ -480,6 +517,8 @@ class _ComunidadState extends State<Comunidad> {
     required VoidCallback onConfirm,
     required VoidCallback onDelete,
   }) {
+    // La imagen de perfil aquí es decorativa, no un icono actionable por sí mismo.
+    // Los botones de "Confirmar" y "Eliminar" ya tienen texto que los describe.
     return Container(
       margin: const EdgeInsets.only(bottom: 15.0),
       padding: const EdgeInsets.all(10.0),

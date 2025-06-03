@@ -27,7 +27,7 @@ import 'dart:typed_data'; // Para Uint8List
 
 
 // --- CONFIGURACIÓN DE API KEYS ---
-const String GEMINI_API_KEY_HOME = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3nenc'; // TU API KEY DE GEMINI AQUÍ
+const String GEMINI_API_KEY_HOME = 'AIzaSyBYFGiQrNtcOkfbf3Pz1rGKsgoYPyQejmM'; // TU API KEY DE GEMINI AQUÍ
 // ---------------------------------
 
 class Home extends StatefulWidget {
@@ -51,7 +51,7 @@ class _HomeState extends State<Home> {
   void _initializeGemini() {
     if (GEMINI_API_KEY_HOME.isNotEmpty && GEMINI_API_KEY_HOME != 'AIzaSyD4FUbajaBbCslYPKZNyF-WGwrJZPcBZss') { // Reemplaza con tu placeholder si es diferente
       _geminiModel = GenerativeModel(
-        model: 'gemini-pro',
+        model: 'gemini 2.0',
         apiKey: GEMINI_API_KEY_HOME,
       );
       developer.log("Modelo Gemini inicializado en Home.", name: "Home.Gemini");

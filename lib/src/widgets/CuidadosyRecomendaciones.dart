@@ -24,12 +24,10 @@ import 'dart:developer' as developer;
 import '../models/animal.dart'; // Importa tu modelo Animal para leer especies y razas
 
 // --- CONFIGURACIÓN DE API KEYS ---
-// Asegúrate de que estas claves sean las correctas y válidas para tu proyecto.
-// Una clave que empiece por AIzaSy... es el formato correcto, pero el valor debe ser tu propia clave.
-const String GEMINI_API_KEY_CARE = 'AIzaSyArtAEpXDnH_T9kBM6EW7kD9meZIGyGstA'; // <<< VERIFICAR ESTA CLAVE
+const String GEMINI_API_KEY_CARE = 'AIzaSyBYFGiQrNtcOkfbf3Pz1rGKsgoYPyQejmM'; // <<< VERIFICAR ESTA CLAVE
 const String THE_DOG_API_KEY = 'live_vkA9cQvaiI3cmRM7qiNqgvFPtyApnTvGQzTtVuEK6evCT1yTzFyUIXEW2l4JPCAU';
-const String THE_CAT_API_KEY = 'live_cfM38FCZX4mhnH3NqCwMXMOLWMiSygx6x8Nh3q1Uaubz3eI6pOtc1l8Ls05XzHp'; // Asegúrate de que esta sea la clave correcta
-const String UNSPLASH_ACCESS_KEY = 'bmwT3dUY0JzWsIV1DqP8rhKKbQhLPMD9xThDow4TzXg';
+const String THE_CAT_API_KEY = 'live_cfM38FCZX4mhnH3NqCwMXMOLWMiSygx6x8Nh3q1Uaubz3eI6pOtc1l8Ls05XzHp';
+const String UNSPLASH_ACCESS_KEY = 'bmwT3dUY0JzWsIV1DqP8rhKKQhLPMD9xThDow4TXg';
 // ---------------------------------
 
 class CuidadosyRecomendaciones extends StatefulWidget {
@@ -54,9 +52,10 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
   }
 
   void _initializeGeminiForSearch() {
+    // Usar una cadena placeholder genérica para la verificación, no la clave del usuario.
     if (GEMINI_API_KEY_CARE.isNotEmpty && GEMINI_API_KEY_CARE != 'TU_API_KEY_DE_GEMINI_AQUI') {
       _geminiModelSearch = GenerativeModel(
-        model: 'gemini-pro',
+        model: 'gemini-1.5', // CAMBIO: Usar 'gemini-1.0-pro' para la búsqueda
         apiKey: GEMINI_API_KEY_CARE,
       );
       developer.log("Modelo Gemini para búsqueda inicializado en CuidadosyRecomendaciones.");
@@ -74,7 +73,7 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
     }
     if (_geminiModelSearch == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La búsqueda con IA no está disponible. La clave API de Gemini no está configurada.')),
+        const SnackBar(content: Text('La búsqueda con IA no está disponible. La clave API de Gemini no está configurada o no es válida.')),
       );
       return;
     }
@@ -144,6 +143,7 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
 
   Widget _buildNavigationButtonItem({
     required String imagePath,
+    required String tooltipMessage, // Nuevo parámetro para el mensaje del tooltip
     bool isHighlighted = false,
     double? fixedWidth,
     double height = 60.0,
@@ -158,12 +158,15 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
       else itemWidth = 60.0;
     }
-    return Container(
-      width: itemWidth,
-      height: height,
-      decoration: BoxDecoration(
-        image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.fill),
-        boxShadow: isHighlighted ? const [BoxShadow(color: Color(0xff9ff0fa), offset: Offset(0, 3), blurRadius: 6)] : null,
+    return Tooltip( // Envuelve con Tooltip
+      message: tooltipMessage,
+      child: Container(
+        width: itemWidth,
+        height: height,
+        decoration: BoxDecoration(
+          image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.fill),
+          boxShadow: isHighlighted ? const [BoxShadow(color: Color(0xff9ff0fa), offset: Offset(0, 3), blurRadius: 6)] : null,
+        ),
       ),
     );
   }
@@ -183,22 +186,28 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
           ),
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => Home(key: const Key('Home')))],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+            child: Tooltip( // Tooltip para el logo
+              message: 'Ir a Inicio',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => Home(key: const Key('Home')))],
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
               ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328), Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip para Ayuda
+              message: 'Abrir sección de Ayuda',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Pinned.fromPins(
@@ -223,7 +232,11 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
                   ),
                   _isSearchingWithGemini
                       ? const Padding(padding: EdgeInsets.all(8.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.0)))
-                      : IconButton(icon: const Icon(Icons.search, color: Colors.black54), onPressed: () { if (!_isSearchingWithGemini) _performSearchWithGemini(_searchController.text); }),
+                      : IconButton(
+                    icon: const Icon(Icons.search, color: Colors.black54),
+                    onPressed: () { if (!_isSearchingWithGemini) _performSearchWithGemini(_searchController.text); },
+                    tooltip: 'Buscar consejos con IA', // Tooltip para el botón de búsqueda
+                  ),
                 ],
               ),
             ),
@@ -231,48 +244,60 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
           if (currentUser != null) // Solo mostrar si el usuario está logueado
             Pinned.fromPins(
               Pin(size: 60.0, start: 6.0), Pin(size: 60.0, middle: 0.1947), // Ajustado
-              child: StreamBuilder<DocumentSnapshot>(
-                stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
-                builder: (context, snapshot) {
-                  final profilePhotoUrl = snapshot.data?['profilePhotoUrl'] as String?;
-                  return PageLink(
-                    links: [PageLinkInfo(pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')))],
-                    child: Container(
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.grey[200], border: Border.all(color: Colors.white, width: 1.5)),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.5),
-                        child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
-                            ? CachedNetworkImage(
-                          imageUrl: profilePhotoUrl, fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
-                          errorWidget: (context, url, error) => const Icon(Icons.person, size: 30, color: Colors.grey),
-                        )
-                            : const Icon(Icons.person, size: 30, color: Colors.grey),
+              child: Tooltip( // Tooltip para la foto de perfil
+                message: 'Ver tu Perfil Público',
+                child: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
+                  builder: (context, snapshot) {
+                    final profilePhotoUrl = snapshot.data?['profilePhotoUrl'] as String?;
+                    return PageLink(
+                      links: [PageLinkInfo(pageBuilder: () => PerfilPublico(key: const Key('PerfilPublico')))],
+                      child: Container(
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10.0), color: Colors.grey[200], border: Border.all(color: Colors.white, width: 1.5)),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8.5),
+                          child: profilePhotoUrl != null && profilePhotoUrl.isNotEmpty
+                              ? CachedNetworkImage(
+                            imageUrl: profilePhotoUrl, fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
+                            errorWidget: (context, url, error) => const Icon(Icons.person, size: 30, color: Colors.grey),
+                          )
+                              : const Icon(Icons.person, size: 30, color: Colors.grey),
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6), Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip para Configuraciones
+              message: 'Abrir Configuraciones',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 60.1, start: 6.0), Pin(size: 60.0, start: 44.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimales')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip para Lista de Animales
+              message: 'Ver mi lista de animales',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimales')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 58.5, end: 2.0), Pin(size: 60.0, start: 105.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => CompradeProductos(key: const Key('CompradeProductos')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip para Compra de Productos
+              message: 'Comprar productos para mascotas',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => CompradeProductos(key: const Key('CompradeProductos')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/store.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Positioned(
@@ -281,11 +306,11 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                PageLink(links: [PageLinkInfo(pageBuilder: () => Home(key: const Key('Home')))], child: _buildNavigationButtonItem(imagePath: 'assets/images/noticias.png', fixedWidth: 54.3)),
-                _buildNavigationButtonItem(imagePath: 'assets/images/cuidadosrecomendaciones.png', isHighlighted: true, fixedWidth: 63.0),
-                PageLink(links: [PageLinkInfo(pageBuilder: () => Emergencias(key: const Key('Emergencias')))], child: _buildNavigationButtonItem(imagePath: 'assets/images/emergencias.png', fixedWidth: 65.0)),
-                PageLink(links: [PageLinkInfo(pageBuilder: () => Comunidad(key: const Key('Comunidad')))], child: _buildNavigationButtonItem(imagePath: 'assets/images/comunidad.png', fixedWidth: 67.0)),
-                PageLink(links: [PageLinkInfo(pageBuilder: () => Crearpublicaciones(key: const Key('Crearpublicaciones')))], child: _buildNavigationButtonItem(imagePath: 'assets/images/crearpublicacion.png', fixedWidth: 53.6)),
+                PageLink(links: [PageLinkInfo(pageBuilder: () => Home(key: const Key('Home')))], child: _buildNavigationButtonItem(imagePath: 'assets/images/noticias.png', fixedWidth: 54.3, tooltipMessage: 'Noticias y Novedades')),
+                _buildNavigationButtonItem(imagePath: 'assets/images/cuidadosrecomendaciones.png', isHighlighted: true, fixedWidth: 63.0, tooltipMessage: 'Cuidados y Recomendaciones (Actual)'),
+                PageLink(links: [PageLinkInfo(pageBuilder: () => Emergencias(key: const Key('Emergencias')))], child: _buildNavigationButtonItem(imagePath: 'assets/images/emergencias.png', fixedWidth: 65.0, tooltipMessage: 'Emergencias')),
+                PageLink(links: [PageLinkInfo(pageBuilder: () => Comunidad(key: const Key('Comunidad')))], child: _buildNavigationButtonItem(imagePath: 'assets/images/comunidad.png', fixedWidth: 67.0, tooltipMessage: 'Comunidad')),
+                PageLink(links: [PageLinkInfo(pageBuilder: () => Crearpublicaciones(key: const Key('Crearpublicaciones')))], child: _buildNavigationButtonItem(imagePath: 'assets/images/crearpublicacion.png', fixedWidth: 53.6, tooltipMessage: 'Crear Publicación')),
               ],
             ),
           ),
@@ -328,12 +353,14 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
   }
 
   void _initializeGeminiForTips() {
+    // Usar una cadena placeholder genérica para la verificación, no la clave del usuario.
     if (GEMINI_API_KEY_CARE.isNotEmpty && GEMINI_API_KEY_CARE != 'TU_API_KEY_DE_GEMINI_AQUI') {
-      _geminiModelTips = GenerativeModel(model: 'gemini-pro', apiKey: GEMINI_API_KEY_CARE);
+      _geminiModelTips = GenerativeModel(model: 'gemini-1.0-pro', apiKey: GEMINI_API_KEY_CARE); // CAMBIO: Usar 'gemini-1.0-pro' para los consejos
       developer.log("Modelo Gemini para consejos inicializado en DailyAnimalCareContent.");
     } else {
       developer.log("API Key de Gemini no configurada o es un placeholder en DailyAnimalCareContent. Los consejos de IA no se generarán.");
-      errorMessage = "Consejos IA no disponibles. La clave API de Gemini no está configurada correctamente.";
+      // No establecer errorMessage aquí, ya que podría sobrescribirse por un error de carga real.
+      // El error se reportará cuando se intente usar _geminiModelTips si es nulo.
     }
   }
 
@@ -342,14 +369,20 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
   /// Species and breed are converted to lowercase for consistent comparison.
   Future<List<Map<String, String>>> _getUserAnimalsSpeciesAndBreeds() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return [];
+    if (user == null) {
+      developer.log("Usuario no logueado, no se pueden obtener animales.");
+      return [];
+    }
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .collection('animals') // Asegúrate de que este es el nombre correcto de tu subcolección
           .get();
-      if (snapshot.docs.isEmpty) return [];
+      if (snapshot.docs.isEmpty) {
+        developer.log("El usuario no tiene animales registrados.");
+        return [];
+      }
       return snapshot.docs.map((doc) {
         var data = doc.data();
         return {
@@ -365,8 +398,10 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
 
 
   Future<String> _fetchImageFromUnsplash(String query) async {
+    // Usar una cadena placeholder genérica para la verificación, no la clave del usuario.
     if (UNSPLASH_ACCESS_KEY.isEmpty || UNSPLASH_ACCESS_KEY == 'TU_UNSPLASH_ACCESS_KEY') {
       developer.log("Unsplash API Key no configurada. Usando imagen de fallback para '$query'.");
+      // Mapeo de ejemplo para imágenes de fallback para especies comunes
       final Map<String, List<String>> sampleImageUrls = {
         'perro': ['https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?w=500'],
         'gato': ['https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=500'],
@@ -407,7 +442,7 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
 
   Future<String> _generateTipWithGemini(String animalType, {String? breed}) async {
     if (_geminiModelTips == null) {
-      developer.log("GEMINI_API_KEY_CARE is not properly initialized or is a placeholder.");
+      developer.log("GEMINI_API_KEY_CARE no inicializada o es un placeholder.");
       return "Consejo IA no disponible. La clave API de Gemini no está configurada correctamente.";
     }
     try {
@@ -480,8 +515,8 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
   Future<void> _fetchAndCachePersonalizedTips(String todayString) async {
     final List<AnimalCareTip> fetchedTips = [];
     final List<Map<String, String>> userAnimals = await _getUserAnimalsSpeciesAndBreeds();
-    final Set<String> processedAnimalKeys = {}; // Para evitar consejos duplicados por especie/raza
-    final Set<String> processedGenericSpecies = {}; // Para evitar genéricos si ya hay uno específico
+    final Set<String> processedAnimalKeys = {}; // Para evitar consejos duplicados por la misma especie+raza
+    final Set<String> coveredSpecies = {}; // Para evitar añadir consejos genéricos para especies ya cubiertas por un animal específico del usuario
 
     developer.log("Animales del usuario: $userAnimals");
 
@@ -496,7 +531,7 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
           continue; // Saltar si ya generamos un consejo para esta combinación específica
         }
         processedAnimalKeys.add(key);
-        processedGenericSpecies.add(type); // Añadir la especie para evitar genéricos redundantes
+        coveredSpecies.add(type); // Añadir la especie para evitar genéricos redundantes
 
         String consejo;
         String imageUrl;
@@ -510,45 +545,40 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
         }
 
         // Priorizar APIs específicas para mascotas comunes si las claves están configuradas
+        // y no son placeholders.
         if (type == 'perro' && THE_DOG_API_KEY.isNotEmpty && THE_DOG_API_KEY != 'TU_API_KEY_DE_THE_DOG_API') {
           try {
-            // Intentar obtener una raza aleatoria de The Dog API, o buscar por nombre de raza si la tenemos
             String apiUrl = 'https://api.thedogapi.com/v1/images/search?has_breeds=true&limit=1';
-            // Si la raza de nuestro animal coincide con alguna de las razas de The Dog API, podemos intentar buscar por breed_id
-            // Esto es más complejo y requeriría una búsqueda previa de IDs de razas.
-            // Por simplicidad, por ahora, seguimos buscando una raza aleatoria y obtenemos su info.
-
             final dogApiResponse = await http.get(Uri.parse(apiUrl), headers: {'x-api-key': THE_DOG_API_KEY}).timeout(const Duration(seconds: 10));
             if (dogApiResponse.statusCode == 200) {
               final List<dynamic> dogData = json.decode(dogApiResponse.body);
               if (dogData.isNotEmpty && dogData[0]['breeds'] != null && (dogData[0]['breeds'] as List).isNotEmpty) {
                 final breedInfo = dogData[0]['breeds'][0];
-                String apiBreedName = breedInfo['name'] ?? type.capitalize();
-
-                titulo = 'Para tu Perro ${breed.isNotEmpty ? 'de raza ${breed.capitalize()}' : 'de raza ${apiBreedName}'}:';
+                String apiBreedName = breedInfo['name']?.toLowerCase() ?? '';
 
                 // Intentar generar consejo con la raza real del usuario, si no, con la de la API, si no, genérico.
                 consejo = await _generateTipWithGemini('perro', breed: breed.isNotEmpty ? breed : apiBreedName);
-                if (consejo.isEmpty || consejo.contains("Problema al contactar IA")) {
+                if (consejo.contains("Problema al contactar IA") || consejo.contains("API Key de Gemini no válida") || consejo.contains("La solicitud a la IA tardó demasiado")) {
                   // Si Gemini falla o no da un buen consejo, usar temperamento de la API como fallback
-                  consejo = 'Temperamento: ${breedInfo['temperament'] ?? 'N/A'}.\n${breedInfo['life_span'] ?? 'Esperanza de vida no disponible.'}';
+                  consejo = 'Temperamento común: ${breedInfo['temperament'] ?? 'N/A'}.\nEsperanza de vida: ${breedInfo['life_span'] ?? 'no disponible.'}';
+                  titulo = 'Dato de Perro (raza: ${breed.isNotEmpty ? breed.capitalize() : apiBreedName.capitalize()})';
                 }
 
                 imageUrl = dogData[0]['url'] ?? await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : apiBreedName);
-                fuente = 'The Dog API / Unsplash';
+                fuente = 'The Dog API / IA Gemini / Unsplash';
               } else {
                 // No hay raza específica de la API, recurrir a Gemini para perro
                 consejo = await _generateTipWithGemini(type, breed: breed);
                 imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
               }
             } else {
-              developer.log('Error The Dog API: ${dogApiResponse.statusCode}');
-              consejo = await _generateTipWithGemini(type, breed: breed);
+              developer.log('Error The Dog API: ${dogApiResponse.statusCode} - ${dogApiResponse.body}');
+              consejo = await _generateTipWithGemini(type, breed: breed); // Fallback to Gemini
               imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
             }
           } catch (e) {
             developer.log('Excepción The Dog API: $e');
-            consejo = await _generateTipWithGemini(type, breed: breed);
+            consejo = await _generateTipWithGemini(type, breed: breed); // Fallback to Gemini
             imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
           }
         } else if (type == 'gato' && THE_CAT_API_KEY.isNotEmpty && THE_CAT_API_KEY != 'TU_API_KEY_DE_THE_CAT_API') {
@@ -559,23 +589,23 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
               final List<dynamic> catData = json.decode(catApiResponse.body);
               if (catData.isNotEmpty && catData[0]['breeds'] != null && (catData[0]['breeds'] as List).isNotEmpty) {
                 final breedInfo = catData[0]['breeds'][0];
-                String apiBreedName = breedInfo['name'] ?? type.capitalize();
+                String apiBreedName = breedInfo['name']?.toLowerCase() ?? '';
 
-                titulo = 'Para tu Gato ${breed.isNotEmpty ? 'de raza ${breed.capitalize()}' : 'de raza ${apiBreedName}'}:';
                 consejo = await _generateTipWithGemini('gato', breed: breed.isNotEmpty ? breed : apiBreedName);
-                if (consejo.isEmpty || consejo.contains("Problema al contactar IA")) {
+                if (consejo.contains("Problema al contactar IA") || consejo.contains("API Key de Gemini no válida") || consejo.contains("La solicitud a la IA tardó demasiado")) {
                   // Si Gemini falla o no da un buen consejo, usar temperamento de la API como fallback
-                  consejo = 'Temperamento: ${breedInfo['temperament'] ?? 'N/A'}.\n${breedInfo['life_span'] ?? 'Esperanza de vida no disponible.'}';
+                  consejo = 'Temperamento común: ${breedInfo['temperament'] ?? 'N/A'}.\nEsperanza de vida: ${breedInfo['life_span'] ?? 'no disponible.'}';
+                  titulo = 'Dato de Gato (raza: ${breed.isNotEmpty ? breed.capitalize() : apiBreedName.capitalize()})';
                 }
                 imageUrl = catData[0]['url'] ?? await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : apiBreedName);
-                fuente = 'The Cat API / Unsplash';
+                fuente = 'The Cat API / IA Gemini / Unsplash';
               } else {
                 // No hay raza específica de la API, recurrir a Gemini para gato
                 consejo = await _generateTipWithGemini(type, breed: breed);
                 imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
               }
             } else {
-              developer.log('Error The Cat API: ${catApiResponse.statusCode}');
+              developer.log('Error The Cat API: ${catApiResponse.statusCode} - ${catApiResponse.body}');
               consejo = await _generateTipWithGemini(type, breed: breed);
               imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
             }
@@ -584,7 +614,7 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
             consejo = await _generateTipWithGemini(type, breed: breed);
             imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
           }
-        } else { // Para otros tipos de animales o si las claves de API no están configuradas
+        } else { // Para otros tipos de animales o si las claves de API no están configuradas/fallan
           consejo = await _generateTipWithGemini(type, breed: breed);
           imageUrl = await _fetchImageFromUnsplash(breed.isNotEmpty ? breed : type);
         }
@@ -592,13 +622,16 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
         // Manejar el mensaje de error de la API Key de Gemini
         if (consejo.contains("API Key de Gemini no válida") || consejo.contains("Problema al contactar IA") || consejo.contains("La solicitud a la IA tardó demasiado")) {
           imageUrl = await _fetchImageFromUnsplash('error');
-          fetchedTips.add(AnimalCareTip(
-            title: 'Error al obtener consejo',
-            description: consejo, // Aquí se mostrará el mensaje de error específico de Gemini
-            imageUrl: imageUrl,
-            source: 'Sistema',
-            date: todayString,
-          ));
+          // Solo añadir un tip de error si no hay uno ya para evitar duplicados en caso de múltiples fallos.
+          if (!fetchedTips.any((tip) => tip.title == 'Error al obtener consejo')) {
+            fetchedTips.add(AnimalCareTip(
+              title: 'Error al obtener consejo',
+              description: consejo, // Aquí se mostrará el mensaje de error específico de Gemini
+              imageUrl: imageUrl,
+              source: 'Sistema',
+              date: todayString,
+            ));
+          }
         } else {
           fetchedTips.add(AnimalCareTip(
             title: titulo,
@@ -613,27 +646,22 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
 
     // 2. Añadir consejos genéricos para rellenar o si el usuario no tiene animales específicos
     // Objetivo: tener al menos 3 consejos si es posible, o hasta 6 si hay muchos animales
-    int targetTips = max(3, fetchedTips.length);
-    int genericTipsAdded = 0;
+    int targetMinimumTips = userAnimals.isNotEmpty ? 3 : 3; // Asegurar al menos 3 tips si tiene animales o no
+    int maxTotalTips = 6;     // Máximo de tips a mostrar
 
-    // Si el usuario no tiene animales, empezar con algunos genéricos
-    if (userAnimals.isEmpty) {
-      for (String genericType in _tiposAnimalesGenericos.take(3)) { // Tomar los 3 primeros genéricos si el usuario no tiene animales
-        if (genericTipsAdded >= targetTips) break;
-
+    // Rellenar hasta el mínimo de tips con genéricos si no se alcanzó con los animales del usuario
+    for (String genericType in _tiposAnimalesGenericos) {
+      if (fetchedTips.length >= targetMinimumTips) {
+        break; // Mínimo alcanzado
+      }
+      if (!coveredSpecies.contains(genericType)) { // Solo añadir si esta especie genérica no ha sido cubierta
         String consejo = await _generateTipWithGemini(genericType);
         String imageUrl = await _fetchImageFromUnsplash(genericType);
 
-        // Manejar errores de IA también para consejos genéricos
-        if (consejo.contains("API Key de Gemini no válida") || consejo.contains("Problema al contactar IA") || consejo.contains("La solicitud a la IA tardó demasiado")) {
-          if (!fetchedTips.any((tip) => tip.title == 'Error al obtener consejo')) { // Evitar múltiples errores de IA
-            fetchedTips.add(AnimalCareTip(
-              title: 'Error al obtener consejo',
-              description: consejo,
-              imageUrl: await _fetchImageFromUnsplash('error'),
-              source: 'Sistema',
-              date: todayString,
-            ));
+        if (consejo.contains("API Key de Gemini no válida") || consejo.contains("Problema al contactar IA") || consejo.
+        contains("La solicitud a la IA tardó demasiado")) {
+          if (!fetchedTips.any((tip) => tip.title == 'Error al obtener consejo')) {
+            fetchedTips.add(AnimalCareTip(title: 'Error al obtener consejo', description: consejo, imageUrl: await _fetchImageFromUnsplash('error'), source: 'Sistema', date: todayString));
           }
         } else {
           fetchedTips.add(AnimalCareTip(
@@ -643,33 +671,23 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
             source: 'IA Gemini / Unsplash',
             date: todayString,
           ));
-          genericTipsAdded++;
-          processedGenericSpecies.add(genericType);
+          coveredSpecies.add(genericType); // Marcar esta especie genérica como cubierta
         }
       }
-    } else {
-      // Si el usuario tiene animales, añadir genéricos SOLO si no se ha cubierto esa especie y necesitamos más tips
-      for (String genericType in _tiposAnimalesGenericos) {
-        if (fetchedTips.length >= 6) break; // Limitar el total de consejos a 6
+    }
 
-        // Si ya hay un consejo específico para esta especie, o ya añadimos un genérico para ella, saltar
-        if (processedGenericSpecies.contains(genericType)) {
-          continue;
-        }
-
+    // Rellenar hasta el máximo de tips con genéricos adicionales si todavía hay espacio
+    for (String genericType in _tiposAnimalesGenericos) {
+      if (fetchedTips.length >= maxTotalTips) {
+        break; // Máximo alcanzado
+      }
+      if (!coveredSpecies.contains(genericType)) { // Solo añadir si esta especie genérica no ha sido cubierta todavía
         String consejo = await _generateTipWithGemini(genericType);
         String imageUrl = await _fetchImageFromUnsplash(genericType);
 
-        // Manejar errores de IA también para consejos genéricos
         if (consejo.contains("API Key de Gemini no válida") || consejo.contains("Problema al contactar IA") || consejo.contains("La solicitud a la IA tardó demasiado")) {
           if (!fetchedTips.any((tip) => tip.title == 'Error al obtener consejo')) {
-            fetchedTips.add(AnimalCareTip(
-              title: 'Error al obtener consejo',
-              description: consejo,
-              imageUrl: await _fetchImageFromUnsplash('error'),
-              source: 'Sistema',
-              date: todayString,
-            ));
+            fetchedTips.add(AnimalCareTip(title: 'Error al obtener consejo', description: consejo, imageUrl: await _fetchImageFromUnsplash('error'), source: 'Sistema', date: todayString));
           }
         } else {
           fetchedTips.add(AnimalCareTip(
@@ -679,13 +697,13 @@ class _DailyAnimalCareContentState extends State<DailyAnimalCareContent> {
             source: 'IA Gemini / Unsplash',
             date: todayString,
           ));
-          processedGenericSpecies.add(genericType);
+          coveredSpecies.add(genericType); // Marcar esta especie genérica como cubierta
         }
       }
     }
 
     // 3. Añadir un "Dato Curioso" general si todavía hay espacio para variedad
-    if (fetchedTips.length < 5) { // Se podría ajustar para asegurar al menos 5-6 consejos si es posible
+    if (fetchedTips.length < maxTotalTips) {
       try {
         final factResponse = await http.get(Uri.parse('https://uselessfacts.jsph.pl/api/v2/facts/random?language=es')).timeout(const Duration(seconds: 10));
         if (factResponse.statusCode == 200) {

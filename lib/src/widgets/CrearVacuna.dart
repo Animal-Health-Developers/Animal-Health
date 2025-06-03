@@ -61,6 +61,19 @@ class _CrearVacunaState extends State<CrearVacuna> {
       initialDate: isVaccinationDate ? _fechaVacunacion : _proximaDosis,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101), // Fecha máxima razonable
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xff4ec8dd),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+            dialogBackgroundColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -225,20 +238,23 @@ class _CrearVacunaState extends State<CrearVacuna> {
           // --- Logo de la App (Navega a Home) ---
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: const Key('Home_From_CrearVacuna')),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ir a Inicio',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Home(key: const Key('Home_From_CrearVacuna')),
+                  ),
+                ],
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
               ),
             ),
@@ -246,40 +262,52 @@ class _CrearVacunaState extends State<CrearVacuna> {
           // --- Botón de Retroceso (Vuelve a CarnetdeVacunacion para este animal) ---
           Pinned.fromPins(
             Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0),
-            child: InkWell(
-              onTap: () => Navigator.pop(context), // Vuelve a CarnetdeVacunacion
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Volver al Carnet de Vacunación',
+              child: InkWell(
+                onTap: () => Navigator.pop(context), // Vuelve a CarnetdeVacunacion
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           // --- Botón de Ayuda ---
           Pinned.fromPins(
             Pin(size: 40.5, end: 15.0), Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda_From_CrearVacuna')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ayuda y Soporte',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda_From_CrearVacuna')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           // --- Iconos Laterales (Configuración y Lista General de Animales) ---
           Pinned.fromPins(
             Pin(size: 47.2, end: 15.0), Pin(size: 50.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  pageBuilder: () => Configuraciones(key: const Key('Settings_From_CrearVacuna'), authService: AuthService()),
-                ),
-              ],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Configuraciones de la Aplicación',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    pageBuilder: () => Configuraciones(key: const Key('Settings_From_CrearVacuna'), authService: AuthService()),
+                  ),
+                ],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           Pinned.fromPins(
             Pin(size: 60.1, start: 15.0), Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_From_CrearVacuna')),
-                ),
-              ],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ver todos mis animales',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_From_CrearVacuna')),
+                  ),
+                ],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
 
@@ -317,54 +345,58 @@ class _CrearVacunaState extends State<CrearVacuna> {
                 }
 
                 return Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditarPerfildeAnimal(
-                            key: Key('EditarPerfilDesdeCrearVacuna_${widget.animalId}'),
-                            animalId: widget.animalId,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 90.0, height: 90.0,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(25.0),
-                              border: Border.all(color: Colors.white, width: 2.5),
-                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: Offset(0,3))]
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(22.5),
-                            child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
-                                ? CachedNetworkImage(
-                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
-                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
-                                errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
-                                : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
-                          ),
-                        ),
-                        if (animalData.nombre.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              animalData.nombre,
-                              style: const TextStyle(
-                                  fontFamily: 'Comic Sans MS',
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [Shadow(blurRadius: 1.0, color: Colors.black, offset: Offset(1.0,1.0))]
-                              ),
+                  child: Tooltip( // Tooltip añadido para la foto de perfil
+                    message: 'Ver perfil de ${animalData.nombre}',
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditarPerfildeAnimal(
+                              key: Key('EditarPerfilDesdeCrearVacuna_${widget.animalId}'),
+                              animalId: widget.animalId,
                             ),
                           ),
-                      ],
+                        );
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 90.0, height: 90.0,
+                            decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(25.0),
+                                border: Border.all(color: Colors.white, width: 2.5),
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), spreadRadius: 2, blurRadius: 5, offset: Offset(0,3))]
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(22.5),
+                              child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
+                                  ? CachedNetworkImage(
+                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                                errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                              )
+                                  : Icon(Icons.pets, size: 50, color: Colors.grey[600]),
+                            ),
+                          ),
+                          if (animalData.nombre.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                animalData.nombre,
+                                style: const TextStyle(
+                                    fontFamily: 'Comic Sans MS',
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    shadows: [Shadow(blurRadius: 1.0, color: Colors.black, offset: Offset(1.0,1.0))]
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -411,6 +443,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
                             iconPath: 'assets/images/nombrevacuna.png', // Reutilizando icono si es adecuado
                             validator: (value) => value == null || value.isEmpty ? 'Por favor ingrese el nombre de la vacuna' : null,
                             keyboardType: TextInputType.text,
+                            tooltipMessage: 'Nombre de la vacuna a registrar', // Tooltip
                           ),
                           const SizedBox(height: 20),
 
@@ -420,6 +453,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
                             date: _fechaVacunacion,
                             iconPath: 'assets/images/edad.png', // Reutilizando icono
                             onTap: () => _selectDate(context, isVaccinationDate: true),
+                            tooltipMessage: 'Fecha en que se aplicó la vacuna', // Tooltip
                           ),
                           const SizedBox(height: 20),
 
@@ -429,6 +463,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
                             date: _proximaDosis,
                             iconPath: 'assets/images/edad.png', // Reutilizando icono
                             onTap: () => _selectDate(context, isVaccinationDate: false),
+                            tooltipMessage: 'Fecha estimada para la próxima dosis de la vacuna', // Tooltip
                           ),
                           const SizedBox(height: 20),
 
@@ -439,6 +474,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
                             iconPath: 'assets/images/lote.png', // Asegúrate de tener este icono o usa uno genérico
                             validator: (value) => value == null || value.isEmpty ? 'Por favor ingrese el lote' : null,
                             keyboardType: TextInputType.text,
+                            tooltipMessage: 'Número de lote de la vacuna', // Tooltip
                           ),
                           const SizedBox(height: 20),
 
@@ -453,6 +489,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
                               return null;
                             },
                             keyboardType: TextInputType.number,
+                            tooltipMessage: 'Número de dosis aplicada (ej: 1, 2, 3)', // Tooltip
                           ),
                           const SizedBox(height: 20),
 
@@ -463,32 +500,36 @@ class _CrearVacunaState extends State<CrearVacuna> {
                             iconPath: 'assets/images/veterinario.png', // Asegúrate de tener este icono o usa uno genérico
                             validator: (value) => value == null || value.isEmpty ? 'Por favor ingrese el nombre del veterinario' : null,
                             keyboardType: TextInputType.text,
+                            tooltipMessage: 'Nombre del veterinario que aplicó la vacuna', // Tooltip
                           ),
                           const SizedBox(height: 30),
 
                           // Botón Guardar Vacuna
-                          GestureDetector(
-                            onTap: _guardarVacuna,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Image.asset(
-                                  'assets/images/agregarvacuna.png', // Reutilizando el icono de agregar vacuna
-                                  width: 120.0,
-                                  height: 120.0,
-                                  fit: BoxFit.fill,
-                                ),
-                                const Text(
-                                  'Guardar Vacuna',
-                                  style: TextStyle(
-                                    fontFamily: 'Comic Sans MS',
-                                    fontSize: 20,
-                                    color: Color(0xff000000),
-                                    fontWeight: FontWeight.w700,
+                          Tooltip( // Tooltip para el botón de guardar vacuna
+                            message: 'Guardar nueva vacuna',
+                            child: GestureDetector(
+                              onTap: _guardarVacuna,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/agregarvacuna.png', // Reutilizando el icono de agregar vacuna
+                                    width: 120.0,
+                                    height: 120.0,
+                                    fit: BoxFit.fill,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                                  const Text(
+                                    'Guardar Vacuna',
+                                    style: TextStyle(
+                                      fontFamily: 'Comic Sans MS',
+                                      fontSize: 20,
+                                      color: Color(0xff000000),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           const SizedBox(height: 30), // Espacio al final
@@ -505,12 +546,13 @@ class _CrearVacunaState extends State<CrearVacuna> {
     );
   }
 
-  // --- Widgets Reutilizables para el Formulario ---
+  // --- Widgets Reutilizables para el Formulario (ACTUALIZADOS con Tooltips) ---
 
   Widget _buildFormField({
     required TextEditingController controller,
     required String labelText,
     required String iconPath,
+    required String tooltipMessage, // Nuevo parámetro para el Tooltip
     String? Function(String?)? validator,
     TextInputType keyboardType = TextInputType.text,
   }) {
@@ -529,6 +571,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
               contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
             ),
             validator: validator,
+            style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16), // Consistencia de estilo
           ),
           Positioned(
             left: 5,
@@ -536,13 +579,16 @@ class _CrearVacunaState extends State<CrearVacuna> {
             bottom: 10, // Alinea el icono verticalmente
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Container(
-                width: 40.0, // Tamaño del icono
-                height: 40.0, // Tamaño del icono
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(iconPath),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el icono
+                message: tooltipMessage,
+                child: Container(
+                  width: 40.0, // Tamaño del icono
+                  height: 40.0, // Tamaño del icono
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(iconPath),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -558,30 +604,34 @@ class _CrearVacunaState extends State<CrearVacuna> {
     required DateTime date,
     required String iconPath,
     required VoidCallback onTap,
+    required String tooltipMessage, // Nuevo parámetro para el Tooltip
   }) {
     return Container(
       height: 60,
       child: Stack(
         children: [
-          InkWell(
-            onTap: onTap,
-            child: InputDecorator(
-              decoration: InputDecoration(
-                labelText: labelText,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    DateFormat('dd/MM/yyyy').format(date),
-                    style: const TextStyle(fontSize: 16), // Ajusta el tamaño de fuente
-                  ),
-                  const Icon(Icons.arrow_drop_down),
-                ],
+          Tooltip( // Tooltip para el campo de fecha completo
+            message: tooltipMessage,
+            child: InkWell(
+              onTap: onTap,
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: labelText,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      DateFormat('dd/MM/yyyy').format(date),
+                      style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16), // Ajusta el tamaño de fuente y aplica fuente
+                    ),
+                    const Icon(Icons.arrow_drop_down),
+                  ],
+                ),
               ),
             ),
           ),
@@ -591,13 +641,16 @@ class _CrearVacunaState extends State<CrearVacuna> {
             bottom: 10, // Alinea el icono verticalmente
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Container(
-                width: 40.0,
-                height: 40.0,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(iconPath),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el icono de la fecha
+                message: tooltipMessage, // Reutiliza el mensaje del campo completo
+                child: Container(
+                  width: 40.0,
+                  height: 40.0,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(iconPath),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),

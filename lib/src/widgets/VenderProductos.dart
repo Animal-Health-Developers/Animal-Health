@@ -231,7 +231,7 @@ class _VenderProductosState extends State<VenderProductos> {
     }
   }
 
-  // --- MÉTODO _buildTextField con icono ---
+  // --- MÉTODO _buildTextField con icono y Tooltip ---
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
@@ -240,6 +240,7 @@ class _VenderProductosState extends State<VenderProductos> {
     String? Function(String?)? validator,
     int maxLines = 1,
     required String iconPath, // Nuevo parámetro para la ruta del icono
+    required String tooltipMessage, // <--- Nuevo parámetro para el tooltip
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -294,15 +295,18 @@ class _VenderProductosState extends State<VenderProductos> {
               left: 5,
               top: maxLines > 1 ? 10 : 0, // Ajusta la posición superior para multilinea
               bottom: maxLines > 1 ? null : 10, // Ajusta la posición inferior para una línea
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  width: 37.0, // Ancho del icono
-                  height: 40.0, // Alto del icono
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(iconPath),
-                      fit: BoxFit.fill,
+              child: Tooltip( // <--- Tooltip agregado
+                message: tooltipMessage,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: 37.0, // Ancho del icono
+                    height: 40.0, // Alto del icono
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(iconPath),
+                        fit: BoxFit.fill,
+                      ),
                     ),
                   ),
                 ),
@@ -315,8 +319,8 @@ class _VenderProductosState extends State<VenderProductos> {
   }
   // --- FIN MÉTODO _buildTextField ---
 
-  // --- MÉTODO _buildCategoryDropdown con icono ---
-  Widget _buildCategoryDropdown({required String iconPath}) { // Nuevo parámetro
+  // --- MÉTODO _buildCategoryDropdown con icono y Tooltip ---
+  Widget _buildCategoryDropdown({required String iconPath, required String tooltipMessage}) { // <--- Nuevo parámetro
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: SizedBox(
@@ -372,15 +376,18 @@ class _VenderProductosState extends State<VenderProductos> {
               left: 5,
               top: 0,
               bottom: 10,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  width: 40.0, // Ancho del icono
-                  height: 40.0, // Alto del icono
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(iconPath),
-                      fit: BoxFit.fill,
+              child: Tooltip( // <--- Tooltip agregado
+                message: tooltipMessage,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: 40.0, // Ancho del icono
+                    height: 40.0, // Alto del icono
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(iconPath),
+                        fit: BoxFit.fill,
+                      ),
                     ),
                   ),
                 ),
@@ -430,16 +437,19 @@ class _VenderProductosState extends State<VenderProductos> {
                 ),
                 Material(
                   color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => _removerImagenSeleccionada(index),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
-                        shape: BoxShape.circle,
+                  child: Tooltip( // <--- Tooltip para el botón de remover imagen
+                    message: 'Remover imagen',
+                    child: InkWell(
+                      onTap: () => _removerImagenSeleccionada(index),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, color: Colors.white, size: 18),
                       ),
-                      child: const Icon(Icons.close, color: Colors.white, size: 18),
                     ),
                   ),
                 )
@@ -476,115 +486,136 @@ class _VenderProductosState extends State<VenderProductos> {
               ),
             ),
           ),
+          // Botón de Volver
           Pinned.fromPins(
             Pin(size: 52.9, start: 9.1),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  pageBuilder: () => const CompradeProductos(key: Key("CompradeProductosDesdeVenta")),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/back.png'),
-                    fit: BoxFit.fill,
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Volver a Comprar Productos',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    pageBuilder: () => const CompradeProductos(key: Key("CompradeProductosDesdeVenta")),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/back.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
+          // Logo (Ir a Inicio)
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: const Key('HomeDesdeVenta')),
-                ),
-              ],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/logo.png'),
-                    fit: BoxFit.cover,
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Ir a Inicio',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Home(key: const Key('HomeDesdeVenta')),
                   ),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                ],
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/logo.png'),
+                      fit: BoxFit.cover,
+                    ),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
               ),
             ),
           ),
+          // Botón Carrito de compras
           Pinned.fromPins(
             Pin(size: 47.2, middle: 0.6987),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Carritodecompras(key: const Key('CarritodecomprasDesdeVenta')),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/carrito.png'),
-                    fit: BoxFit.fill,
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Carrito de compras',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Carritodecompras(key: const Key('CarritodecomprasDesdeVenta')),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/carrito.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
+          // Botón Ayuda
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: const Key('AyudaDesdeVenta')),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Ayuda',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Ayuda(key: const Key('AyudaDesdeVenta')),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/help.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
+          // Botón Configuración
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('SettingsDesdeVenta'), authService: AuthService()),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Configuración',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Configuraciones(key: const Key('SettingsDesdeVenta'), authService: AuthService()),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/settingsbutton.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
+          // Mini foto de perfil (Ver mi perfil)
           Pinned.fromPins(
             Pin(size: 60.0, start: 13.0),
             Pin(size: 60.0, start: 115.0),
@@ -607,60 +638,67 @@ class _VenderProductosState extends State<VenderProductos> {
                     profilePhotoUrl = null;
                   }
                 }
-                return PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => PerfilPublico(key: const Key('PerfilPublicoDesdeVenta')),
-                    ),
-                  ],
-                  child: Container(
-                    width: 60.0,
-                    height: 60.0,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(10.0),
-                      border: Border.all(color: APP_TEXT_COLOR, width: 0.5),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.0),
-                      child: (profilePhotoUrl != null && profilePhotoUrl.isNotEmpty)
-                          ? CachedNetworkImage(
-                        imageUrl: profilePhotoUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2.0,
-                                valueColor: AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR))),
-                        errorWidget: (context, url, error) =>
-                        const Icon(Icons.person, size: 40.0, color: Colors.grey),
-                      )
-                          : const Icon(Icons.person, size: 40.0, color: Colors.grey),
+                return Tooltip( // <--- Tooltip agregado
+                  message: 'Ver mi perfil',
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => PerfilPublico(key: const Key('PerfilPublicoDesdeVenta')),
+                      ),
+                    ],
+                    child: Container(
+                      width: 60.0,
+                      height: 60.0,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(10.0),
+                        border: Border.all(color: APP_TEXT_COLOR, width: 0.5),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10.0),
+                        child: (profilePhotoUrl != null && profilePhotoUrl.isNotEmpty)
+                            ? CachedNetworkImage(
+                          imageUrl: profilePhotoUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2.0,
+                                  valueColor: AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR))),
+                          errorWidget: (context, url, error) =>
+                          const Icon(Icons.person, size: 40.0, color: Colors.grey),
+                        )
+                            : const Icon(Icons.person, size: 40.0, color: Colors.grey),
+                      ),
                     ),
                   ),
                 );
               },
             ),
           ),
+          // Botón Lista de animales
           Pinned.fromPins(
             Pin(size: 60.1, end: 7.6),
             Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimalesDesdeVenta')),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/listaanimales.png'),
-                    fit: BoxFit.fill,
+            child: Tooltip( // <--- Tooltip agregado
+              message: 'Mi lista de animales',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimalesDesdeVenta')),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/listaanimales.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -703,12 +741,13 @@ class _VenderProductosState extends State<VenderProductos> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    // --- CAMPOS DEL FORMULARIO CON ICONOS ---
+                    // --- CAMPOS DEL FORMULARIO CON ICONOS Y TOOLTIPS ---
                     _buildTextField(
                       controller: _nombreController,
                       labelText: 'Nombre del Producto',
                       originalHint: 'Nombre del Producto',
                       iconPath: 'assets/images/nombreproducto.png',
+                      tooltipMessage: 'Ingresa el nombre de tu producto', // <--- Tooltip
                     ),
                     _buildTextField(
                       controller: _descripcionController,
@@ -716,9 +755,11 @@ class _VenderProductosState extends State<VenderProductos> {
                       originalHint: 'Detalles, características...',
                       maxLines: 3,
                       iconPath: 'assets/images/infoproducto.png',
+                      tooltipMessage: 'Proporciona una descripción detallada del producto', // <--- Tooltip
                     ),
                     _buildCategoryDropdown(
                       iconPath: 'assets/images/category.png',
+                      tooltipMessage: 'Selecciona la categoría a la que pertenece tu producto', // <--- Tooltip
                     ),
                     _buildTextField(
                       controller: _precioController,
@@ -726,6 +767,7 @@ class _VenderProductosState extends State<VenderProductos> {
                       originalHint: 'Precio',
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
                       iconPath: 'assets/images/price.png',
+                      tooltipMessage: 'Ingresa el precio de venta del producto', // <--- Tooltip
                     ),
                     _buildTextField(
                       controller: _cantidadController,
@@ -733,38 +775,43 @@ class _VenderProductosState extends State<VenderProductos> {
                       originalHint: 'Cantidad de Productos',
                       keyboardType: TextInputType.number,
                       iconPath: 'assets/images/stock.png',
+                      tooltipMessage: 'Ingresa la cantidad de unidades disponibles en stock', // <--- Tooltip
                     ),
                     _buildTextField(
                       controller: _empresaController,
                       labelText: 'Nombre de la Empresa o Negocio',
                       originalHint: 'Nombre de la Empresa o Negocio',
                       iconPath: 'assets/images/company.png',
+                      tooltipMessage: 'Ingresa el nombre de tu empresa o negocio', // <--- Tooltip
                     ),
                     // --- FIN CAMPOS DEL FORMULARIO ---
                     const SizedBox(height: 16.0),
 
                     _buildSelectedImagesPreview(),
 
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.add_a_photo_outlined, color: APP_TEXT_COLOR),
-                      label: Text(
-                        _selectedImageWrappers.isEmpty ? 'Cargar Imágenes' : 'Añadir más Imágenes',
-                        style: const TextStyle(
-                            fontFamily: APP_FONT_FAMILY,
-                            fontSize: 18,
-                            color: APP_TEXT_COLOR,
-                            fontWeight: FontWeight.w700),
+                    Tooltip( // <--- Tooltip para el botón de cargar imágenes
+                      message: _selectedImageWrappers.isEmpty ? 'Seleccionar imágenes para el producto' : 'Añadir más imágenes al producto',
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.add_a_photo_outlined, color: APP_TEXT_COLOR),
+                        label: Text(
+                          _selectedImageWrappers.isEmpty ? 'Cargar Imágenes' : 'Añadir más Imágenes',
+                          style: const TextStyle(
+                              fontFamily: APP_FONT_FAMILY,
+                              fontSize: 18,
+                              color: APP_TEXT_COLOR,
+                              fontWeight: FontWeight.w700),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff4ec8dd), // Un color que contraste un poco
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                              side: const BorderSide(color: APP_TEXT_COLOR, width: 1.0),
+                            ),
+                            elevation: 3,
+                            shadowColor: const Color(0xff080808)),
+                        onPressed: _isUploading ? null : _seleccionarImagenes,
                       ),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff4ec8dd), // Un color que contraste un poco
-                          padding: const EdgeInsets.symmetric(vertical: 12.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                            side: const BorderSide(color: APP_TEXT_COLOR, width: 1.0),
-                          ),
-                          elevation: 3,
-                          shadowColor: const Color(0xff080808)),
-                      onPressed: _isUploading ? null : _seleccionarImagenes,
                     ),
                     const SizedBox(height: 24.0),
                     _isUploading
@@ -779,24 +826,27 @@ class _VenderProductosState extends State<VenderProductos> {
                           ],
                         )
                     )
-                        : ElevatedButton(
-                      onPressed: _publicarProducto,
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: APP_PRIMARY_COLOR,
-                          padding: const EdgeInsets.symmetric(vertical: 15.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                            side: const BorderSide(color: APP_TEXT_COLOR, width: 1.0),
+                        : Tooltip( // <--- Tooltip para el botón de Publicar Producto
+                      message: 'Publica tu producto para venderlo',
+                      child: ElevatedButton(
+                        onPressed: _publicarProducto,
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: APP_PRIMARY_COLOR,
+                            padding: const EdgeInsets.symmetric(vertical: 15.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                              side: const BorderSide(color: APP_TEXT_COLOR, width: 1.0),
+                            ),
+                            elevation: 3,
+                            shadowColor: const Color(0xff080808)),
+                        child: const Text(
+                          'Publicar Producto',
+                          style: TextStyle(
+                            fontFamily: APP_FONT_FAMILY,
+                            fontSize: 20,
+                            color: APP_TEXT_COLOR,
+                            fontWeight: FontWeight.w700,
                           ),
-                          elevation: 3,
-                          shadowColor: const Color(0xff080808)),
-                      child: const Text(
-                        'Publicar Producto',
-                        style: TextStyle(
-                          fontFamily: APP_FONT_FAMILY,
-                          fontSize: 20,
-                          color: APP_TEXT_COLOR,
-                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),

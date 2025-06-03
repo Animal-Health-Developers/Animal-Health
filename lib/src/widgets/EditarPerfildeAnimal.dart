@@ -51,7 +51,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
   final TextEditingController _anchoController = TextEditingController();
   DateTime? _fechaNacimiento;
 
-  final List<String> _especiesDisponibles = [
+  final List<String> _especiesDisponibles = const [
     "Perro", "Gato", "Ave", "Roedor", "Reptil", "Otro"
   ];
   String? _selectedEspecie;
@@ -63,7 +63,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ID de animal no proporcionado.')),
+            const SnackBar(content: Text('Error: ID de animal no proporcionado.')),
           );
           if (Navigator.canPop(context)) {
             Navigator.of(context).pop();
@@ -81,12 +81,12 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Usuario no autenticado')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuario no autenticado')));
         if (mounted) setState(() { _isLoadingData = false; });
         return;
       }
       if (widget.animalId.isEmpty) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ID de animal inválido para cargar datos.')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ID de animal inválido para cargar datos.')));
         if (mounted) setState(() { _isLoadingData = false; });
         return;
       }
@@ -104,7 +104,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
           setState(() {
             _nombreController.text = data['nombre'] ?? '';
             _selectedEspecie = data['especie'] as String? ?? _especiesDisponibles.first;
-            _especieController.text = _selectedEspecie!;
+            _especieController.text = _selectedEspecie!; // Aunque se usa Dropdown, se mantiene para consistencia si se necesitara.
             _razaController.text = data['raza'] ?? '';
             _pesoController.text = (data['peso'] as num?)?.toString() ?? '';
             _largoController.text = (data['largo'] as num?)?.toString() ?? '';
@@ -123,7 +123,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
           });
         }
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Perfil de animal no encontrado')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Perfil de animal no encontrado')));
         if (mounted) setState(() { _isLoadingData = false; });
       }
     } catch (e) {
@@ -212,7 +212,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
     _formKey.currentState!.save();
 
     if (_isUploading) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Espere, se está subiendo la imagen...')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Espere, se está subiendo la imagen...')));
       return;
     }
 
@@ -256,7 +256,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Perfil de ${_nombreController.text} actualizado con éxito!')));
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ListadeAnimales(key: Key('ListadeAnimales'))),
+          MaterialPageRoute(builder: (context) => ListadeAnimales(key: const Key('ListadeAnimales'))),
         );
       }
     } catch (e) {
@@ -276,8 +276,8 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: ColorScheme.light(
-              primary: const Color(0xff4ec8dd), // Color del encabezado del calendario
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xff4ec8dd), // Color del encabezado del calendario
               onPrimary: Colors.white, // Color del texto del encabezado
               onSurface: Colors.black, // Color del texto del día
             ),
@@ -380,6 +380,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
     bool enabled = true,
+    required String tooltipMessage, // Nuevo parámetro para el Tooltip
   }) {
     return Container(
       height: 60,
@@ -393,12 +394,12 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               filled: true,
               fillColor: Colors.white.withOpacity(0.95),
-              contentPadding: EdgeInsets.only(left: 50.0, right: 15.0, top: 15, bottom: 15),
+              contentPadding: const EdgeInsets.only(left: 50.0, right: 15.0, top: 15, bottom: 15),
               floatingLabelBehavior: FloatingLabelBehavior.auto,
             ),
             keyboardType: keyboardType,
             validator: validator,
-            style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16),
+            style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16),
             enabled: enabled,
           ),
           Positioned(
@@ -407,13 +408,16 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
             bottom: 10,
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Container(
-                width: iconWidth,
-                height: iconHeight,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(assetIconPath),
-                    fit: BoxFit.fill,
+              child: Tooltip( // Tooltip para el icono del campo de texto
+                message: tooltipMessage,
+                child: Container(
+                  width: iconWidth,
+                  height: iconHeight,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(assetIconPath),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -443,13 +447,16 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
           // --- Logo de la App (Navega a Home) ---
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => Home(key: const Key('Home')))],
-              child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(width: 1.0, color: const Color(0xff000000)),
+            child: Tooltip( // Tooltip añadido
+              message: 'Ir a Inicio',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => Home(key: const Key('Home')))],
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                    borderRadius: BorderRadius.circular(15.0),
+                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  ),
                 ),
               ),
             ),
@@ -457,29 +464,35 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
           // --- Botón de Retroceso a Lista de Animales ---
           Pinned.fromPins(
             Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [PageLinkInfo(pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_Back')))],
-              child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+            child: Tooltip( // Tooltip añadido
+              message: 'Volver a Mis Animales',
+              child: PageLink(
+                links: [PageLinkInfo(pageBuilder: () => const ListadeAnimales(key: Key('ListadeAnimales_Back')))],
+                child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+              ),
             ),
           ),
           // --- Botón de Configuración (A la derecha del todo) ---
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/settingsbutton.png'),
-                    fit: BoxFit.fill,
+            child: Tooltip( // Tooltip añadido
+              message: 'Configuraciones de la Aplicación',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Configuraciones(key: const Key('Settings'), authService: AuthService()),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/settingsbutton.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -489,20 +502,23 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
           Pinned.fromPins(
             Pin(size: 40.5, end: 7.6 + 47.2 + 5.0),
             Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: const Key('Ayuda')),
-                ),
-              ],
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/help.png'),
-                    fit: BoxFit.fill,
+            child: Tooltip( // Tooltip añadido
+              message: 'Ayuda y Soporte',
+              child: PageLink(
+                links: [
+                  PageLinkInfo(
+                    transition: LinkTransition.Fade,
+                    ease: Curves.easeOut,
+                    duration: 0.3,
+                    pageBuilder: () => Ayuda(key: const Key('Ayuda')),
+                  ),
+                ],
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/help.png'),
+                      fit: BoxFit.fill,
+                    ),
                   ),
                 ),
               ),
@@ -516,7 +532,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
             right: 20,
             bottom: 20,
             child: _isLoadingData
-                ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+                ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
                 : Form(
               key: _formKey,
               child: SingleChildScrollView(
@@ -536,21 +552,36 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                               mainAxisSize: MainAxisSize.min, // Ajusta la altura al contenido vertical
                               children: [
                                 // --- Foto de Perfil (Centrada y con GestureDetector para vista grande) ---
-                                GestureDetector(
-                                  onTap: _isUploading ? null : _showLargeImage, // Al tocar, muestra la imagen en grande
-                                  child: CircleAvatar(
-                                    radius: 55,
-                                    backgroundColor: Colors.white.withOpacity(0.8),
-                                    child: _isUploading
-                                        ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))
-                                        : _pickedImage != null
-                                        ? (kIsWeb && _imageBytes != null
-                                        ? ClipOval(child: Image.memory(_imageBytes!, width: 100, height: 100, fit: BoxFit.cover))
-                                        : !kIsWeb ? ClipOval(child: Image.file(_pickedImage as File, width: 100, height: 100, fit: BoxFit.cover))
-                                        : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey))
-                                        : (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
-                                        ? ClipOval(child: CachedNetworkImage(imageUrl: _currentImageUrl!, width: 100, height: 100, fit: BoxFit.cover, placeholder: (c, u) => CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))), errorWidget: (c,u,e) => Icon(Icons.pets, size: 40, color: Colors.grey[600],)))
-                                        : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+                                Tooltip( // Tooltip para la foto de perfil
+                                  message: 'Ver o cambiar foto de perfil',
+                                  child: GestureDetector(
+                                    onTap: _isUploading ? null : _showLargeImage, // Al tocar, muestra la imagen en grande
+                                    child: Container( // Cambiado de CircleAvatar a Container
+                                      width: 110, // Tamaño cuadrado (radio 55 * 2)
+                                      height: 110, // Tamaño cuadrado
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.8),
+                                        borderRadius: BorderRadius.circular(15.0), // Bordes redondeados
+                                      ),
+                                      child: _isUploading
+                                          ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))
+                                          : _pickedImage != null
+                                          ? (kIsWeb && _imageBytes != null
+                                          ? ClipRRect(borderRadius: BorderRadius.circular(15.0), child: Image.memory(_imageBytes!, width: 110, height: 110, fit: BoxFit.cover))
+                                          : !kIsWeb ? ClipRRect(borderRadius: BorderRadius.circular(15.0), child: Image.file(_pickedImage as File, width: 110, height: 110, fit: BoxFit.cover))
+                                          : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey))
+                                          : (_currentImageUrl != null && _currentImageUrl!.isNotEmpty)
+                                          ? ClipRRect( // ClipRRect para bordes redondeados en CachedNetworkImage
+                                        borderRadius: BorderRadius.circular(15.0),
+                                        child: CachedNetworkImage(
+                                          imageUrl: _currentImageUrl!,
+                                          width: 110, height: 110, fit: BoxFit.cover,
+                                          placeholder: (c, u) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)))),
+                                          errorWidget: (c,u,e) => const Icon(Icons.pets, size: 40, color: Colors.grey,),
+                                        ),
+                                      )
+                                          : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 10), // Espacio entre la imagen y el botón
@@ -577,28 +608,31 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                           Positioned(
                             left: 0,
                             top: (170 - 70) / 2, // Centrado verticalmente con la nueva altura
-                            child: GestureDetector(
-                              onTap: () {
-                                if (widget.animalId.isNotEmpty) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => FuncionesdelaApp(
-                                        key: Key('FuncionesdelaApp_${widget.animalId}'),
-                                        animalId: widget.animalId,
+                            child: Tooltip( // Tooltip para el botón de funciones
+                              message: 'Ver Funciones del Animal',
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (widget.animalId.isNotEmpty) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => FuncionesdelaApp(
+                                          key: Key('FuncionesdelaApp_${widget.animalId}'),
+                                          animalId: widget.animalId,
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('ID de animal no disponible.')),
-                                  );
-                                }
-                              },
-                              child: Container(
-                                width: 60, height: 70,
-                                decoration: const BoxDecoration(
-                                  image: DecorationImage(image: AssetImage('assets/images/funciones.png'), fit: BoxFit.contain),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('ID de animal no disponible.')),
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width: 60, height: 70,
+                                  decoration: const BoxDecoration(
+                                    image: DecorationImage(image: AssetImage('assets/images/funciones.png'), fit: BoxFit.contain),
+                                  ),
                                 ),
                               ),
                             ),
@@ -608,31 +642,42 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                     ),
                     const SizedBox(height: 25), // Espaciado ajustado
                     // --- Campos del Formulario ---
-                    _buildTextFormFieldWithIcon(controller: _nombreController, labelText: 'Nombre', assetIconPath: 'assets/images/nombreanimal.png', iconWidth: 37.4, iconHeight: 40.0, validator: (v) => v!.isEmpty ? 'Ingrese nombre' : null),
+                    _buildTextFormFieldWithIcon(
+                      controller: _nombreController,
+                      labelText: 'Nombre',
+                      assetIconPath: 'assets/images/nombreanimal.png',
+                      iconWidth: 37.4,
+                      iconHeight: 40.0,
+                      validator: (v) => v!.isEmpty ? 'Ingrese nombre' : null,
+                      tooltipMessage: 'Nombre del animal', // Tooltip para el campo Nombre
+                    ),
                     Container(
                       height: 60,
                       margin: const EdgeInsets.only(bottom:20),
                       child: Stack(
                         children: [
-                          InkWell(
-                            onTap: () => _selectDate(context),
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                labelText: 'Fecha de Nacimiento',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                filled: true,
-                                fillColor: Colors.white.withOpacity(0.95),
-                                contentPadding: EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 15.0),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _fechaNacimiento != null ? DateFormat('dd/MM/yyyy').format(_fechaNacimiento!) : 'Seleccionar fecha',
-                                    style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: _fechaNacimiento != null ? Colors.black87 : Colors.grey.shade700),
-                                  ),
-                                  Icon(Icons.arrow_drop_down, color: Colors.grey.shade700),
-                                ],
+                          Tooltip( // Tooltip para el campo Fecha de Nacimiento
+                            message: 'Seleccionar fecha de nacimiento del animal',
+                            child: InkWell(
+                              onTap: () => _selectDate(context),
+                              child: InputDecorator(
+                                decoration: InputDecoration(
+                                  labelText: 'Fecha de Nacimiento',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.95),
+                                  contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 15.0),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _fechaNacimiento != null ? DateFormat('dd/MM/yyyy').format(_fechaNacimiento!) : 'Seleccionar fecha',
+                                      style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: _fechaNacimiento != null ? Colors.black87 : Colors.grey.shade700),
+                                    ),
+                                    Icon(Icons.arrow_drop_down, color: Colors.grey.shade700), // Icono de la flecha del dropdown
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -642,13 +687,16 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                             bottom: 10,
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Container(
-                                width: 35.2,
-                                height: 40.0,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: const AssetImage('assets/images/edad.png'),
-                                    fit: BoxFit.fill,
+                              child: Tooltip( // Tooltip para el icono de Edad
+                                message: 'Icono de Edad',
+                                child: Container(
+                                  width: 35.2,
+                                  height: 40.0,
+                                  decoration: const BoxDecoration(
+                                    image: DecorationImage(
+                                      image: AssetImage('assets/images/edad.png'),
+                                      fit: BoxFit.fill,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -662,45 +710,92 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
                       margin: const EdgeInsets.only(bottom: 20),
                       child: Stack(
                         children: [
-                          DropdownButtonFormField<String>(
-                            value: _selectedEspecie,
-                            items: _especiesDisponibles.map((String value) {
-                              return DropdownMenuItem<String>(value: value, child: Text(value, style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)));
-                            }).toList(),
-                            onChanged: (newValue) => setState(() => _selectedEspecie = newValue),
-                            decoration: InputDecoration(
-                              labelText: 'Especie',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              filled: true,
-                              fillColor: Colors.white.withOpacity(0.95),
-                              contentPadding: const EdgeInsets.only(left: 50.0, right: 15.0, top: 15, bottom: 15),
+                          Tooltip( // Tooltip para el campo Especie
+                            message: 'Seleccionar especie del animal',
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedEspecie,
+                              items: _especiesDisponibles.map((String value) {
+                                return DropdownMenuItem<String>(value: value, child: Text(value, style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16)));
+                              }).toList(),
+                              onChanged: (newValue) => setState(() => _selectedEspecie = newValue),
+                              decoration: InputDecoration(
+                                labelText: 'Especie',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.95),
+                                contentPadding: const EdgeInsets.only(left: 50.0, right: 15.0, top: 15, bottom: 15),
+                              ),
+                              validator: (v) => v == null || v.isEmpty ? 'Seleccione especie' : null,
+                              isExpanded: true,
                             ),
-                            validator: (v) => v == null || v.isEmpty ? 'Seleccione especie' : null,
-                            isExpanded: true,
                           ),
                           Positioned(
                             left: 5, top: 0, bottom: 10,
-                            child: Align(alignment: Alignment.centerLeft, child: Container(width: 40.3, height: 40.0, decoration: BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/especie.png'), fit: BoxFit.fill)))),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Tooltip( // Tooltip para el icono de Especie
+                                message: 'Icono de Especie',
+                                child: Container(width: 40.3, height: 40.0, decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/especie.png'), fit: BoxFit.fill))),
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    _buildTextFormFieldWithIcon(controller: _razaController, labelText: 'Raza', assetIconPath: 'assets/images/raza.png', iconWidth: 40.4, iconHeight: 40.0, validator: (v) => v!.isEmpty ? 'Ingrese raza' : null),
-                    _buildTextFormFieldWithIcon(controller: _pesoController, labelText: 'Peso (kg)', assetIconPath: 'assets/images/peso.png', iconWidth: 40.7, iconHeight: 40.0, keyboardType: TextInputType.numberWithOptions(decimal: true), validator: (v) => v!.isEmpty ? 'Ingrese peso' : (double.tryParse(v.replaceAll(',', '.')) == null ? 'Número inválido' : null)),
-                    _buildTextFormFieldWithIcon(controller: _largoController, labelText: 'Largo (cm)', assetIconPath: 'assets/images/largo.png', iconWidth: 35.8, iconHeight: 40.0, keyboardType: TextInputType.numberWithOptions(decimal: true), validator: (v) => v!.isEmpty ? 'Ingrese largo' : (double.tryParse(v.replaceAll(',', '.')) == null ? 'Número inválido' : null)),
-                    _buildTextFormFieldWithIcon(controller: _anchoController, labelText: 'Ancho (cm)', assetIconPath: 'assets/images/ancho.png', iconWidth: 35.8, iconHeight: 40.0, keyboardType: TextInputType.numberWithOptions(decimal: true), validator: (v) => v!.isEmpty ? 'Ingrese ancho' : (double.tryParse(v.replaceAll(',', '.')) == null ? 'Número inválido' : null)),
+                    _buildTextFormFieldWithIcon(
+                      controller: _razaController,
+                      labelText: 'Raza',
+                      assetIconPath: 'assets/images/raza.png',
+                      iconWidth: 40.4,
+                      iconHeight: 40.0,
+                      validator: (v) => v!.isEmpty ? 'Ingrese raza' : null,
+                      tooltipMessage: 'Raza del animal', // Tooltip para el campo Raza
+                    ),
+                    _buildTextFormFieldWithIcon(
+                      controller: _pesoController,
+                      labelText: 'Peso (kg)',
+                      assetIconPath: 'assets/images/peso.png',
+                      iconWidth: 40.7,
+                      iconHeight: 40.0,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      validator: (v) => v!.isEmpty ? 'Ingrese peso' : (double.tryParse(v.replaceAll(',', '.')) == null ? 'Número inválido' : null),
+                      tooltipMessage: 'Peso del animal en kilogramos', // Tooltip para el campo Peso
+                    ),
+                    _buildTextFormFieldWithIcon(
+                      controller: _largoController,
+                      labelText: 'Largo (cm)',
+                      assetIconPath: 'assets/images/largo.png',
+                      iconWidth: 35.8,
+                      iconHeight: 40.0,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      validator: (v) => v!.isEmpty ? 'Ingrese largo' : (double.tryParse(v.replaceAll(',', '.')) == null ? 'Número inválido' : null),
+                      tooltipMessage: 'Largo del animal en centímetros', // Tooltip para el campo Largo
+                    ),
+                    _buildTextFormFieldWithIcon(
+                      controller: _anchoController,
+                      labelText: 'Ancho (cm)',
+                      assetIconPath: 'assets/images/ancho.png',
+                      iconWidth: 35.8,
+                      iconHeight: 40.0,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      validator: (v) => v!.isEmpty ? 'Ingrese ancho' : (double.tryParse(v.replaceAll(',', '.')) == null ? 'Número inválido' : null),
+                      tooltipMessage: 'Ancho del animal en centímetros', // Tooltip para el campo Ancho
+                    ),
                     const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: _isUpdating || _isUploading ? null : _actualizarAnimal,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 127.3, height: 120.0,
-                            decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/editarperfilanimal.png'), fit: BoxFit.fill)),
-                          ),
-                          if (_isUpdating || _isUploading) const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
-                        ],
+                    Tooltip( // Tooltip para el botón de Actualizar Perfil
+                      message: 'Guardar todos los cambios del perfil',
+                      child: GestureDetector(
+                        onTap: _isUpdating || _isUploading ? null : _actualizarAnimal,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 127.3, height: 120.0,
+                              decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/editarperfilanimal.png'), fit: BoxFit.fill)),
+                            ),
+                            if (_isUpdating || _isUploading) const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 30),
