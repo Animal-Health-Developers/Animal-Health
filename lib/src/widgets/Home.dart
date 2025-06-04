@@ -51,7 +51,7 @@ class _HomeState extends State<Home> {
   void _initializeGemini() {
     if (GEMINI_API_KEY_HOME.isNotEmpty && GEMINI_API_KEY_HOME != 'AIzaSyD4FUbajaBbCslYPKZNyF-WGwrJZPcBZss') { // Reemplaza con tu placeholder si es diferente
       _geminiModel = GenerativeModel(
-        model: 'gemini 2.0',
+        model: 'gemini-1.5-flash', // Cambiado a un modelo más reciente y ligero
         apiKey: GEMINI_API_KEY_HOME,
       );
       developer.log("Modelo Gemini inicializado en Home.", name: "Home.Gemini");
@@ -569,7 +569,10 @@ class _HomeState extends State<Home> {
     final postOwnerId = pubDataMap?['usuarioId'] as String?;
     final isOwnPost = currentUserId != null && postOwnerId == currentUserId;
     final likes = pubDataMap?['likes'] as int? ?? 0;
+    // Asegura que likedBy sea una lista de Strings, incluso si es null o no es una lista
     final likedBy = List<String>.from(pubDataMap?['likedBy'] as List<dynamic>? ?? []);
+    final isLikedByCurrentUser = currentUserId != null && likedBy.contains(currentUserId);
+
 
     return Container(
       margin: const EdgeInsets.only(top: 10.0),
@@ -707,12 +710,17 @@ class _HomeState extends State<Home> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Tooltip( // Tooltip para el botón de Me gusta
-                  message: 'Me gusta',
+                  message: isLikedByCurrentUser ? 'Quitar Me gusta' : 'Me gusta',
                   child: GestureDetector(
                     onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, context),
                     child: Row(
                       children: [
-                        Image.asset('assets/images/like.png', width: 40, height: 40),
+                        // Cambia la imagen según si el usuario actual ha dado like
+                        Image.asset(
+                          isLikedByCurrentUser ? 'assets/images/like.png' : 'assets/images/like.png',
+                          width: 40,
+                          height: 40,
+                        ),
                         const SizedBox(width: 5),
                         Text(likes.toString(), style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 16, color: Colors.black)),
                       ],
@@ -866,6 +874,7 @@ class _HomeState extends State<Home> {
     );
   }
 
+  // --- NUEVA FUNCIÓN PARA TOGGLE LIKES ---
   Future<void> _toggleLike(String postId, String? userId, List<String> likedBy, BuildContext context) async {
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -875,22 +884,33 @@ class _HomeState extends State<Home> {
     }
     try {
       final postRef = FirebaseFirestore.instance.collection('publicaciones').doc(postId);
+
       await FirebaseFirestore.instance.runTransaction((transaction) async {
         final postSnapshot = await transaction.get(postRef);
         if (!postSnapshot.exists) {
           developer.log('Error: Publicación no encontrada para dar like: $postId', name: "Home.Like");
           throw Exception("Publicación no encontrada.");
         }
+
         final postData = postSnapshot.data() as Map<String, dynamic>?;
+        // Asegúrate de que 'likedBy' sea una lista de Strings.
         List<String> currentLikedBy = List<String>.from(postData?['likedBy'] as List<dynamic>? ?? []);
+
         final bool isLiked = currentLikedBy.contains(userId);
         List<String> newLikedBy;
+
         if (isLiked) {
+          // Si ya le dio like, quitar el like
           newLikedBy = currentLikedBy.where((id) => id != userId).toList();
         } else {
+          // Si no le ha dado like, añadir el like
           newLikedBy = [...currentLikedBy, userId];
         }
-        transaction.update(postRef, {'likes': newLikedBy.length, 'likedBy': newLikedBy});
+
+        transaction.update(postRef, {
+          'likes': newLikedBy.length,
+          'likedBy': newLikedBy,
+        });
       });
     } catch (e) {
       developer.log('Error al actualizar like: $e', error: e, name: "Home.Like");

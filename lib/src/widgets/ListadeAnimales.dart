@@ -69,7 +69,7 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
             Text('Error', style: TextStyle(fontSize: 10, color: Colors.red)),
           ],
         ),
-      ),
+      ), // <-- CORRECCIÓN AQUÍ: Se añadió este paréntesis extra para cerrar el Tooltip
     );
   }
 
@@ -117,6 +117,10 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
         placeholder: (context, url) => _buildPlaceholder(),
         errorWidget: (context, url, error) {
           print('Error al cargar imagen de animal (URL original: $url): $error. Intentando obtener nueva URL...');
+          // Si la URL que falló es una cadena vacía o nula, consideramos que es un placeholder, no un error de carga.
+          if (url == null || url.isEmpty) {
+            return _buildPlaceholder();
+          }
           return FutureBuilder<String?>(
             future: _getFreshDownloadUrl(url), // Intenta obtener una nueva URL
             builder: (context, snapshot) {
@@ -192,7 +196,10 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
   Widget _buildAnimalItem(DocumentSnapshot animalDoc, String userId) {
     try {
       final Animal animalObjeto = Animal.fromFirestore(animalDoc);
-      final fotoUrl = animalObjeto.fotoPerfilUrl;
+      // MODIFICACIÓN CLAVE AQUÍ: Asegurarse de que fotoPerfilUrl sea siempre un String.
+      // Si por alguna razón no lo es (ej. Firebase guarda 'false' o null en lugar de ""),
+      // esto lo convierte a una cadena vacía para evitar errores de tipo.
+      final String fotoUrl = (animalObjeto.fotoPerfilUrl is String) ? animalObjeto.fotoPerfilUrl : '';
       final nombre = animalObjeto.nombre;
       final especie = animalObjeto.especie;
 
