@@ -318,6 +318,62 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
     }
   }
 
+  // Nueva función para construir el botón "Crear Perfil" como un ítem de la cuadrícula
+  Widget _buildCreateProfileButton() {
+    return SizedBox(
+      width: cardWidth,
+      height: cardHeight,
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: BorderSide(color: Colors.white, width: 2)),
+        color: const Color(0x7a54d1e0), // Color similar a las tarjetas de animales
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Tooltip(
+              message: 'Crear nuevo perfil de animal',
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CrearPerfildeAnimal(
+                        key: const Key('CrearPerfildeAnimal'),
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 127.3,
+                  height: 120.0,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(image: AssetImage('assets/images/crearperfilanimal.png'), fit: BoxFit.fill),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: 135.0,
+              height: 35.0,
+              decoration: BoxDecoration(
+                color: const Color(0xe3a0f4fe),
+                borderRadius: BorderRadius.circular(10.0),
+                border: Border.all(width: 1.0, color: const Color(0xe3000000)),
+              ),
+              child: const Center(
+                child: Text(
+                  'Crear Perfil',
+                  style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 17, color: Color(0xff000000), fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final User? currentUser = _auth.currentUser;
@@ -478,73 +534,58 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
                         );
                       }
                       final animalDocs = snapshot.data?.docs;
-                      if (animalDocs?.isEmpty ?? true) {
+                      final int numAnimals = animalDocs?.length ?? 0;
+                      final int itemCount = numAnimals + (widget.isSelectionMode ? 0 : 1); // +1 para el botón de crear perfil si no es modo selección
+
+                      if (numAnimals == 0 && !widget.isSelectionMode) {
+                        return SingleChildScrollView( // Usamos SingleChildScrollView para que el botón de crear perfil sea scrollable incluso si no hay animales
+                          padding: const EdgeInsets.symmetric(horizontal: 15.0).copyWith(bottom: 20.0, top: 15.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(height: 50), // Espacio para centrar el mensaje y el botón
+                              Text(
+                                'No hay animales registrados',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Colors.white),
+                              ),
+                              const SizedBox(height: 30),
+                              _buildCreateProfileButton(), // Muestra el botón de crear perfil
+                              const SizedBox(height: 50), // Espacio al final
+                            ],
+                          ),
+                        );
+                      }
+
+                      if (numAnimals == 0 && widget.isSelectionMode) {
                         return Center(
                           child: Text(
-                            widget.isSelectionMode ? 'No hay animales para seleccionar.' : 'No hay animales registrados',
+                            'No hay animales para seleccionar.',
                             textAlign: TextAlign.center,
                             style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Colors.white),
                           ),
                         );
                       }
+
                       return GridView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 15, mainAxisSpacing: 15, childAspectRatio: cardWidth / cardHeight),
-                        itemCount: animalDocs?.length ?? 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 15).copyWith(bottom: 20.0, top: 15.0), // Ajuste de padding
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 15,
+                          mainAxisSpacing: 15,
+                          childAspectRatio: cardWidth / cardHeight,
+                        ),
+                        itemCount: itemCount,
                         itemBuilder: (context, index) {
+                          if (!widget.isSelectionMode && index == numAnimals) {
+                            return _buildCreateProfileButton(); // El último elemento es el botón de crear perfil
+                          }
                           return _buildAnimalItem(animalDocs![index], userId);
                         },
                       );
                     },
                   ),
                 ),
-                if (!widget.isSelectionMode)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20.0, top: 10),
-                    child: Column(
-                      children: [
-                        Tooltip( // Tooltip para el botón de crear perfil de animal
-                          message: 'Crear nuevo perfil de animal',
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CrearPerfildeAnimal(
-                                    key: const Key('CrearPerfildeAnimal'),
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: 127.3,
-                              height: 120.0,
-                              decoration: const BoxDecoration(
-                                image: DecorationImage(image: AssetImage('assets/images/crearperfilanimal.png'), fit: BoxFit.fill),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        // El siguiente contenedor es solo texto, no un icono, no requiere Tooltip a menos que sea interactivo.
-                        Container(
-                          width: 135.0,
-                          height: 35.0,
-                          decoration: BoxDecoration(
-                            color: const Color(0xe3a0f4fe),
-                            borderRadius: BorderRadius.circular(10.0),
-                            border: Border.all(width: 1.0, color: const Color(0xe3000000)),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Crear Perfil',
-                              style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 17, color: Color(0xff000000), fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),
