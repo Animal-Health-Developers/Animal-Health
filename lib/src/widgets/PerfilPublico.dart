@@ -59,6 +59,24 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
+  // NEW: Function to show "Create Story" modal
+  Future<void> _mostrarDialogoCrearHistoria(BuildContext pageContext, String userId, Map<String, dynamic> currentUserData) async {
+    await showModalBottomSheet(
+      context: pageContext,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext modalBuildContext) {
+        return _CrearHistoriaModalWidget(
+          key: Key('create_story_modal_$userId'),
+          userId: userId,
+          userName: currentUserData['nombreUsuario'] ?? currentUserData['name'] ?? 'Usuario',
+          userProfilePic: currentUserData['profilePhotoUrl'] as String?,
+          parentContextForSnackbars: pageContext,
+        );
+      },
+    );
+  }
+
   void _showProfileImageDialog(BuildContext context, String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -370,92 +388,121 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 child: Image.asset('assets/images/Animal Health Fondo de Pantalla.png', fit: BoxFit.cover),
               ),
               // --- Widgets Pinned de la AppBar ---
-              // ... (código existente de Pinned para back, logo, help, settings, listaanimales)
+              // Back button
               Pinned.fromPins(
                 Pin(size: 52.9, start: 9.0),
                 Pin(size: 50.0, start: 40.0),
-                child: PageLink(
-                  links: [PageLinkInfo(pageBuilder: () {
-                    if (Navigator.canPop(context)) { Navigator.of(context).pop(); return Container();}
-                    else { return Home(key: const Key('Home_FromPerfil_Back_AppBar')); }
-                  })],
-                  child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+                child: Tooltip( // Tooltip added
+                  message: 'Volver a la página anterior',
+                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                  child: PageLink(
+                    links: [PageLinkInfo(pageBuilder: () {
+                      if (Navigator.canPop(context)) { Navigator.of(context).pop(); return Container();}
+                      else { return Home(key: const Key('Home_FromPerfil_Back_AppBar')); }
+                    })],
+                    child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))),
+                  ),
                 ),
               ),
 
+              // Logo button
               Pinned.fromPins(
                   Pin(size: 74.0, middle: 0.5),
                   Pin(size: 73.0, start: 42.0),
-                  child: PageLink(
-                    links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Home(key: const Key('Home_FromPerfil_Logo_AppBar')))],
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                  child: Tooltip( // Tooltip added
+                    message: 'Ir a la página de inicio',
+                    textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
+                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                    child: PageLink(
+                      links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Home(key: const Key('Home_FromPerfil_Logo_AppBar')))],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                          borderRadius: BorderRadius.circular(15.0),
+                          border: Border.all(width: 1.0, color: const Color(0xff000000)),
+                        ),
                       ),
                     ),
                   )
               ),
 
+              // Help button
               Pinned.fromPins(
                 Pin(size: 40.5, middle: 0.8328),
                 Pin(size: 50.0, start: 49.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => Ayuda(key: const Key('Ayuda_FromPerfil_AppBar')),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/help.png'),
-                        fit: BoxFit.fill,
+                child: Tooltip( // Tooltip added
+                  message: 'Ayuda y soporte',
+                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => Ayuda(key: const Key('Ayuda_FromPerfil_AppBar')),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/help.png'),
+                          fit: BoxFit.fill,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
 
+              // Settings button
               Pinned.fromPins(
                 Pin(size: 47.2, end: 7.6),
                 Pin(size: 50.0, start: 49.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => Configuraciones(key: const Key('Settings_FromPerfil_AppBar'), authService: _authService),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill),
+                child: Tooltip( // Tooltip added
+                  message: 'Configuración de la aplicación',
+                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => Configuraciones(key: const Key('Settings_FromPerfil_AppBar'), authService: _authService),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(image: AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill),
+                      ),
                     ),
                   ),
                 ),
               ),
 
+              // Animal List button
               Pinned.fromPins(
                 Pin(size: 60.1, start: 80.0),
                 Pin(size: 60.0, start: 44.0),
-                child: PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimales_FromPerfil_AppBar')),
-                    ),
-                  ],
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill),
+                child: Tooltip( // Tooltip added
+                  message: 'Ver mi lista de animales',
+                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                  child: PageLink(
+                    links: [
+                      PageLinkInfo(
+                        transition: LinkTransition.Fade,
+                        ease: Curves.easeOut,
+                        duration: 0.3,
+                        pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimales_FromPerfil_AppBar')),
+                      ),
+                    ],
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(image: AssetImage('assets/images/listaanimales.png'), fit: BoxFit.fill),
+                      ),
                     ),
                   ),
                 ),
@@ -473,6 +520,16 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                     children: <Widget>[
                       _buildProfileHeader(context, profilePhotoUrl, userName, userData, currentUser.uid),
                       const SizedBox(height: 20),
+                      // NEW: Button to create a story
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: _buildActionButton(
+                          context,
+                          text: 'Crear Historia',
+                          onTapAction: () => _mostrarDialogoCrearHistoria(context, currentUser.uid, userData),
+                        ),
+                      ),
+                      const SizedBox(height: 20), // Spacing below the new button
                       _buildInfoTabs(context), // Ya se usa _selectedTabIndex aquí
                       const SizedBox(height: 10), // Espacio entre pestañas y contenido
                       // --- CONTENIDO DINÁMICO BASADO EN LA PESTAÑA SELECCIONADA ---
@@ -623,16 +680,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
       case 0: // Información
         return _buildUserInfoDetails(viveEn, deDonde, preferencias, genero, edad);
       case 1: // Historias
-        return Container(
-          padding: const EdgeInsets.all(20),
-          margin: const EdgeInsets.symmetric(vertical:10),
-          decoration: BoxDecoration(
-              color: _tabBackgroundColor,
-              borderRadius: BorderRadius.circular(9.0),
-              border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))
-          ),
-          child: const Center(child: Text('Contenido de Historias (Próximamente)', style: TextStyle(fontFamily: _fontFamily, fontSize: 18, color: _primaryTextColor))),
-        );
+        return _buildStoriesSection(currentUserId); // NEW: Display stories for the selected tab
       case 2: // Comunidad (Lista de Amigos)
         return _buildFriendsListSection(currentUserId);
       default:
@@ -781,6 +829,165 @@ class _PerfilPublicoState extends State<PerfilPublico> {
           ),
         );
       },
+    );
+  }
+
+  // NEW: Widget to display user stories
+  Widget _buildStoriesSection(String userId) {
+    return Container(
+      margin: const EdgeInsets.only(top: 0, bottom: 15.0),
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        color: _tabBackgroundColor,
+        borderRadius: BorderRadius.circular(9.0),
+        border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89)),
+      ),
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('stories')
+            .where('userId', isEqualTo: userId)
+            .where('expiresAt', isGreaterThan: Timestamp.now()) // Only show active stories
+            .orderBy('expiresAt', descending: false) // Order by expiration, soonest first
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)));
+          }
+          if (snapshot.hasError) {
+            developer.log("Error cargando historias del perfil: ${snapshot.error}", name: "PerfilPublico.StoryStream", error: snapshot.error);
+            return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                'Error al cargar historias.\nDetalle: ${snapshot.error}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontFamily: _fontFamily, color: Colors.redAccent),
+              ),
+            );
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.all(30.0),
+              child: Center(
+                child: Text(
+                  'Aún no tienes historias activas.\n¡Crea una y compártela!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontFamily: _fontFamily, fontSize: 18, color: _primaryTextColor),
+                ),
+              ),
+            );
+          }
+
+          final storyDocs = snapshot.data!.docs;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, bottom: 10.0, top: 5.0),
+                child: Text(
+                  'Historias Activas (${storyDocs.length})',
+                  style: const TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: _primaryTextColor),
+                ),
+              ),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3, // 3 stories per row
+                  crossAxisSpacing: 8.0,
+                  mainAxisSpacing: 8.0,
+                  childAspectRatio: 0.7, // Adjust aspect ratio for story tiles
+                ),
+                itemCount: storyDocs.length,
+                itemBuilder: (context, index) {
+                  final story = storyDocs[index];
+                  final storyData = story.data() as Map<String, dynamic>;
+                  final mediaUrl = storyData['mediaUrl'] as String?;
+                  final isVideo = (storyData['esVideo'] as bool?) ?? false;
+                  final caption = storyData['caption'] as String? ?? '';
+                  final expiresAt = (storyData['expiresAt'] as Timestamp?)?.toDate();
+
+                  String timeRemaining = '';
+                  if (expiresAt != null) {
+                    final remaining = expiresAt.difference(DateTime.now());
+                    if (remaining.isNegative) {
+                      timeRemaining = 'Expirada';
+                    } else if (remaining.inHours > 0) {
+                      timeRemaining = '${remaining.inHours}h restantes';
+                    } else {
+                      timeRemaining = '${remaining.inMinutes}m restantes';
+                    }
+                  }
+
+                  return GestureDetector(
+                    onTap: () {
+                      // TODO: Implement viewing story details (e.g., full screen story viewer)
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Ver historia: ${caption.isEmpty ? 'Sin texto' : caption}', style: const TextStyle(fontFamily: _fontFamily))),
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: _tabBackgroundColor.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(10.0),
+                        border: Border.all(color: _primaryTextColor.withOpacity(0.5)),
+                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (mediaUrl != null && mediaUrl.isNotEmpty)
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8.0),
+                                child: isVideo
+                                    ? Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    _VideoPlayerWidgetFromHome(key: Key('story_preview_video_${story.id}'), videoUrl: mediaUrl),
+                                    const Icon(Icons.play_circle_outline, color: Colors.white70, size: 40),
+                                  ],
+                                )
+                                    : CachedNetworkImage(
+                                  imageUrl: mediaUrl,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))),
+                                  errorWidget: (context, url, error) => const Icon(Icons.image_not_supported_outlined, size: 40, color: Colors.grey),
+                                ),
+                              ),
+                            )
+                          else
+                            const Expanded(
+                              child: Center(
+                                child: Icon(Icons.photo_library_outlined, size: 40, color: Colors.grey),
+                              ),
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Text(
+                              caption.isNotEmpty ? caption : (isVideo ? 'Video' : 'Imagen'),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontFamily: _fontFamily, fontSize: 12, color: _primaryTextColor, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Text(
+                            timeRemaining,
+                            style: TextStyle(fontFamily: _fontFamily, fontSize: 10, color: Colors.grey[700]),
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -1632,11 +1839,11 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
             _videoPlayerControllerPreview = null;
             if (isVideo) {
               if (kIsWeb) {
-                // Para web, VideoPlayerController.file no funciona.
-                // Se podría usar video_player_web y crear un Object URL para la preview si se tienen los bytes.
-                // Por simplicidad, aquí podríamos no mostrar la preview de video local en web, o mostrar un placeholder.
-                // O si _nuevoMedioFile.path es un URL blob ya (tras picker en web), podría funcionar.
-                _initializeVideoPlayerPreview(pickedFilePath, isFile: true); // Intentar, puede que no funcione en web para files locales
+                // For web, VideoPlayerController.file does not work directly with local file paths.
+                // If pickedFile.path is a blob URL from the picker in web, networkUrl might work.
+                // Otherwise, a placeholder or more complex web-specific handling is needed.
+                // For simplicity, we'll try networkUrl and log if it fails.
+                _initializeVideoPlayerPreview(pickedFilePath, isFile: true); // Attempt to initialize from path.
               } else {
                 _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
               }
@@ -1690,9 +1897,9 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
         if (kIsWeb) {
           Uint8List? bytesParaSubir;
           if(_esNuevoMedioVideo) {
-            bytesParaSubir = await _nuevoMedioFile!.readAsBytes(); // Leer bytes del video para web
+            bytesParaSubir = await _nuevoMedioFile!.readAsBytes(); // Read bytes of video for web
           } else {
-            bytesParaSubir = _nuevoMedioBytesPreview; // Usar bytes de imagen ya leídos
+            bytesParaSubir = _nuevoMedioBytesPreview; // Use image bytes already read
           }
 
           if (bytesParaSubir != null) {
@@ -1983,6 +2190,392 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
                         icon: const Icon(Icons.save_outlined, color: Colors.white),
                         label: const Text('Guardar Cambios', style: TextStyle(color: Colors.white)),
                         onPressed: _guardarCambiosPublicacion,
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: _buttonBackgroundColor,
+                            padding: const EdgeInsets.symmetric(vertical: 15.0),
+                            textStyle: const TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextButton(
+                        onPressed: () => Navigator.of(modalContext).pop(),
+                        child: const Text(
+                          'Cancelar',
+                          style: TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+// NEW: _CrearHistoriaModalWidget
+class _CrearHistoriaModalWidget extends StatefulWidget {
+  final String userId;
+  final String userName;
+  final String? userProfilePic;
+  final BuildContext parentContextForSnackbars;
+
+  const _CrearHistoriaModalWidget({
+    Key? key,
+    required this.userId,
+    required this.userName,
+    this.userProfilePic,
+    required this.parentContextForSnackbars,
+  }) : super(key: key);
+
+  @override
+  __CrearHistoriaModalWidgetState createState() => __CrearHistoriaModalWidgetState();
+}
+
+class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
+  final TextEditingController _captionController = TextEditingController();
+  File? _selectedMediaFile;
+  Uint8List? _selectedMediaBytesPreview; // For web image preview
+  bool _isMediaVideo = false;
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
+  final _formKeyStory = GlobalKey<FormState>();
+  VideoPlayerController? _videoPlayerControllerPreview;
+
+  @override
+  void dispose() {
+    _captionController.dispose();
+    _videoPlayerControllerPreview?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _seleccionarMedia(ImageSource source, {bool isVideo = false}) async {
+    XFile? pickedFile;
+    try {
+      if (isVideo) {
+        pickedFile = await _picker.pickVideo(source: source);
+      } else {
+        pickedFile = await _picker.pickImage(source: source, imageQuality: 80, maxWidth: 1080, maxHeight: 1920);
+      }
+
+      if (pickedFile != null) {
+        _selectedMediaBytesPreview = null; // Reset
+        String pickedFilePath = pickedFile.path;
+
+        if (kIsWeb) {
+          _selectedMediaBytesPreview = await pickedFile.readAsBytes();
+          if (isVideo) {
+            // For web video preview from local file, VideoPlayerController.networkUrl with a blob URL or direct URL is needed.
+            // If pickedFilePath is a blob URL from the picker, it might work. Otherwise, a placeholder.
+            _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
+          }
+        } else { // Mobile
+          if (isVideo) {
+            _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _selectedMediaFile = File(pickedFilePath);
+            _isMediaVideo = isVideo;
+          });
+        }
+      }
+    } catch (e) {
+      developer.log("Error seleccionando media para historia: $e", name: "CrearHistoriaModal.Picker", error: e);
+      if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al seleccionar media: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily))));
+    }
+  }
+
+  void _initializeVideoPlayerPreview(String url, {bool isFile = false}) async {
+    await _videoPlayerControllerPreview?.dispose(); // Dispose previous controller
+
+    Uri? uri = Uri.tryParse(url);
+    if (uri == null) {
+      developer.log("URL inválida para VideoPlayer preview (Create Story): $url", name: "CreateStoryModal.Video");
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
+          SnackBar(content: Text('URL de video inválida para previsualización.', style: const TextStyle(fontFamily: _fontFamily))),
+        );
+      }
+      return;
+    }
+
+    if (isFile && !kIsWeb) {
+      _videoPlayerControllerPreview = VideoPlayerController.file(File(url));
+    } else {
+      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
+    }
+
+    try {
+      await _videoPlayerControllerPreview!.initialize();
+      if (mounted) setState(() {});
+      _videoPlayerControllerPreview!.setLooping(true);
+    } catch (e) {
+      developer.log("Error inicializando VideoPlayer preview (Create Story): $e, URL: $url", name: "CreateStoryModal.Video", error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
+          const SnackBar(content: Text('Error al cargar la vista previa del video.', style: TextStyle(fontFamily: _fontFamily))),
+        );
+      }
+      // Set to null to show placeholder/error
+      if (mounted) setState(() => _videoPlayerControllerPreview = null);
+    }
+  }
+
+
+  Future<void> _publicarHistoria() async {
+    if (!_formKeyStory.currentState!.validate()) return;
+    if (_selectedMediaFile == null && _captionController.text.trim().isEmpty) {
+      if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(const SnackBar(content: Text('Debes añadir una foto/video o un texto para tu historia.', style: TextStyle(fontFamily: _fontFamily))));
+      return;
+    }
+    if (_isUploading) return;
+    setState(() => _isUploading = true);
+
+    String? mediaUrl;
+    try {
+      if (_selectedMediaFile != null) {
+        String fileExtension = _selectedMediaFile!.path.split('.').last.toLowerCase();
+        if (_isMediaVideo) {
+          if (!['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(fileExtension)) fileExtension = 'mp4';
+        } else {
+          if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) fileExtension = 'jpeg';
+        }
+
+        String fileName = 'stories/${widget.userId}/${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+        String contentType = _isMediaVideo ? 'video/$fileExtension' : 'image/$fileExtension';
+        if (_isMediaVideo && fileExtension == 'mov') contentType = 'video/quicktime';
+
+        UploadTask uploadTask;
+        if (kIsWeb) {
+          Uint8List? bytesToUpload;
+          if (_isMediaVideo) {
+            bytesToUpload = await _selectedMediaFile!.readAsBytes(); // Read bytes of video for web
+          } else {
+            bytesToUpload = _selectedMediaBytesPreview; // Use image bytes already read
+          }
+
+          if (bytesToUpload != null) {
+            uploadTask = FirebaseStorage.instance.ref(fileName).putData(bytesToUpload, SettableMetadata(contentType: contentType));
+          } else {
+            throw Exception("Bytes nulos para la subida del medio en web.");
+          }
+        } else {
+          uploadTask = FirebaseStorage.instance.ref(fileName).putFile(_selectedMediaFile!, SettableMetadata(contentType: contentType));
+        }
+
+        TaskSnapshot snapshot = await uploadTask;
+        mediaUrl = await snapshot.ref.getDownloadURL();
+      }
+
+      await FirebaseFirestore.instance.collection('stories').add({
+        'userId': widget.userId,
+        'userName': widget.userName,
+        'userProfilePic': widget.userProfilePic,
+        'mediaUrl': mediaUrl,
+        'esVideo': _isMediaVideo,
+        'caption': _captionController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+        'expiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 24))), // Stories expire in 24 hours
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
+          const SnackBar(content: Text('Historia publicada con éxito!', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green),
+        );
+        Navigator.of(context).pop(); // Close the modal
+      }
+    } catch (e) {
+      developer.log('Error al publicar historia: $e', name: "CrearHistoriaModal.Publish", error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
+          SnackBar(content: Text('Error al publicar historia: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
+  Widget _buildMediaPreview() {
+    if (_selectedMediaFile != null) {
+      if (_isMediaVideo) {
+        if (kIsWeb) {
+          return Container(height: 200, color: Colors.black, child: const Center(child: Text("Previsualización de video no disponible para web antes de subir.", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontFamily: _fontFamily))));
+        }
+        if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
+          return AspectRatio(
+            aspectRatio: _videoPlayerControllerPreview!.value.aspectRatio > 0 ? _videoPlayerControllerPreview!.value.aspectRatio : 16/9,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                VideoPlayer(_videoPlayerControllerPreview!),
+                _buildPlayPauseOverlayPreview(_videoPlayerControllerPreview!)
+              ],
+            ),
+          );
+        } else {
+          return Container(height: 200, color: Colors.black, child: const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)) ));
+        }
+      } else { // It's an image
+        if (kIsWeb && _selectedMediaBytesPreview != null) {
+          return Image.memory(_selectedMediaBytesPreview!, height: 200, fit: BoxFit.contain);
+        } else {
+          return Image.file(_selectedMediaFile!, height: 200, fit: BoxFit.contain);
+        }
+      }
+    }
+    return Container(
+      height: 150,
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Center(
+        child: Text(
+          'Selecciona una foto o video para tu historia',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontFamily: _fontFamily),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayPauseOverlayPreview(VideoPlayerController controller) {
+    return GestureDetector(
+      onTap: () {
+        if (!controller.value.isInitialized) return;
+        setState(() {
+          if (controller.value.isPlaying) {
+            controller.pause();
+          } else {
+            controller.play();
+          }
+        });
+      },
+      child: AnimatedOpacity(
+        opacity: (controller.value.isInitialized && !controller.value.isPlaying) ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 300),
+        child: Container(
+          color: Colors.black26,
+          child: const Center(
+            child: Icon(
+              Icons.play_circle_outline,
+              color: Colors.white,
+              size: 60.0,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext modalContext) {
+    return FractionallySizedBox(
+      heightFactor: 0.9,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Crear Historia', style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
+            backgroundColor: _scaffoldBgColorModal,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(modalContext).pop(),
+              )
+            ],
+          ),
+          body: Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKeyStory,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      const Text(
+                        'Crea tu historia:',
+                        style: TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      const SizedBox(height: 15),
+
+                      _buildMediaPreview(),
+                      const SizedBox(height: 10),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.image_outlined, color: Colors.white),
+                            label: const Text('Seleccionar Foto', style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
+                            onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: false),
+                            style: ElevatedButton.styleFrom(backgroundColor: _buttonBackgroundColor, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.videocam_outlined, color: Colors.white),
+                            label: const Text('Seleccionar Video', style: TextStyle(color: Colors.white, fontFamily: _fontFamily)),
+                            onPressed: () => _seleccionarMedia(ImageSource.gallery, isVideo: true),
+                            style: ElevatedButton.styleFrom(backgroundColor: _buttonBackgroundColor, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      TextFormField(
+                        controller: _captionController,
+                        style: const TextStyle(fontFamily: _fontFamily, color: Colors.black),
+                        decoration: InputDecoration(
+                            labelText: 'Escribe tu historia (opcional)',
+                            labelStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.black54),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.85),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: const BorderSide(color: _buttonBackgroundColor, width: 2)
+                            ),
+                            errorStyle: TextStyle(fontFamily: _fontFamily, color: Colors.redAccent[700], fontWeight: FontWeight.bold)
+                        ),
+                        maxLines: 3,
+                        maxLength: 500, // Shorter for stories
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                      const SizedBox(height: 30),
+
+                      _isUploading
+                          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)))
+                          : ElevatedButton.icon(
+                        icon: const Icon(Icons.send_outlined, color: Colors.white),
+                        label: const Text('Publicar Historia', style: TextStyle(color: Colors.white)),
+                        onPressed: _publicarHistoria,
                         style: ElevatedButton.styleFrom(
                             backgroundColor: _buttonBackgroundColor,
                             padding: const EdgeInsets.symmetric(vertical: 15.0),
