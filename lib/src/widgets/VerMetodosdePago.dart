@@ -1,6 +1,6 @@
-// --- ElegirMetodoDePagoParaComprar.dart ---
+// --- VerMetodosdePago.dart (Todo en uno) ---
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart'; // Para TextInputFormatter
 import 'package:adobe_xd/pinned.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,18 +15,16 @@ import './Ayuda.dart';
 import './Configuracion.dart';
 import '../services/auth_service.dart';
 
-// --- Clase Principal de la Página: ElegirMetodoDePagoParaComprar ---
-class Elejirmetododepagoparacomprar extends StatefulWidget {
-  // Puedes pasar el ID de la tarjeta actualmente seleccionada si ya hay una
-  final String? initialSelectedMethodId;
 
-  const Elejirmetododepagoparacomprar({Key? key, this.initialSelectedMethodId}) : super(key: key);
+// --- Clase Principal de la Página: VerMetodosdePago ---
+class VerMetodosdePago extends StatefulWidget {
+  const VerMetodosdePago({Key? key}) : super(key: key);
 
   @override
-  _ElejirmetododepagoparacomprarState createState() => _ElejirmetododepagoparacomprarState();
+  _VerMetodosdePagoState createState() => _VerMetodosdePagoState();
 }
 
-class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparacomprar> {
+class _VerMetodosdePagoState extends State<VerMetodosdePago> {
   // --- Variables de Estado ---
   final User? _currentUser = FirebaseAuth.instance.currentUser;
   bool _audioVisualAccessibility = false;
@@ -34,13 +32,12 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
 
   bool _isLoading = true;
   List<Map<String, dynamic>> _paymentMethods = [];
-  String? _selectedMethodId; // Para manejar la selección en la UI
+  String? _defaultPaymentMethodId;
 
   // --- Ciclo de Vida: initState ---
   @override
   void initState() {
     super.initState();
-    _selectedMethodId = widget.initialSelectedMethodId;
     _loadAccessibilityPreference();
     _loadPaymentMethods();
   }
@@ -64,6 +61,11 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
     if (mounted) setState(() => _isLoading = true);
 
     try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).get();
+      if (userDoc.exists) {
+        _defaultPaymentMethodId = userDoc.data()?['defaultPaymentMethodId'];
+      }
+
       final querySnapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(_currentUser!.uid)
@@ -74,6 +76,7 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
       final methods = querySnapshot.docs.map((doc) {
         var data = doc.data();
         data['id'] = doc.id;
+        // Aseguramos que el año se muestre en formato de 2 dígitos
         if (data['exp_year'] != null && data['exp_year'].toString().length == 4) {
           data['exp_year_short'] = data['exp_year'].toString().substring(2);
         } else {
@@ -89,16 +92,60 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
         });
       }
     } catch (e) {
+      print("Error al cargar métodos de pago: $e");
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al cargar tus métodos de pago.'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al cargar tus métodos de pago.'), backgroundColor: Colors.red),
+        );
       }
     }
   }
 
-  void _selectMethodAndReturn(Map<String, dynamic> method) {
-    // Cierra la pantalla y devuelve la tarjeta seleccionada
-    Navigator.of(context).pop(method);
+  Future<void> _setDefaultMethod(String methodId) async {
+    if (_currentUser == null) return;
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).update({
+        'defaultPaymentMethodId': methodId,
+      });
+      if (mounted) {
+        setState(() {
+          _defaultPaymentMethodId = methodId;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Método predeterminado actualizado.'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo actualizar.'), backgroundColor: Colors.red));
+    }
+  }
+
+  Future<void> _deleteMethod(String methodId) async {
+    final bool? confirmDelete = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Confirmar Eliminación'),
+        content: const Text('¿Seguro que quieres eliminar este método de pago?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Eliminar', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirmDelete != true || _currentUser == null) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).collection('payment_methods').doc(methodId).delete();
+      if (_defaultPaymentMethodId == methodId) {
+        await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).update({'defaultPaymentMethodId': FieldValue.delete()});
+      }
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Método de pago eliminado.'), backgroundColor: Colors.green));
+      _loadPaymentMethods();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo eliminar el método.'), backgroundColor: Colors.red));
+    }
   }
 
   Future<void> _showPaymentMethodModal() async {
@@ -107,7 +154,9 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext modalBuildContext) {
-        return _MetodoDePagoModalForm(parentContextForSnackbars: context);
+        return _MetodoDePagoModalForm(
+          parentContextForSnackbars: context,
+        );
       },
     );
     if (result == true) {
@@ -154,11 +203,11 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
       backgroundColor: const Color(0xff4ec8dd),
       body: Stack(
         children: <Widget>[
-          // --- Fondo y Barra Superior ---
           Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'), fit: BoxFit.cover))),
-          Pinned.fromPins(Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0), child: PageLink(links: [PageLinkInfo(pageBuilder: () => Home(key: const Key('Home')))], child: Container(decoration: BoxDecoration(image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover), borderRadius: BorderRadius.circular(15.0), border: Border.all(width: 1.0, color: const Color(0xff000000)))))),
+          Pinned.fromPins(Pin(size: 74.0, middle: 0.5), Pin(size: 73.0, start: 42.0), child: PageLink(links: [PageLinkInfo(pageBuilder: () => Home(key: const Key('Home_From_Payment')))], child: Container(decoration: BoxDecoration(image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover), borderRadius: BorderRadius.circular(15.0), border: Border.all(width: 1.0, color: const Color(0xff000000)))))),
           Pinned.fromPins(Pin(size: 52.9, start: 15.0), Pin(size: 50.0, start: 49.0), child: InkWell(onTap: () => Navigator.of(context).pop(), child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/back.png'), fit: BoxFit.fill))))),
-          Pinned.fromPins(Pin(size: 40.5, end: 15.0), Pin(size: 50.0, start: 49.0), child: PageLink(links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda')))], child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))))),
+          Pinned.fromPins(Pin(size: 40.5, end: 15.0), Pin(size: 50.0, start: 49.0), child: PageLink(links: [PageLinkInfo(pageBuilder: () => Ayuda(key: const Key('Ayuda_From_Payment')))], child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage('assets/images/help.png'), fit: BoxFit.fill))))),
+          Pinned.fromPins(Pin(size: 47.2, end: 7.6), Pin(size: 50.0, start: 49.0), child: PageLink(links: [PageLinkInfo(pageBuilder: () => Configuraciones(key: Key('Settings'), authService: AuthService()))], child: Container(decoration: BoxDecoration(image: DecorationImage(image: const AssetImage('assets/images/settingsbutton.png'), fit: BoxFit.fill))))),
 
           Positioned(
             top: topOffsetForContent,
@@ -167,13 +216,12 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
             bottom: 0,
             child: Column(
               children: [
-                // --- Título de la pantalla ---
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0),
                   child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Icon(Icons.payment, size: 35, color: Colors.white, shadows: [Shadow(blurRadius: 2.0, color: Colors.black, offset: Offset(1, 1))]),
+                    const Icon(Icons.credit_card, size: 35, color: Colors.white, shadows: [Shadow(blurRadius: 2.0, color: Colors.black, offset: Offset(1, 1))]),
                     const SizedBox(width: 10),
-                    Text('Elige un Método de Pago', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 24, color: Colors.white, fontWeight: FontWeight.w700, shadows: [Shadow(blurRadius: 2.0, color: Colors.black.withOpacity(0.5), offset: Offset(1.0, 1.0))]), textAlign: TextAlign.center),
+                    Text('Métodos de Pago', style: TextStyle(fontFamily: 'Comic Sans MS', fontSize: 24, color: Colors.white, fontWeight: FontWeight.w700, shadows: [Shadow(blurRadius: 2.0, color: Colors.black.withOpacity(0.5), offset: Offset(1.0, 1.0))]), textAlign: TextAlign.center),
                   ]),
                 ),
                 Expanded(
@@ -181,38 +229,59 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
                     padding: const EdgeInsets.only(bottom: 20.0),
                     child: Column(
                       children: <Widget>[
-                        // --- LISTA DE MÉTODOS DE PAGO ---
+                        if (_currentUser != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
+                            child: Row(children: [
+                              StreamBuilder<DocumentSnapshot>(
+                                stream: FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).snapshots(),
+                                builder: (context, snapshot) {
+                                  String? profilePhotoUrl;
+                                  if (snapshot.hasData && snapshot.data!.exists) {
+                                    final userData = snapshot.data!.data() as Map<String, dynamic>;
+                                    profilePhotoUrl = userData['profilePhotoUrl'] as String?;
+                                  }
+                                  return Container(
+                                    width: 70, height: 70,
+                                    decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(12.0), border: Border.all(color: Colors.white, width: 2.0), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), spreadRadius: 1, blurRadius: 3, offset: Offset(0, 2))]),
+                                    child: ClipRRect(borderRadius: BorderRadius.circular(10.0), child: (profilePhotoUrl != null && profilePhotoUrl.isNotEmpty) ? CachedNetworkImage(imageUrl: profilePhotoUrl, fit: BoxFit.cover, placeholder: (c, u) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)), errorWidget: (c, u, e) => Icon(Icons.person, size: 40, color: Colors.grey[600])) : Icon(Icons.person, size: 40, color: Colors.grey[600])),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text(_currentUser!.displayName ?? _currentUser!.email ?? 'Usuario', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                                  if (_currentUser!.email != null) Text(_currentUser!.email!, style: const TextStyle(fontFamily: 'Arial', fontSize: 14, color: Colors.black87), overflow: TextOverflow.ellipsis),
+                                ]),
+                              ),
+                            ]),
+                          ),
+                        const SizedBox(height: 15),
+                        _buildPaymentCard(icon: Icons.add_card_outlined, title: 'Añadir Método de Pago', onTap: _showPaymentMethodModal, trailing: Icon(Icons.arrow_forward_ios, color: _audioVisualAccessibility ? Colors.yellowAccent.withOpacity(0.7) : Colors.grey, size: 18)),
+                        const Divider(height: 30, thickness: 1, indent: 40, endIndent: 40, color: Colors.white54),
                         if (_isLoading)
                           const Padding(padding: EdgeInsets.all(30.0), child: CircularProgressIndicator(color: Colors.white))
                         else if (_paymentMethods.isEmpty)
                           const Padding(padding: EdgeInsets.all(20.0), child: Text('No tienes métodos de pago guardados.', style: TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Arial'), textAlign: TextAlign.center))
                         else
                           ..._paymentMethods.map((method) {
+                            final bool isDefault = method['id'] == _defaultPaymentMethodId;
                             return _buildPaymentCard(
                               icon: _getCardIcon(method['brand']),
                               title: '${method['brand'] ?? 'Tarjeta'} terminada en ${method['last4'] ?? '****'}',
                               subtitle: 'Expira ${method['exp_month']}/${method['exp_year_short']}',
-                              // **ACCIÓN PRINCIPAL**: Al tocar, selecciona y regresa
-                              onTap: () => _selectMethodAndReturn(method),
-                              // **UI DE SELECCIÓN**
-                              trailing: Radio<String>(
-                                value: method['id'],
-                                groupValue: _selectedMethodId,
-                                onChanged: (String? value) {
-                                  // El onTap se encarga de la acción, pero esto actualiza la UI visualmente
-                                  setState(() {
-                                    _selectedMethodId = value;
-                                  });
-                                  _selectMethodAndReturn(method);
-                                },
-                                activeColor: const Color(0xff4ec8dd),
-                              ),
+                              onTap: isDefault ? () {} : () => _setDefaultMethod(method['id']),
+                              trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                                if (isDefault)
+                                  Chip(
+                                    label: const Text('Default', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                    backgroundColor: Colors.green.shade400, padding: const EdgeInsets.symmetric(horizontal: 6), visualDensity: VisualDensity.compact,
+                                  ),
+                                IconButton(icon: Icon(Icons.delete_outline, color: isDefault ? Colors.grey : Colors.red.shade400), onPressed: isDefault ? null : () => _deleteMethod(method['id'])),
+                              ]),
                             );
                           }).toList(),
-
-                        const Divider(height: 30, thickness: 1, indent: 40, endIndent: 40, color: Colors.white54),
-                        // --- OPCIÓN PARA AÑADIR ---
-                        _buildPaymentCard(icon: Icons.add_card_outlined, title: 'Añadir Nuevo Método', onTap: _showPaymentMethodModal, trailing: Icon(Icons.arrow_forward_ios, color: _audioVisualAccessibility ? Colors.yellowAccent.withOpacity(0.7) : Colors.grey, size: 18)),
                       ],
                     ),
                   ),
@@ -226,7 +295,7 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
   }
 }
 
-// --- WIDGET DEL MODAL (definido aquí mismo para conveniencia) ---
+// --- WIDGET DEL MODAL CON EL FORMULARIO (DEFINIDO DENTRO DEL MISMO ARCHIVO) ---
 class _MetodoDePagoModalForm extends StatefulWidget {
   final BuildContext parentContextForSnackbars;
   const _MetodoDePagoModalForm({required this.parentContextForSnackbars});
@@ -414,7 +483,7 @@ class _MetodoDePagoModalFormState extends State<_MetodoDePagoModalForm> {
   }
 }
 
-// --- TextInputFormatters ---
+// --- TextInputFormatters (Clases de ayuda para formatear la entrada de texto) ---
 class CardMonthInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {

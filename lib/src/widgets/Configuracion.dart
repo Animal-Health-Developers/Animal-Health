@@ -14,7 +14,7 @@ import './PerfilPublico.dart';
 import './ListadeAnimales.dart';
 import './PRIVACIDAD.dart';
 import './EditarinfodeUsuario.dart';
-import './AgregarMetodosdePago.dart';
+import './VerMetodosdePago.dart';
 import './Idiomas.dart';
 import './AnimalHealth.dart';
 import './Suscripcion.dart';
@@ -300,7 +300,7 @@ class _ConfiguracionesState extends State<Configuraciones> {
                         _buildConfigOption(
                           icon: Icons.credit_card,
                           title: 'Métodos de Pago',
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AgregarMetodosdePago(key: const Key('AgregarMetodosdePago')))),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => VerMetodosdePago(key: const Key('AgregarMetodosdePago')))),
                         ),
                         _buildConfigOption(
                           icon: Icons.translate_outlined,

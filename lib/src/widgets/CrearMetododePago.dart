@@ -9,8 +9,8 @@ import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class MetododePago extends StatelessWidget {
-  const MetododePago({
+class CrearMetododePago extends StatelessWidget {
+  const CrearMetododePago({
     required Key key,
   }) : super(key: key);
   @override

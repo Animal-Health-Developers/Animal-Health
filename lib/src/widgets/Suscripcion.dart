@@ -16,7 +16,7 @@ import './Ayuda.dart';
 // import './ListadeAnimales.dart'; // Probablemente no se necesite desde aquí
 // import './PRIVACIDAD.dart'; // Se podría navegar a una pantalla específica o URL
 // import './EditarinfodeUsuario.dart'; // No relevante para esta pantalla
-// import './AgregarMetodosdePago.dart'; // Podría ser relevante si se gestiona desde aquí
+// import './VerMetodosdePago.dart'; // Podría ser relevante si se gestiona desde aquí
 // import './Idiomas.dart'; // No relevante para esta pantalla
 // import './AnimalHealth.dart'; // Para el logo
 
