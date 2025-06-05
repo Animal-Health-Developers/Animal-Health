@@ -27,6 +27,7 @@ const Color APP_PRIMARY_COLOR = Color(0xff4ec8dd);
 const Color APP_TEXT_COLOR = Color(0xff000000);
 const String APP_FONT_FAMILY = 'Comic Sans MS';
 
+
 class CompradeProductos extends StatefulWidget {
   const CompradeProductos({
     Key? key,
@@ -45,6 +46,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
 
   Stream<QuerySnapshot<Map<String, dynamic>>>? _productsStream;
 
+  /// Inicializa el estado del widget, configurando el stream de productos.
   @override
   void initState() {
     super.initState();
@@ -52,23 +54,26 @@ class _CompradeProductosState extends State<CompradeProductos> {
     _updateProductStream();
   }
 
-  // **CAMBIO CLAVE AQUÍ:** Lógica para construir y actualizar el stream de productos
+  // **LÓGICA CLAVE PARA LA BÚSQUEDA INSENSIBLE A MAYÚSCULAS/MINÚSCULAS Y MANEJO DE QUERIES**
   void _updateProductStream() {
     String searchTerm = _searchController.text.trim();
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection('products');
 
     if (searchTerm.isNotEmpty) {
-      // Si hay un término de búsqueda, aplicamos el filtro de rango por nombre.
-      // Firebase requiere que el 'orderBy' sea sobre el mismo campo que el filtro de rango si hay uno.
-      // Por eso, si filtramos por 'name', no podemos ordenar por 'creationDate' en la misma query.
+      // CONVIERTE EL TÉRMINO DE BÚSQUEDA A MINÚSCULAS PARA HACER MATCH CON 'nameLower'
+      String querySearchTerm = searchTerm.toLowerCase();
+
+      // Realiza la búsqueda en el nuevo campo 'nameLower'
       query = query
-          .where('name', isGreaterThanOrEqualTo: searchTerm)
-          .where('name', isLessThan: searchTerm + '\uf8ff')
-      // Si quieres ordenar por 'name' en la búsqueda, descomenta la siguiente línea:
-      // .orderBy('name', descending: false); // O true, según prefieras
-          ;
+          .where('nameLower', isGreaterThanOrEqualTo: querySearchTerm)
+          .where('nameLower', isLessThan: querySearchTerm + '\uf8ff');
+      // Importante: Si hay un filtro de rango (isGreaterThanOrEqualTo, isLessThan),
+      // Firestore solo permite un orderBy sobre el MISMO campo que el filtro de rango.
+      // Por lo tanto, no podemos ordenar por 'creationDate' si buscamos por 'nameLower'.
+      // Si deseas un orden específico en los resultados de la búsqueda,
+      // puedes añadir: .orderBy('nameLower', descending: false); (o true para A-Z/Z-A).
     } else {
-      // Si no hay término de búsqueda, mostramos todos los productos ordenados por fecha de creación.
+      // Si no hay término de búsqueda, muestra todos los productos ordenados por fecha de creación.
       query = query.orderBy('creationDate', descending: true);
     }
 
@@ -78,15 +83,22 @@ class _CompradeProductosState extends State<CompradeProductos> {
     developer.log('CompradeProductos _updateProductStream: Stream updated with search term: "$searchTerm"');
   }
 
+
+  /// Realiza la acción de búsqueda de productos.
+  /// Oculta el teclado y actualiza el ValueNotifier con el término de búsqueda.
   @override
   void _performSearch() {
     developer.log('CompradeProductos _performSearch: Starting search for: "${_searchController.text.trim()}"');
+
     FocusScope.of(context).unfocus();
-    _updateProductStream(); // Regenera la consulta de Firebase
+
+    _updateProductStream(); // Regenera la consulta de Firebase con el nuevo término de búsqueda
+
     _searchTermNotifier.value = _searchController.text.trim();
     developer.log("CompradeProductos _performSearch: Search initiated. Current term: \"${_searchTermNotifier.value}\"");
   }
 
+  /// Limpia el campo de búsqueda y vuelve a realizar la búsqueda (mostrando todos los productos).
   @override
   void _clearSearch() {
     developer.log('CompradeProductos _clearSearch: Clearing search bar');
@@ -96,6 +108,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
     setState(() {});
   }
 
+  /// Libera los controladores y notifiers cuando el widget es desechado.
   @override
   void dispose() {
     developer.log('CompradeProductos dispose: Disposing controllers and notifiers');
@@ -103,8 +116,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
     _searchTermNotifier.dispose();
     super.dispose();
   }
-
-  // ... (El resto de tu código es igual)
 
   /// Muestra un modal (bottom sheet) con la lista de productos publicados por el usuario actual.
   Future<void> _mostrarModalMisProductos() async {
@@ -250,7 +261,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                 product: product,
               ),
             ),
-          );
+          ); // <-- ¡Coma extra corregida aquí!
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -881,8 +892,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
   }
 }
 
-// ... (El resto de tus clases _MisProductosModalWidget y _EditarProductoModalWidget son las mismas)
-
 /// Widget modal para mostrar los productos publicados por un usuario específico.
 /// Recibe el ID del usuario y un BuildContext padre para mostrar SnackBar.
 class _MisProductosModalWidget extends StatelessWidget {
@@ -1338,6 +1347,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
       // Prepara los datos actualizados para Firestore
       Map<String, dynamic> updatedData = {
         'name': _nameController.text.trim(),
+        'nameLower': _nameController.text.trim().toLowerCase(), // <-- ¡NUEVO CAMBIO AQUÍ PARA GUARDAR EL NOMBRE EN MINÚSCULAS!
         'description': _descriptionController.text.trim(),
         'price': double.tryParse(_priceController.text) ?? widget.productToEdit.price,
         'stock': int.tryParse(_stockController.text) ?? widget.productToEdit.stock,
