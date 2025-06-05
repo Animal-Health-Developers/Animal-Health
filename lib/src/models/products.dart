@@ -1,3 +1,5 @@
+// Archivo: src/models/products.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer' as developer;
 
@@ -54,7 +56,8 @@ class ProductOpinion {
 class Product {
   String id;
   String name;
-  String nameLower; // <-- ¡NUEVO CAMPO AQUÍ!
+  String nameLower; // Campo para búsqueda de prefijo insensible a mayúsculas/minúsculas
+  List<String> keywords; // <-- ¡NUEVO CAMPO: Lista de palabras clave para búsqueda de substrings!
   double price;
   String description;
   int qualification;
@@ -66,11 +69,13 @@ class Product {
   List<ProductOpinion> opinions;
   String userId;
   DateTime creationDate;
+  DateTime? lastUpdated; // Agregado para consistencia con _EditarProductoModalWidget
 
   Product({
     required this.id,
     required this.name,
-    required this.nameLower, // <-- Añadido al constructor
+    required this.nameLower,
+    required this.keywords, // <-- Añadido al constructor
     required this.price,
     required this.description,
     this.qualification = 0,
@@ -82,12 +87,14 @@ class Product {
     this.opinions = const [],
     required this.userId,
     DateTime? creationDate,
+    this.lastUpdated, // Agregado al constructor
   }) : creationDate = creationDate ?? DateTime.now();
 
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'nameLower': nameLower, // <-- ¡INCLUIDO EN toJson!
+      'nameLower': nameLower,
+      'keywords': keywords, // <-- ¡INCLUIDO EN toJson!
       'price': price,
       'description': description,
       'qualification': qualification,
@@ -99,16 +106,15 @@ class Product {
       'opinions': opinions.map((opinion) => opinion.toJson()).toList(),
       'userId': userId,
       'creationDate': Timestamp.fromDate(creationDate),
+      'lastUpdated': lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null, // Incluido si existe
     };
   }
 
+  // Nota: El método 'crearProductoEnFirestore' aquí es más bien un helper.
+  // La lógica para generar 'nameLower' y 'keywords' debería estar donde se crea el objeto Product
+  // (ej. en VenderProductos o _EditarProductoModalWidget), para que el objeto Product ya sea completo.
   Future<DocumentReference> crearProductoEnFirestore() async {
-    // Al crear un producto, asegúrate de que 'nameLower' se calcule y se incluya.
-    // Aunque este método esté aquí, la recomendación es calcularlo en VenderProductos.dart.
-    // Aquí es un ejemplo de cómo se debería ver si lo gestionara el modelo directamente.
-    final Map<String, dynamic> data = toJson();
-    data['nameLower'] = name.toLowerCase(); // Sobrescribe para asegurar que es minúscula
-    return FirebaseFirestore.instance.collection('products').add(data);
+    return FirebaseFirestore.instance.collection('products').add(toJson());
   }
 
   factory Product.fromFirestore(Map<String, dynamic> data, String documentId) {
@@ -155,15 +161,16 @@ class Product {
       developer.log("'opinions' es null o no existe para producto $documentId");
     }
 
-    // Manejo del campo 'name' y el nuevo 'nameLower'
     final String fetchedName = data['name'] as String? ?? 'Sin Nombre';
-    // Si 'nameLower' no existe en los datos (ej. productos antiguos), lo genera a partir de 'name'
     final String fetchedNameLower = data['nameLower'] as String? ?? fetchedName.toLowerCase();
+    final List<String> fetchedKeywords = (data['keywords'] as List?)?.map((item) => item.toString()).toList() ?? _generateDefaultKeywords(fetchedName);
+
 
     return Product(
       id: documentId,
       name: fetchedName,
-      nameLower: fetchedNameLower, // <-- ¡Asignado aquí!
+      nameLower: fetchedNameLower,
+      keywords: fetchedKeywords, // <-- ¡Asignado aquí!
       price: (data['price'] as num?)?.toDouble() ?? 0.0,
       description: data['description'] as String? ?? 'Sin Descripción',
       qualification: (data['qualification'] as num?)?.toInt() ?? 0,
@@ -175,6 +182,12 @@ class Product {
       opinions: parsedOpinions,
       userId: data['userId'] as String? ?? '',
       creationDate: (data['creationDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastUpdated: (data['lastUpdated'] as Timestamp?)?.toDate(),
     );
+  }
+
+  // Helper para generar keywords si no existen (útil para productos antiguos)
+  static List<String> _generateDefaultKeywords(String name) {
+    return name.toLowerCase().split(' ').where((word) => word.isNotEmpty).toList();
   }
 }

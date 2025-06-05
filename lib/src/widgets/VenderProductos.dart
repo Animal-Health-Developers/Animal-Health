@@ -65,6 +65,19 @@ class _VenderProductosState extends State<VenderProductos> {
 
   final ImagePicker _picker = ImagePicker();
 
+  // Helper para generar keywords (palabras clave para la búsqueda)
+  List<String> _generateSearchKeywords(String name) {
+    // Convierte el nombre a minúsculas, elimina caracteres no alfanuméricos
+    // y lo divide en palabras. Filtra palabras vacías.
+    return name
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^\w\s]'), '') // Elimina puntuación y símbolos
+        .split(' ')
+        .where((word) => word.isNotEmpty)
+        .toSet() // Usa Set para asegurar unicidad y luego convierte a List
+        .toList();
+  }
+
   Future<void> _seleccionarImagenes() async {
     final List<XFile> pickedFiles = await _picker.pickMultiImage(imageQuality: 70);
 
@@ -104,7 +117,10 @@ class _VenderProductosState extends State<VenderProductos> {
 
     for (int i = 0; i < _selectedImageWrappers.length; i++) {
       final wrapper = _selectedImageWrappers[i];
-      String imageName = '${DateTime.now().millisecondsSinceEpoch}_${i}_${wrapper.name}'; // Asegurar unicidad
+      // Para un nombre de archivo más limpio y amigable para URL/rutas:
+      // Reemplaza espacios con guiones bajos y elimina caracteres especiales del nombre original
+      String cleanedOriginalName = wrapper.name.replaceAll(RegExp(r'[^\w\s.-]'), '').replaceAll(' ', '_');
+      String imageName = '${DateTime.now().millisecondsSinceEpoch}_${i}_$cleanedOriginalName';
       String fileName = 'product_images/$userId/$imageName';
 
       try {
@@ -177,12 +193,18 @@ class _VenderProductosState extends State<VenderProductos> {
     }
 
     try {
-      String tempIdForModel = FirebaseFirestore.instance.collection('temp').doc().id; // Placeholder ID for model
+      // Calculamos nameLower y keywords antes de crear el objeto Product
+      final String productName = _nombreController.text.trim();
+      final String productNameLower = productName.toLowerCase();
+      final List<String> productKeywords = _generateSearchKeywords(productName);
+
+      String tempIdForModel = FirebaseFirestore.instance.collection('temp').doc().id; // Placeholder ID
 
       final product = Product(
         id: tempIdForModel, // Este ID será sobrescrito por Firestore al añadirlo.
-        name: _nombreController.text.trim(),
-        nameLower: _nombreController.text.trim().toLowerCase(), // <-- ¡CAMBIO CLAVE AQUÍ!
+        name: productName,
+        nameLower: productNameLower, // <-- ¡Asignado aquí!
+        keywords: productKeywords, // <-- ¡Asignado aquí!
         price: double.tryParse(_precioController.text.trim()) ?? 0.0,
         description: _descripcionController.text.trim(),
         category: _categoriaSeleccionada!,
@@ -194,7 +216,9 @@ class _VenderProductosState extends State<VenderProductos> {
         // qualification y qualificationsNumber se inicializan con valor por defecto en el modelo Product
       );
 
-      await product.crearProductoEnFirestore(); // Esto internamente llama a product.toJson() que incluye nameLower
+      // Ahora enviamos el objeto Product completo a Firestore.
+      // Su método toJson() ya incluye nameLower y keywords.
+      await product.crearProductoEnFirestore();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
