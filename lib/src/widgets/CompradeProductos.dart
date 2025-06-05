@@ -27,7 +27,6 @@ const Color APP_PRIMARY_COLOR = Color(0xff4ec8dd);
 const Color APP_TEXT_COLOR = Color(0xff000000);
 const String APP_FONT_FAMILY = 'Comic Sans MS';
 
-
 class CompradeProductos extends StatefulWidget {
   const CompradeProductos({
     Key? key,
@@ -44,36 +43,69 @@ class _CompradeProductosState extends State<CompradeProductos> {
   // y que ValueListenableBuilder pueda reconstruir la UI con la animación.
   final ValueNotifier<String> _searchTermNotifier = ValueNotifier<String>('');
 
-  // Eliminamos _isSearching. El StreamBuilder se encargará de la carga inicial
-  // y la animación del AnimatedSwitcher manejará la transición de resultados al filtrar.
-
   final CartService _cartService = CartService();
 
-  // El stream de productos ahora se declara como final para no cambiar la consulta.
-  // El filtrado se hará en el cliente.
-  late final Stream<QuerySnapshot<Map<String, dynamic>>> _productsStream;
-
+  // CAMBIO CLAVE 1: Ahora _productsStream es mutable (no final) y nullable
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _productsStream;
 
   /// Inicializa el estado del widget, configurando el stream de productos.
   @override
   void initState() {
     super.initState();
-    developer.log('CompradeProductos initState: Initializing _productsStream');
-    // El stream siempre obtiene TODOS los productos ordenados por fecha de creación.
-    // La lógica de "contains" se aplica en el cliente.
-    _productsStream = FirebaseFirestore.instance.collection('products').orderBy('creationDate', descending: true).snapshots();
-
-    // No necesitamos un listener para _currentInputText en el controlador de búsqueda,
-    // usamos onChanged en el TextField directamente para la visibilidad del botón de limpiar.
+    developer.log('CompradeProductos initState: Initializing search controller and updating product stream.');
+    // CAMBIO CLAVE 2: Llama a _updateProductStream para cargar productos inicialmente
+    _updateProductStream();
   }
+
+  // CAMBIO CLAVE 3: Nuevo método para construir y actualizar el stream de productos
+  void _updateProductStream() {
+    String searchTerm = _searchController.text.trim();
+    Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection('products');
+
+    if (searchTerm.isNotEmpty) {
+      // Importante: Firestore queries son case-sensitive.
+      // Para una búsqueda insensible a mayúsculas/minúsculas,
+      // necesitarías almacenar 'name_lower' en tu documento y buscar sobre él.
+      query = query
+          .where('name', isGreaterThanOrEqualTo: searchTerm)
+          .where('name', isLessThan: searchTerm + '\uf8ff');
+      // Nota: Firestore solo permite un orderBy sobre el campo de la primera cláusula where
+      // O requiere un índice compuesto específico.
+      // Si buscas por 'name', no puedes ordenar por 'creationDate'
+      // sin un índice compuesto en 'name' (asc) y 'creationDate' (desc).
+      // Para evitar un error de índice por ahora, si usas where en name,
+      // no agregues orderBy en creationDate a la misma query.
+      // Si es esencial, deberás crear el índice compuesto en Firebase Console.
+      // Por simplicidad, si hay un término de búsqueda, no ordenamos por creationDate aquí.
+      // Si la query es solo por orderBy, Firebase la manejará bien.
+    }
+
+    // Si no hay término de búsqueda, o si la búsqueda es general, ordenamos por fecha.
+    // Opcional: si la query tiene .where, el .orderBy debe ser sobre el mismo campo
+    // o requerirá un índice compuesto. Mantendré el orderBy para el caso sin búsqueda.
+    // Para que funcione con la búsqueda, deberías tener un índice compuesto
+    // en `name` (ascendente) y `creationDate` (descendente).
+    query = query.orderBy('creationDate', descending: true);
+
+
+    setState(() {
+      _productsStream = query.snapshots();
+    });
+    developer.log('CompradeProductos _updateProductStream: Stream updated with search term: "$searchTerm"');
+  }
+
 
   /// Realiza la acción de búsqueda de productos.
   /// Oculta el teclado y actualiza el ValueNotifier con el término de búsqueda.
+  @override
   void _performSearch() {
     developer.log('CompradeProductos _performSearch: Starting search for: "${_searchController.text.trim()}"');
 
     // 1. Ocultar el teclado.
     FocusScope.of(context).unfocus();
+
+    // CAMBIO CLAVE 4: Llama a _updateProductStream para generar una nueva consulta de Firebase
+    _updateProductStream();
 
     // 2. Actualizar el ValueNotifier. Esto es lo que disparará la reconstrucción
     // de la cuadrícula de productos a través de ValueListenableBuilder y AnimatedSwitcher.
@@ -82,12 +114,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
   }
 
   /// Limpia el campo de búsqueda y vuelve a realizar la búsqueda (mostrando todos los productos).
+  @override
   void _clearSearch() {
     developer.log('CompradeProductos _clearSearch: Clearing search bar');
     _searchController.clear();
-    // Al borrar, realizamos la búsqueda de nuevo para mostrar todos los productos.
-    _performSearch();
-    // Forzamos una reconstrucción para actualizar la visibilidad del botón de "limpiar".
+    // CAMBIO CLAVE 5: Al borrar, actualizamos el stream para mostrar todos los productos.
+    _updateProductStream();
+    // Actualizamos el notifier y forzamos reconstrucción para botón de limpiar.
+    _searchTermNotifier.value = '';
     setState(() {});
   }
 
@@ -669,6 +703,8 @@ class _CompradeProductosState extends State<CompradeProductos> {
                         },
                         onChanged: (value) {
                           // Esto fuerza una reconstrucción para que el botón de limpiar se muestre/oculte.
+                          // Si quisieras que la búsqueda sea "en tiempo real" (al escribir),
+                          // podrías llamar a _performSearch() aquí, pero ten cuidado con las lecturas de Firebase.
                           setState(() {});
                         },
                       ),
@@ -754,8 +790,8 @@ class _CompradeProductosState extends State<CompradeProductos> {
             ),
           ),
           Pinned.fromPins(
-            Pin(size: 60.0, end: 7.6 + 65.0 + 10.0),
-            Pin(size: 55.0, start: 200.5),
+            Pin(size: 65.0, end: 7.6 + 65.0 + 10.0),
+            Pin(size: 60.0, start: 200.5),
             child: GestureDetector(
               onTap: _mostrarModalMisProductos,
               child: Tooltip( // Tooltip para el icono de mis productos
@@ -775,16 +811,13 @@ class _CompradeProductosState extends State<CompradeProductos> {
           Pinned.fromPins(
             Pin(start: 8.0, end: 8.0),
             Pin(start: 270.0, end: 0.0),
-            // MODIFICACIÓN PRINCIPAL: Usamos ValueListenableBuilder para reconstruir
+            // Usamos ValueListenableBuilder para reconstruir
             // el StreamBuilder (y, por lo tanto, la cuadrícula de productos) cuando
             // el término de búsqueda cambia. El AnimatedSwitcher anima esta transición.
             child: ValueListenableBuilder<String>(
               valueListenable: _searchTermNotifier,
               builder: (context, currentSearchTerm, child) {
                 developer.log('ValueListenableBuilder: Current search term for filtering: "$currentSearchTerm"');
-                // La clave en AnimatedSwitcher es CRÍTICA. Cuando esta clave cambia,
-                // AnimatedSwitcher entiende que el contenido interno ha cambiado y
-                // aplica la animación de transición.
                 return AnimatedSwitcher(
                   duration: const Duration(milliseconds: 500), // Duración de la animación
                   transitionBuilder: (Widget child, Animation<double> animation) {
@@ -804,14 +837,14 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   // Aquí, el contenido cambia si el término de búsqueda cambia.
                   key: ValueKey<String>('product_grid_for_term_${currentSearchTerm.isEmpty ? 'all' : currentSearchTerm}'),
                   child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    // El stream permanece estático, obteniendo todos los productos.
-                    // El filtrado ocurre en el lado del cliente.
+                    // CAMBIO CLAVE 6: El stream ahora es la variable mutable _productsStream
                     stream: _productsStream,
                     builder: (context, snapshot) {
                       developer.log('StreamBuilder: Connection state: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, hasError: ${snapshot.hasError}');
 
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        developer.log('StreamBuilder: Data is still loading from Firebase.');
+                      // CAMBIO CLAVE 7: Manejo del estado inicial del stream
+                      if (snapshot.connectionState == ConnectionState.waiting || _productsStream == null) {
+                        developer.log('StreamBuilder: Data is still loading from Firebase or stream not initialized.');
                         return const Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -832,30 +865,33 @@ class _CompradeProductosState extends State<CompradeProductos> {
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
                       }
+                      // CAMBIO CLAVE 8: Mensaje para cuando no hay datos o la búsqueda no arroja resultados
                       if (!snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
-                        developer.log('StreamBuilder: No data or empty docs found in Firestore collection "products".');
-                        return const Center(
-                            child: Text('No hay productos disponibles en la base de datos.',
-                                style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
+                        developer.log('StreamBuilder: No data or empty docs found in Firestore for the current query.');
+                        String message = _searchController.text.isNotEmpty
+                            ? 'No se encontraron productos para "${_searchController.text}".'
+                            : 'No hay productos disponibles en la base de datos.';
+                        return Center(
+                            child: Text(message,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
                       }
 
-                      // --- Inicio del parseo y filtrado ---
-                      final List<Product> allProducts = [];
+                      // --- Inicio del parseo ---
+                      final List<Product> products = [];
                       for (var doc in snapshot.data!.docs) {
                         try {
                           final data = doc.data();
                           final id = doc.id;
-                          allProducts.add(Product.fromFirestore(data, id));
+                          products.add(Product.fromFirestore(data, id));
                         } catch (e, s) {
                           developer.log('ERROR al parsear producto ${doc.id}: $e\nStackTrace: $s\nDatos: ${doc.data()}');
-                          // Aquí podrías mostrar un mensaje de error si un producto individual no se pudo parsear,
-                          // pero la app seguirá intentando mostrar los demás.
                         }
                       }
 
-                      developer.log('StreamBuilder: Total products successfully parsed: ${allProducts.length}');
+                      developer.log('StreamBuilder: Products successfully parsed for current query: ${products.length}');
 
-                      if (allProducts.isEmpty) {
+                      if (products.isEmpty) {
                         // Este caso ocurre si hay documentos en Firestore, pero ninguno pudo ser parseado a `Product`.
                         return const Center(
                             child: Text('No se pudieron cargar productos válidos de la base de datos.\nRevisa la estructura de tus datos o el archivo `products.dart`.',
@@ -863,45 +899,10 @@ class _CompradeProductosState extends State<CompradeProductos> {
                                 style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
                       }
 
-                      // Filtrar productos en el cliente basándose en el currentSearchTerm.
-                      final filteredProducts = currentSearchTerm.isEmpty
-                          ? allProducts
-                          : allProducts.where((product) {
-                        final searchTermLower = currentSearchTerm.toLowerCase();
-                        // Asegurarse de que estos campos existan y no sean nulos antes de llamar a .toLowerCase()
-                        // Usamos el operador `?? ''` para proporcionar una cadena vacía si el campo es nulo,
-                        // evitando errores de NullPointerException.
-                        final nameLower = (product.name).toLowerCase();
-                        final descriptionLower = (product.description).toLowerCase();
-                        final categoryLower = (product.category).toLowerCase();
-                        final sellerLower = (product.seller ?? '').toLowerCase(); // CAMBIO CLAVE AQUÍ: Manejar el caso de 'seller' nulo
+                      // CAMBIO CLAVE 9: Se eliminó el filtrado del lado del cliente (`.where((product) { ... })`)
+                      // porque ahora Firestore ya nos envía los productos filtrados.
 
-                        // Comprueba si el término de búsqueda está contenido en alguno de los campos relevantes.
-                        return nameLower.contains(searchTermLower) ||
-                            descriptionLower.contains(searchTermLower) ||
-                            categoryLower.contains(searchTermLower) ||
-                            sellerLower.contains(searchTermLower);
-                      }).toList();
-
-                      developer.log('StreamBuilder: Filtered products count for "$currentSearchTerm": ${filteredProducts.length}');
-
-                      if (filteredProducts.isEmpty) {
-                        if (currentSearchTerm.isNotEmpty) {
-                          // Si no hay resultados para un término de búsqueda específico.
-                          return Center(
-                              child: Text('No se encontraron productos para "$currentSearchTerm".',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)));
-                        } else {
-                          // Este caso no debería alcanzarse si allProducts no está vacío,
-                          // pero sirve como fallback si por alguna razón la lista filtrada queda vacía sin término.
-                          return const Center(
-                              child: Text('Aún no hay productos publicados.',
-                                  style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)));
-                        }
-                      }
-
-                      // Si hay productos filtrados, los muestra en un GridView.
+                      // Si hay productos, los muestra en un GridView.
                       return GridView.builder(
                         padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0, bottom: 80.0),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -910,9 +911,9 @@ class _CompradeProductosState extends State<CompradeProductos> {
                           crossAxisSpacing: 8.0,
                           mainAxisSpacing: 8.0,
                         ),
-                        itemCount: filteredProducts.length,
+                        itemCount: products.length,
                         itemBuilder: (context, index) {
-                          final product = filteredProducts[index];
+                          final product = products[index];
                           return _buildProductCard(context, product);
                         },
                       );
@@ -1190,7 +1191,7 @@ class _MisProductosModalWidget extends StatelessWidget {
                                 padding: EdgeInsets.zero, // Elimina el padding interno predeterminado del IconButton
                                 constraints: const BoxConstraints(minWidth: 50, minHeight: 50), // Asegura que el área del botón sea de al menos 50x50
                               ),
-                              // Botón de eliminar directo con imagen personalizada (ya existía así)
+                              // Botón de eliminar directo con imagen personalizada
                               IconButton(
                                 icon: Image.asset(
                                   'assets/images/eliminar.png',

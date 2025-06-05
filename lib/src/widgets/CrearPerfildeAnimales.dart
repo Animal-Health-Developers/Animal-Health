@@ -11,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:typed_data';
 import '../services/auth_service.dart';
+
 class CrearPerfildeAnimal extends StatefulWidget {
   const CrearPerfildeAnimal({
     Key? key,
@@ -24,7 +25,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
   Uint8List? _imageBytes;
-  String? _imageUrl;
+  String? _imageUrl; // Mantenerlo para si se cargaba una URL existente (no aplica en crear)
   bool _isUploading = false;
 
   // Controladores para los campos del formulario
@@ -52,7 +53,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
         final bytes = await pickedFile.readAsBytes();
         setState(() {
           _imageBytes = bytes;
-          _imageUrl = null;
+          _imageUrl = null; // Reiniciar URL si se selecciona nueva imagen local
         });
       }
     } catch (e) {
@@ -63,7 +64,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
   }
 
   Future<String?> _uploadImage() async {
-    if (_imageBytes == null) return null;
+    if (_imageBytes == null) return null; // No hay imagen para subir
 
     setState(() {
       _isUploading = true;
@@ -71,7 +72,13 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
 
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
-      if (userId == null) return null;
+      if (userId == null) {
+        // Manejar el caso de usuario no autenticado, quizás mostrar un error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: Usuario no autenticado para subir imagen.')),
+        );
+        return null;
+      }
 
       final storageRef = FirebaseStorage.instance
           .ref()
@@ -114,7 +121,12 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
           return;
         }
 
-        final imageUrl = await _uploadImage();
+        // Subir la imagen solo si se seleccionó una nueva
+        String? finalImageUrl;
+        if (_imageBytes != null) {
+          finalImageUrl = await _uploadImage();
+        }
+        // Si no se seleccionó una imagen, fotoPerfilUrl será null (o una cadena vacía si prefieres, el model Animal ya lo maneja bien)
 
         await FirebaseFirestore.instance
             .collection('users')
@@ -128,7 +140,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
           'peso': double.tryParse(_pesoController.text) ?? 0,
           'largo': double.tryParse(_largoController.text) ?? 0,
           'ancho': double.tryParse(_anchoController.text) ?? 0,
-          'fotoPerfilUrl': imageUrl,
+          'fotoPerfilUrl': finalImageUrl ?? '', // Guarda la URL o una cadena vacía si no hay imagen
           'userId': userId,
           'createdAt': FieldValue.serverTimestamp(),
         });
@@ -283,19 +295,25 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    // Foto de perfil
+                    // Foto de perfil - MODIFICACIÓN AQUÍ
                     GestureDetector(
                       onTap: _pickImage,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.grey[200],
+                          Container(
+                            width: 100, // Hacerlo cuadrado
+                            height: 100, // Hacerlo cuadrado
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(15), // Bordes redondeados
+                              border: Border.all(color: Colors.white, width: 2), // Borde como las tarjetas
+                            ),
                             child: _isUploading
-                                ? CircularProgressIndicator()
+                                ? Center(child: CircularProgressIndicator()) // Centrar el indicador
                                 : _imageBytes != null
-                                ? ClipOval(
+                                ? ClipRRect( // Recortar con rectángular redondeado
+                              borderRadius: BorderRadius.circular(15),
                               child: Image.memory(
                                 _imageBytes!,
                                 width: 100,
@@ -306,8 +324,9 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                                 },
                               ),
                             )
-                                : _imageUrl != null
-                                ? ClipOval(
+                                : _imageUrl != null && _imageUrl!.isNotEmpty // Si hay URL remota (más para editar, pero bueno mantener)
+                                ? ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
                               child: Image.network(
                                 _imageUrl!,
                                 width: 100,
@@ -318,14 +337,12 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                                 },
                                 loadingBuilder: (context, child, loadingProgress) {
                                   if (loadingProgress == null) return child;
-                                  return CircularProgressIndicator();
+                                  return Center(child: CircularProgressIndicator());
                                 },
                               ),
                             )
-                                : Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+                                : Icon(Icons.add_a_photo, size: 40, color: Colors.grey), // Icono por defecto
                           ),
-                          if (_isUploading)
-                            CircularProgressIndicator(),
                         ],
                       ),
                     ),
@@ -424,15 +441,15 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                     ),
                     SizedBox(height: 20),
 
-                    // Especie
+                    // Especie - MODIFICACIÓN AQUÍ
                     Container(
                       height: 60,
                       child: Stack(
                         children: [
                           DropdownButtonFormField<String>(
-                            value: _especieController.text.isNotEmpty
-                                ? _especieController.text
-                                : especiesDisponibles.first,
+                            value: _especieController.text.isEmpty // Si el controlador está vacío, el valor es null
+                                ? null
+                                : _especieController.text,
                             items: especiesDisponibles.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
@@ -441,11 +458,11 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                             }).toList(),
                             onChanged: (newValue) {
                               setState(() {
-                                _especieController.text = newValue!;
+                                _especieController.text = newValue!; // Actualiza el controlador
                               });
                             },
                             decoration: InputDecoration(
-                              labelText: 'Especie',
+                              labelText: 'Especie', // 'Especie' será la etiqueta flotante
                               border: OutlineInputBorder(),
                               filled: true,
                               fillColor: Colors.white,
@@ -680,7 +697,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                             height: 120.0,
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: const AssetImage('assets/images/editarperfilanimal.png'),
+                                image: const AssetImage('assets/images/editarperfilanimal.png'), // Asumo que este es el asset para el botón de guardar/crear
                                 fit: BoxFit.fill,
                               ),
                             ),

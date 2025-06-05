@@ -364,20 +364,21 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
       },
     );
   }
-  // --- FIN NUEVOS MÉTODOS ---
+  // --- FIN NUEVOS MÉTODOS DE PUBLICACIÓN ---
 
+  // --- FUNCIONES PARA COMENTARIOS (INCLUIDA LA CORREGIDA _addComment) ---
 
-  Future<void> _addComment() async {
+  Future<void> _addComment() async { // <--- FUNCIÓN _addComment AQUÍ
     final User? currentUser = _auth.currentUser;
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debes iniciar sesión para comentar')),
+        const SnackBar(content: Text('Debes iniciar sesión para comentar', style: TextStyle(fontFamily: 'Comic Sans MS'))),
       );
       return;
     }
     if (_commentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El comentario no puede estar vacío')),
+        const SnackBar(content: Text('El comentario no puede estar vacío', style: TextStyle(fontFamily: 'Comic Sans MS'))),
       );
       return;
     }
@@ -404,7 +405,6 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
       });
 
       // Actualiza el contador de comentarios en el documento principal de la publicación
-      // Aquí también nos aseguramos de que el campo 'comentariosCount' se incremente
       await _firestore
           .collection('publicaciones')
           .doc(widget.publicationId)
@@ -413,12 +413,26 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
       _commentController.clear();
       FocusScope.of(context).unfocus();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Comentario añadido'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Comentario añadido', style: TextStyle(fontFamily: 'Comic Sans MS')), backgroundColor: Colors.green),
       );
     } catch (e) {
-      developer.log('Error al añadir comentario: $e');
+      String errorMessage = 'Error desconocido al añadir comentario.';
+      if (e is FirebaseException) {
+        if (e.code == 'permission-denied') {
+          errorMessage = 'No tienes permiso para actualizar el contador de comentarios en esta publicación. Asegúrate de que las reglas de Firebase sean correctas.';
+        } else {
+          errorMessage = 'Error de Firebase: ${e.message ?? e.toString()}';
+        }
+      } else {
+        errorMessage = 'Error inesperado: ${e.toString()}';
+      }
+      developer.log('Error al añadir comentario: $e', error: e);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al añadir comentario: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(errorMessage, style: const TextStyle(fontFamily: 'Comic Sans MS')),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5), // Haz que el mensaje sea visible por más tiempo
+        ),
       );
     } finally {
       if (mounted) {
@@ -428,6 +442,146 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
       }
     }
   }
+
+
+  Future<void> _deleteComment(String publicationId, String commentId) async {
+    bool confirm = await showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('Confirmar Eliminación'),
+          content: const Text('¿Estás seguro de que deseas eliminar este comentario?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(ctx).pop(false),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Eliminar'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+
+    if (!confirm) return;
+
+    try {
+      await _firestore
+          .collection('publicaciones')
+          .doc(publicationId)
+          .collection('comentarios')
+          .doc(commentId)
+          .delete();
+
+      // Decrement comments count on the main publication document
+      await _firestore
+          .collection('publicaciones')
+          .doc(publicationId)
+          .update({'comentariosCount': FieldValue.increment(-1)});
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Comentario eliminado', style: TextStyle(fontFamily: 'Comic Sans MS')), backgroundColor: Colors.orangeAccent),
+        );
+      }
+    } catch (e) {
+      String errorMessage = 'Error desconocido al eliminar comentario.';
+      if (e is FirebaseException) {
+        if (e.code == 'permission-denied') {
+          errorMessage = 'No tienes permiso para eliminar este comentario. Revisa las reglas de Firebase.';
+        } else {
+          errorMessage = 'Error de Firebase: ${e.message ?? e.toString()}';
+        }
+      } else {
+        errorMessage = 'Error inesperado: ${e.toString()}';
+      }
+      developer.log('Error al eliminar comentario: $e', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage, style: const TextStyle(fontFamily: 'Comic Sans MS')), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _showEditCommentDialog(String publicationId, String commentId, String currentText) async {
+    final TextEditingController editCommentController = TextEditingController(text: currentText);
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('Editar Comentario'),
+          content: TextField(
+            controller: editCommentController,
+            maxLines: null,
+            keyboardType: TextInputType.text, // Permite saltos de línea
+            style: const TextStyle(fontFamily: 'Comic Sans MS'),
+            decoration: const InputDecoration(
+              hintText: 'Edita tu comentario aquí...',
+              hintStyle: TextStyle(fontFamily: 'Comic Sans MS', color: Colors.grey),
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar', style: TextStyle(fontFamily: 'Comic Sans MS')),
+              onPressed: () => Navigator.of(ctx).pop(false),
+            ),
+            TextButton(
+              child: const Text('Guardar', style: TextStyle(fontFamily: 'Comic Sans MS')),
+              onPressed: () {
+                if (editCommentController.text.trim().isNotEmpty) {
+                  Navigator.of(ctx).pop(true);
+                } else {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(content: Text('El comentario no puede estar vacío.', style: TextStyle(fontFamily: 'Comic Sans MS'))),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true && editCommentController.text.trim().isNotEmpty) {
+      try {
+        await _firestore
+            .collection('publicaciones')
+            .doc(publicationId)
+            .collection('comentarios')
+            .doc(commentId)
+            .update({'texto': editCommentController.text.trim()});
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Comentario actualizado', style: TextStyle(fontFamily: 'Comic Sans MS')), backgroundColor: Colors.green),
+          );
+        }
+      } catch (e) {
+        String errorMessage = 'Error desconocido al editar comentario.';
+        if (e is FirebaseException) {
+          if (e.code == 'permission-denied') {
+            errorMessage = 'No tienes permiso para editar este comentario. Revisa las reglas de Firebase.';
+          } else {
+            errorMessage = 'Error de Firebase: ${e.message ?? e.toString()}';
+          }
+        } else {
+          errorMessage = 'Error inesperado: ${e.toString()}';
+        }
+        developer.log('Error al editar comentario: $e', error: e);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage, style: const TextStyle(fontFamily: 'Comic Sans MS')), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+  // --- FIN FUNCIONES PARA COMENTARIOS ---
 
 
   @override
@@ -687,7 +841,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                                       ),
                                     ),
                                   ),
-                                  // --- NUEVO: PopupMenuButton para editar/eliminar ---
+                                  // --- NUEVO: PopupMenuButton para editar/eliminar Publicación ---
                                   if (isOwnPost)
                                     PopupMenuButton<String>(
                                       icon: const Icon(Icons.more_vert, color: Colors.black),
@@ -717,7 +871,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                                         const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar publicación')),
                                       ],
                                     ),
-                                  // --- FIN PopupMenuButton ---
+                                  // --- FIN PopupMenuButton Publicación ---
                                 ],
                               ),
                               const SizedBox(height: 10),
@@ -794,7 +948,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        _buildCommentsList(),
+                        _buildCommentsList(), // Aquí se renderiza la lista de comentarios
                       ],
                     ),
                   ),
@@ -910,23 +1064,31 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
         }
         if (snapshot.hasError) {
           developer.log('Error cargando comentarios: ${snapshot.error}');
-          return const Center(child: Text('Error al cargar comentarios.', style: TextStyle(color: Colors.white)));
+          return const Center(child: Text('Error al cargar comentarios.', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')));
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(child: Text('No hay comentarios aún. ¡Sé el primero!', style: TextStyle(color: Colors.white, fontFamily: 'Comic Sans MS')));
         }
 
         final comments = snapshot.data!.docs;
+        final currentUserId = _auth.currentUser?.uid; // Obtener el ID del usuario actual
+        final bool isPostOwner = widget.ownerUserId == currentUserId; // Verificar si el usuario actual es el dueño de la publicación
 
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: comments.length,
           itemBuilder: (context, index) {
-            final comment = comments[index].data() as Map<String, dynamic>;
-            final commenterName = comment['usuarioNombre'] ?? 'Usuario Anónimo';
-            final commenterText = comment['texto'] ?? '';
-            final commenterPhotoUrl = comment['usuarioFotoUrl'] as String?;
+            final commentDoc = comments[index]; // DocumentSnapshot del comentario
+            final String commentId = commentDoc.id; // ID del documento del comentario
+            final Map<String, dynamic> commentData = commentDoc.data() as Map<String, dynamic>; // Datos del comentario
+
+            final String commenterId = commentData['usuarioId'] as String? ?? '';
+            final String commenterName = commentData['usuarioNombre'] ?? 'Usuario Anónimo';
+            final String commenterText = commentData['texto'] ?? '';
+            final String? commenterPhotoUrl = commentData['usuarioFotoUrl'] as String?;
+
+            final bool isCommentOwner = commenterId == currentUserId; // Es el dueño del comentario
 
             return Container(
               margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -975,6 +1137,53 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                       ],
                     ),
                   ),
+                  // Menú de opciones para editar/eliminar comentario
+                  if (isCommentOwner || isPostOwner) // Si es dueño del comentario o de la publicación
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, color: Colors.black),
+                      onSelected: (value) {
+                        if (value == 'edit' && isCommentOwner) {
+                          _showEditCommentDialog(widget.publicationId, commentId, commenterText);
+                        } else if (value == 'delete') {
+                          _deleteComment(widget.publicationId, commentId);
+                        }
+                      },
+                      itemBuilder: (BuildContext context) {
+                        List<PopupMenuEntry<String>> items = [];
+                        if (isCommentOwner) {
+                          items.add(
+                            PopupMenuItem<String>(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Image.asset('assets/images/editar.png', width: 20, height: 20),
+                                  const SizedBox(width: 8),
+                                  const Text('Editar comentario', style: TextStyle(fontFamily: 'Comic Sans MS')),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                        // El dueño del comentario SIEMPRE puede eliminarlo.
+                        // El dueño de la publicación puede eliminar CUALQUIER comentario.
+                        // Por eso, la condición es (isCommentOwner || isPostOwner).
+                        if (isCommentOwner || isPostOwner) {
+                          items.add(
+                            PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Image.asset('assets/images/eliminar.png', width: 20, height: 20),
+                                  const SizedBox(width: 8),
+                                  const Text('Eliminar comentario', style: TextStyle(fontFamily: 'Comic Sans MS')),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                        return items;
+                      },
+                    ),
                 ],
               ),
             );
