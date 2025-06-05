@@ -1,4 +1,3 @@
-// src/models/products.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer' as developer;
 
@@ -55,6 +54,7 @@ class ProductOpinion {
 class Product {
   String id;
   String name;
+  String nameLower; // <-- ¡NUEVO CAMPO AQUÍ!
   double price;
   String description;
   int qualification;
@@ -70,6 +70,7 @@ class Product {
   Product({
     required this.id,
     required this.name,
+    required this.nameLower, // <-- Añadido al constructor
     required this.price,
     required this.description,
     this.qualification = 0,
@@ -86,6 +87,7 @@ class Product {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
+      'nameLower': nameLower, // <-- ¡INCLUIDO EN toJson!
       'price': price,
       'description': description,
       'qualification': qualification,
@@ -101,11 +103,14 @@ class Product {
   }
 
   Future<DocumentReference> crearProductoEnFirestore() async {
-    return FirebaseFirestore.instance.collection('products').add(toJson());
+    // Al crear un producto, asegúrate de que 'nameLower' se calcule y se incluya.
+    // Aunque este método esté aquí, la recomendación es calcularlo en VenderProductos.dart.
+    // Aquí es un ejemplo de cómo se debería ver si lo gestionara el modelo directamente.
+    final Map<String, dynamic> data = toJson();
+    data['nameLower'] = name.toLowerCase(); // Sobrescribe para asegurar que es minúscula
+    return FirebaseFirestore.instance.collection('products').add(data);
   }
 
-  // <--- CORRECCIÓN CLAVE: ESTA ES LA DEFINICIÓN CORRECTA PARA TU PRODUCT.FROMFIRESTORE
-  // Se llama con un Map<String, dynamic> y un String.
   factory Product.fromFirestore(Map<String, dynamic> data, String documentId) {
     developer.log("--- Product.fromFirestore ---");
     developer.log("Parseando producto ID: $documentId");
@@ -150,9 +155,15 @@ class Product {
       developer.log("'opinions' es null o no existe para producto $documentId");
     }
 
+    // Manejo del campo 'name' y el nuevo 'nameLower'
+    final String fetchedName = data['name'] as String? ?? 'Sin Nombre';
+    // Si 'nameLower' no existe en los datos (ej. productos antiguos), lo genera a partir de 'name'
+    final String fetchedNameLower = data['nameLower'] as String? ?? fetchedName.toLowerCase();
+
     return Product(
       id: documentId,
-      name: data['name'] as String? ?? 'Sin Nombre',
+      name: fetchedName,
+      nameLower: fetchedNameLower, // <-- ¡Asignado aquí!
       price: (data['price'] as num?)?.toDouble() ?? 0.0,
       description: data['description'] as String? ?? 'Sin Descripción',
       qualification: (data['qualification'] as num?)?.toInt() ?? 0,

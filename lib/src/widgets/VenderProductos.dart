@@ -180,8 +180,9 @@ class _VenderProductosState extends State<VenderProductos> {
       String tempIdForModel = FirebaseFirestore.instance.collection('temp').doc().id; // Placeholder ID for model
 
       final product = Product(
-        id: tempIdForModel,
+        id: tempIdForModel, // Este ID será sobrescrito por Firestore al añadirlo.
         name: _nombreController.text.trim(),
+        nameLower: _nombreController.text.trim().toLowerCase(), // <-- ¡CAMBIO CLAVE AQUÍ!
         price: double.tryParse(_precioController.text.trim()) ?? 0.0,
         description: _descripcionController.text.trim(),
         category: _categoriaSeleccionada!,
@@ -193,7 +194,7 @@ class _VenderProductosState extends State<VenderProductos> {
         // qualification y qualificationsNumber se inicializan con valor por defecto en el modelo Product
       );
 
-      await product.crearProductoEnFirestore();
+      await product.crearProductoEnFirestore(); // Esto internamente llama a product.toJson() que incluye nameLower
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -741,13 +742,13 @@ class _VenderProductosState extends State<VenderProductos> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    // --- CAMPOS DEL FORMULARIO CON ICONOS Y TOOLTIPS ---
+                    // --- CAMPO: Nombre del Producto con ICONO CORRECTO y Tooltip ---
                     _buildTextField(
                       controller: _nombreController,
                       labelText: 'Nombre del Producto',
                       originalHint: 'Nombre del Producto',
-                      iconPath: 'assets/images/nombreproducto.png',
-                      tooltipMessage: 'Ingresa el nombre de tu producto', // <--- Tooltip
+                      iconPath: 'assets/images/nombreproducto.png', // <-- ¡RUTA DEL ICONO ACTUALIZADA!
+                      tooltipMessage: 'Ingresa el nombre de tu producto',
                     ),
                     _buildTextField(
                       controller: _descripcionController,
@@ -755,11 +756,11 @@ class _VenderProductosState extends State<VenderProductos> {
                       originalHint: 'Detalles, características...',
                       maxLines: 3,
                       iconPath: 'assets/images/infoproducto.png',
-                      tooltipMessage: 'Proporciona una descripción detallada del producto', // <--- Tooltip
+                      tooltipMessage: 'Proporciona una descripción detallada del producto',
                     ),
                     _buildCategoryDropdown(
                       iconPath: 'assets/images/category.png',
-                      tooltipMessage: 'Selecciona la categoría a la que pertenece tu producto', // <--- Tooltip
+                      tooltipMessage: 'Selecciona la categoría a la que pertenece tu producto',
                     ),
                     _buildTextField(
                       controller: _precioController,
@@ -767,7 +768,7 @@ class _VenderProductosState extends State<VenderProductos> {
                       originalHint: 'Precio',
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
                       iconPath: 'assets/images/price.png',
-                      tooltipMessage: 'Ingresa el precio de venta del producto', // <--- Tooltip
+                      tooltipMessage: 'Ingresa el precio de venta del producto',
                     ),
                     _buildTextField(
                       controller: _cantidadController,
@@ -775,14 +776,14 @@ class _VenderProductosState extends State<VenderProductos> {
                       originalHint: 'Cantidad de Productos',
                       keyboardType: TextInputType.number,
                       iconPath: 'assets/images/stock.png',
-                      tooltipMessage: 'Ingresa la cantidad de unidades disponibles en stock', // <--- Tooltip
+                      tooltipMessage: 'Ingresa la cantidad de unidades disponibles en stock',
                     ),
                     _buildTextField(
                       controller: _empresaController,
                       labelText: 'Nombre de la Empresa o Negocio',
                       originalHint: 'Nombre de la Empresa o Negocio',
                       iconPath: 'assets/images/company.png',
-                      tooltipMessage: 'Ingresa el nombre de tu empresa o negocio', // <--- Tooltip
+                      tooltipMessage: 'Ingresa el nombre de tu empresa o negocio',
                     ),
                     // --- FIN CAMPOS DEL FORMULARIO ---
                     const SizedBox(height: 16.0),
