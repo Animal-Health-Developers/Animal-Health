@@ -1110,24 +1110,41 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                     ],
                   ),
                 ),
-                // Solo mostrar PopupMenuButton si el usuario actual es el dueño de la publicación
+                // --- CAMBIO AQUÍ: Reemplazo de PopupMenuButton por botones de imagen ---
                 if (currentUserId == postOwnerId)
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: Colors.black54),
-                    color: Colors.white.withOpacity(0.95),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    onSelected: (value) {
-                      if (value == 'eliminar') {
-                        _eliminarPublicacion(publicacion.id, itemContext, mediaUrl);
-                      } else if (value == 'editar') {
-                        _mostrarDialogoEditarPublicacionIndividual(publicacion, itemContext);
-                      }
-                    },
-                    itemBuilder: (BuildContext context) => [
-                      const PopupMenuItem<String>(value: 'editar', child: Text('Editar', style: TextStyle(fontFamily: _fontFamily, color: _primaryTextColor))),
-                      const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar', style: TextStyle(fontFamily: _fontFamily, color: Colors.red))),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        padding: const EdgeInsets.all(4), // Reducir el padding para que no sea tan grande
+                        constraints: const BoxConstraints(), // Quitar restricciones de tamaño mínimo
+                        icon: Image.asset(
+                          'assets/images/editar.png',
+                          width: 40,
+                          height: 40,
+                        ),
+                        tooltip: 'Editar publicación',
+                        onPressed: () {
+                          _mostrarDialogoEditarPublicacionIndividual(publicacion, itemContext);
+                        },
+                      ),
+                      const SizedBox(width: 8), // Espacio entre botones
+                      IconButton(
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        icon: Image.asset(
+                          'assets/images/eliminar.png', // Usando .png como es estándar
+                          width: 40,
+                          height: 40,
+                        ),
+                        tooltip: 'Eliminar publicación',
+                        onPressed: () {
+                          _eliminarPublicacion(publicacion.id, itemContext, mediaUrl);
+                        },
+                      ),
                     ],
                   ),
+                // --- FIN DEL CAMBIO ---
               ],
             ),
           ),
@@ -1230,8 +1247,8 @@ class _PerfilPublicoState extends State<PerfilPublico> {
 
   Widget _buildPostActionEstiloHome({required String iconAsset, required String label, bool isLiked = false, bool isSavedStyle = false, required VoidCallback onTap}) {
     // ... (código existente de _buildPostActionEstiloHome)
-    double iconSize = 30.0;
-    if (iconAsset.contains('like')) iconSize = 32.0;
+    double iconSize = 40.0;
+    if (iconAsset.contains('like')) iconSize = 40.0;
     Color? activeColor;
     bool isThisTheLikeButton = iconAsset.contains('like');
 

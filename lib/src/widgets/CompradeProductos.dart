@@ -39,85 +39,79 @@ class CompradeProductos extends StatefulWidget {
 
 class _CompradeProductosState extends State<CompradeProductos> {
   final TextEditingController _searchController = TextEditingController();
-
   final ValueNotifier<String> _searchTermNotifier = ValueNotifier<String>('');
-
   final CartService _cartService = CartService();
-
   Stream<QuerySnapshot<Map<String, dynamic>>>? _productsStream;
 
-  /// Inicializa el estado del widget, configurando el stream de productos.
   @override
   void initState() {
     super.initState();
     developer.log('CompradeProductos initState: Initializing search controller and updating product stream.');
+    // La búsqueda se inicia vacía para mostrar todos los productos.
     _updateProductStream();
+    _searchController.addListener(() {
+      setState(() {
+        // Esto es para que el botón de limpiar (X) aparezca/desaparezca instantáneamente
+      });
+    });
   }
 
-  // **LÓGICA CLAVE PARA LA BÚSQUEDA INSENSIBLE A MAYÚSCULAS/MINÚSCULAS Y MANEJO DE QUERIES**
+  // ===== CAMBIO #1: LÓGICA DE BÚSQUEDA AVANZADA =====
+  /// Actualiza el stream para buscar por palabras clave individuales.
   void _updateProductStream() {
-    String searchTerm = _searchController.text.trim();
+    // Obtenemos el término de búsqueda y lo preparamos
+    String searchTerm = _searchController.text.trim().toLowerCase();
+
+    // La consulta base apunta a la colección de productos.
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection('products');
 
     if (searchTerm.isNotEmpty) {
-      // CONVIERTE EL TÉRMINO DE BÚSQUEDA A MINÚSCULAS PARA HACER MATCH CON 'nameLower'
-      String querySearchTerm = searchTerm.toLowerCase();
+      // Si hay un término de búsqueda, usamos 'array-contains'.
+      // Esto busca si el término exacto (en minúsculas) existe en el array 'searchKeywords'.
+      // Ejemplo: Si el usuario busca "gatos", encontrará productos con ["comida", "para", "gatos"] en sus keywords.
+      query = query.where('searchKeywords', arrayContains: searchTerm);
 
-      // Realiza la búsqueda en el nuevo campo 'nameLower'
-      query = query
-          .where('nameLower', isGreaterThanOrEqualTo: querySearchTerm)
-          .where('nameLower', isLessThan: querySearchTerm + '\uf8ff');
-      // Importante: Si hay un filtro de rango (isGreaterThanOrEqualTo, isLessThan),
-      // Firestore solo permite un orderBy sobre el MISMO campo que el filtro de rango.
-      // Por lo tanto, no podemos ordenar por 'creationDate' si buscamos por 'nameLower'.
-      // Si deseas un orden específico en los resultados de la búsqueda,
-      // puedes añadir: .orderBy('nameLower', descending: false); (o true para A-Z/Z-A).
+      developer.log('CompradeProductos _updateProductStream: Searching for keyword: "$searchTerm"');
     } else {
-      // Si no hay término de búsqueda, muestra todos los productos ordenados por fecha de creación.
+      // Si la barra de búsqueda está vacía, muestra todos los productos, ordenados por fecha de creación.
       query = query.orderBy('creationDate', descending: true);
+      developer.log('CompradeProductos _updateProductStream: Search term is empty, showing all products.');
     }
 
     setState(() {
       _productsStream = query.snapshots();
     });
-    developer.log('CompradeProductos _updateProductStream: Stream updated with search term: "$searchTerm"');
   }
 
-
-  /// Realiza la acción de búsqueda de productos.
-  /// Oculta el teclado y actualiza el ValueNotifier con el término de búsqueda.
-  @override
   void _performSearch() {
     developer.log('CompradeProductos _performSearch: Starting search for: "${_searchController.text.trim()}"');
-
-    FocusScope.of(context).unfocus();
-
-    _updateProductStream(); // Regenera la consulta de Firebase con el nuevo término de búsqueda
-
-    _searchTermNotifier.value = _searchController.text.trim();
-    developer.log("CompradeProductos _performSearch: Search initiated. Current term: \"${_searchTermNotifier.value}\"");
+    FocusScope.of(context).unfocus(); // Oculta el teclado
+    _updateProductStream();
+    _searchTermNotifier.value = _searchController.text.trim(); // Notifica al ValueListenableBuilder para la animación
   }
 
-  /// Limpia el campo de búsqueda y vuelve a realizar la búsqueda (mostrando todos los productos).
-  @override
   void _clearSearch() {
     developer.log('CompradeProductos _clearSearch: Clearing search bar');
     _searchController.clear();
-    _updateProductStream(); // Regenera la consulta para mostrar todos los productos
+    _updateProductStream(); // Actualiza el stream para mostrar todos los productos de nuevo
     _searchTermNotifier.value = '';
-    setState(() {});
+    FocusScope.of(context).unfocus();
   }
 
-  /// Libera los controladores y notifiers cuando el widget es desechado.
   @override
   void dispose() {
     developer.log('CompradeProductos dispose: Disposing controllers and notifiers');
+    _searchController.removeListener(() {});
     _searchController.dispose();
     _searchTermNotifier.dispose();
     super.dispose();
   }
 
-  /// Muestra un modal (bottom sheet) con la lista de productos publicados por el usuario actual.
+  // El resto de tus métodos (como _mostrarModalMisProductos, _buildProductCard, etc.) permanecen mayormente iguales,
+  // ya que la lógica principal de la búsqueda se ha centralizado en _updateProductStream.
+  // ... (El resto de tu código de la clase `_CompradeProductosState` sigue aquí)
+  // [COPIA Y PEGA EL RESTO DE TU CÓDIGO DE `_CompradeProductosState` DESDE AQUÍ]
+
   Future<void> _mostrarModalMisProductos() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
@@ -144,8 +138,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
-  /// Muestra un modal (bottom sheet) para editar un producto específico.
-  /// Verifica si el usuario actual es el propietario del producto antes de permitir la edición.
   Future<void> _mostrarModalEditarProducto(Product product, BuildContext cardContext) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null || currentUser.uid != product.userId) {
@@ -170,19 +162,11 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
-  /// Constructor de widget para una tarjeta individual de producto en la cuadrícula principal.
-  /// Incluye lógica para mostrar opciones de edición/eliminación si el usuario es el propietario.
-  ///
-  /// Parámetros:
-  /// - `context`: El BuildContext actual.
-  /// - `product`: El objeto Product a mostrar en la tarjeta.
   Widget _buildProductCard(BuildContext context, Product product) {
     String? imageUrl = product.images.isNotEmpty ? product.images.first.url : null;
     final currentUser = FirebaseAuth.instance.currentUser;
     final bool isOwner = currentUser != null && product.userId.isNotEmpty && product.userId == currentUser.uid;
 
-    /// Función interna para eliminar un producto de la base de datos y Storage.
-    /// Muestra un diálogo de confirmación antes de proceder con la eliminación.
     Future<void> _deleteProduct(String productId, String productName) async {
       bool? confirmDelete = await showDialog<bool>(
         context: context,
@@ -219,7 +203,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
               if (imageInfo.url.startsWith('https://firebasestorage.googleapis.com')) {
                 try {
                   await FirebaseStorage.instance.refFromURL(imageInfo.url).delete();
-                  developer.log('Imagen de Storage eliminada: ${imageInfo.url}');
                 } catch (e) {
                   developer.log('Error eliminando imagen de storage: ${imageInfo.url}, error: $e');
                 }
@@ -261,7 +244,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                 product: product,
               ),
             ),
-          ); // <-- ¡Coma extra corregida aquí!
+          );
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -302,7 +285,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
                     ),
                   ),
                   if (isOwner) ...[
-                    // Icono de Eliminar
                     Positioned(
                       top: 3,
                       right: 2,
@@ -311,29 +293,28 @@ class _CompradeProductosState extends State<CompradeProductos> {
                         child: IconButton(
                           icon: Image.asset(
                             'assets/images/eliminar.png',
-                            width: 28.0, // Tamaño del icono
+                            width: 28.0,
                             height: 28.0,
                             fit: BoxFit.contain,
                           ),
                           onPressed: () {
                             _deleteProduct(product.id, product.name);
                           },
-                          padding: EdgeInsets.zero, // Eliminar padding por defecto del IconButton
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32), // Área de toque mínima
-                          splashRadius: 20, // Radio del efecto de "splash" al tocar
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          splashRadius: 20,
                         ),
                       ),
                     ),
-                    // Icono de Editar
                     Positioned(
                       top: 3,
-                      right: 2 + 28 + 4, // 2px de right + ancho del icono de eliminar (28px) + un padding de 4px
+                      right: 2 + 28 + 4,
                       child: Tooltip(
                         message: 'Editar Producto',
                         child: IconButton(
                           icon: Image.asset(
                             'assets/images/editar.png',
-                            width: 28.0, // Tamaño del icono
+                            width: 28.0,
                             height: 28.0,
                             fit: BoxFit.contain,
                           ),
@@ -413,7 +394,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                 child: SizedBox(
                   height: 30.0,
                   child: Center(
-                    child: Tooltip( // Añadir Tooltip al botón de añadir al carrito
+                    child: Tooltip(
                       message: 'Añadir al Carrito',
                       child: Image.asset(
                         'assets/images/carrito.png',
@@ -432,8 +413,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
-  /// Construye la interfaz de usuario principal de la pantalla de compra de productos.
-  /// Contiene la barra de búsqueda, iconos de navegación y la cuadrícula de productos.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -457,7 +436,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Home(key: const Key("HomeFromCompraProductosV4")),
                 ),
               ],
-              child: Tooltip( // Tooltip para el botón de retroceso
+              child: Tooltip(
                 message: 'Volver a Inicio',
                 child: Container(
                   decoration: const BoxDecoration(
@@ -482,7 +461,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Home(key: const Key('HomeLogoFromCompraProductosV4')),
                 ),
               ],
-              child: Tooltip( // Tooltip para el logo/home
+              child: Tooltip(
                 message: 'Ir a Inicio',
                 child: Container(
                   decoration: BoxDecoration(
@@ -509,7 +488,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Carritodecompras(key: const Key('CarritoIconFromCompraProductosV4')),
                 ),
               ],
-              child: Tooltip( // Tooltip para el icono de carrito
+              child: Tooltip(
                 message: 'Ver Carrito de Compras',
                 child: Container(
                   decoration: const BoxDecoration(
@@ -534,7 +513,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Ayuda(key: const Key('AyudaFromCompraProductosV4')),
                 ),
               ],
-              child: Tooltip( // Tooltip para el icono de ayuda
+              child: Tooltip(
                 message: 'Ayuda',
                 child: Container(
                   decoration: const BoxDecoration(
@@ -559,7 +538,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   pageBuilder: () => Configuraciones(key: const Key('SettingsFromCompraProductosV4'), authService: AuthService()),
                 ),
               ],
-              child: Tooltip( // Tooltip para el icono de configuración
+              child: Tooltip(
                 message: 'Configuración',
                 child: Container(
                   decoration: const BoxDecoration(
@@ -604,7 +583,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                       pageBuilder: () => PerfilPublico(key: const Key('PerfilPublicoFromCompraProductosV4')),
                     ),
                   ],
-                  child: Tooltip( // Tooltip para el icono de perfil
+                  child: Tooltip(
                     message: 'Ver Perfil Público',
                     child: Container(
                       width: 60.0,
@@ -682,10 +661,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                         ),
                         textInputAction: TextInputAction.search,
                         onSubmitted: (value) {
-                          _performSearch(); // Realiza la búsqueda al presionar Enter
-                        },
-                        onChanged: (value) {
-                          setState(() {});
+                          _performSearch();
                         },
                       ),
                     ),
@@ -793,7 +769,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
             child: ValueListenableBuilder<String>(
               valueListenable: _searchTermNotifier,
               builder: (context, currentSearchTerm, child) {
-                developer.log('ValueListenableBuilder: Current search term for filtering: "$currentSearchTerm"');
                 return AnimatedSwitcher(
                   duration: const Duration(milliseconds: 500),
                   transitionBuilder: (Widget child, Animation<double> animation) {
@@ -812,10 +787,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                     stream: _productsStream,
                     builder: (context, snapshot) {
-                      developer.log('StreamBuilder: Connection state: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, hasError: ${snapshot.hasError}');
-
                       if (snapshot.connectionState == ConnectionState.waiting || _productsStream == null) {
-                        developer.log('StreamBuilder: Data is still loading from Firebase or stream not initialized.');
                         return const Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -828,40 +800,48 @@ class _CompradeProductosState extends State<CompradeProductos> {
                         );
                       }
                       if (snapshot.hasError) {
-                        developer.log('StreamBuilder Error: ${snapshot.error}');
-                        developer.log('StreamBuilder StackTrace: ${snapshot.stackTrace}');
+                        String errorMessage = 'Error al cargar productos.';
+                        // Detección específica del error de índice faltante
+                        if (snapshot.error.toString().contains('composite index') || snapshot.error.toString().contains('requires an index')) {
+                          errorMessage += '\n\nACCIÓN REQUERIDA:\nLa nueva búsqueda necesita un índice en Firebase. Revisa la consola de depuración (Run/Debug) de tu editor, allí encontrarás un enlace para crear el índice. Haz clic en él y créalo.';
+                          developer.log("ERROR DE ÍNDICE DE FIRESTORE: ${snapshot.error}");
+                        } else {
+                          errorMessage += ' Por favor, revisa tu conexión a internet.';
+                          developer.log("ERROR GENÉRICO DEL STREAM: ${snapshot.error}");
+                        }
                         return Center(
-                            child: Text('Error al cargar productos. Por favor, revisa tu conexión a internet o las reglas/índices de Firebase.\nDetalle: ${snapshot.error}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(errorMessage,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, backgroundColor: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+                            ));
                       }
                       if (!snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
-                        developer.log('StreamBuilder: No data or empty docs found in Firestore for the current query.');
                         String message = _searchController.text.isNotEmpty
-                            ? 'No se encontraron productos para "${_searchController.text}".'
-                            : 'No hay productos disponibles en la base de datos.';
+                            ? 'No se encontraron productos para "${_searchController.text}".\n\n(Asegúrate de que los productos existentes han sido actualizados con las nuevas palabras clave editándolos y guardándolos de nuevo).'
+                            : 'No hay productos disponibles.';
                         return Center(
-                            child: Text(message,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                              child: Text(message,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)),
+                            ));
                       }
 
                       final List<Product> products = [];
                       for (var doc in snapshot.data!.docs) {
                         try {
-                          final data = doc.data();
-                          final id = doc.id;
-                          products.add(Product.fromFirestore(data, id));
+                          products.add(Product.fromFirestore(doc.data(), doc.id));
                         } catch (e, s) {
                           developer.log('ERROR al parsear producto ${doc.id}: $e\nStackTrace: $s\nDatos: ${doc.data()}');
                         }
                       }
 
-                      developer.log('StreamBuilder: Products successfully parsed for current query: ${products.length}');
-
                       if (products.isEmpty) {
                         return const Center(
-                            child: Text('No se pudieron cargar productos válidos de la base de datos.\nRevisa la estructura de tus datos o el archivo `products.dart`.',
+                            child: Text('No se pudieron cargar productos válidos.\nRevisa la estructura de los datos.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
                       }
@@ -892,8 +872,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
   }
 }
 
-/// Widget modal para mostrar los productos publicados por un usuario específico.
-/// Recibe el ID del usuario y un BuildContext padre para mostrar SnackBar.
 class _MisProductosModalWidget extends StatelessWidget {
   final String userId;
   final BuildContext parentContextForSnackbars;
@@ -904,14 +882,6 @@ class _MisProductosModalWidget extends StatelessWidget {
     required this.parentContextForSnackbars,
   }) : super(key: key);
 
-  /// Método estático para eliminar un producto desde dentro del modal "Mis Productos".
-  /// Incluye validación de permisos y confirmación de eliminación.
-  ///
-  /// Parámetros:
-  /// - `contextForDialogsAndSnackbars`: Contexto para mostrar diálogos y SnackBar.
-  /// - `productId`: ID del producto a eliminar.
-  /// - `productName`: Nombre del producto a eliminar (para confirmación).
-  /// - `userIdOfProduct`: ID del usuario propietario del producto.
   static Future<void> _deleteProductFromModal(
       BuildContext contextForDialogsAndSnackbars,
       String productId,
@@ -962,7 +932,6 @@ class _MisProductosModalWidget extends StatelessWidget {
             if (imageInfo.url.startsWith('https://firebasestorage.googleapis.com')) {
               try {
                 await FirebaseStorage.instance.refFromURL(imageInfo.url).delete();
-                developer.log('Imagen de Storage eliminada (modal): ${imageInfo.url}');
               } catch (e) {
                 developer.log('Error eliminando imagen de storage (modal): ${imageInfo.url}, error: $e');
               }
@@ -987,8 +956,6 @@ class _MisProductosModalWidget extends StatelessWidget {
     }
   }
 
-  /// Construye la interfaz de usuario del modal "Mis Productos Publicados".
-  /// Muestra una lista de productos del usuario y permite editar o eliminar cada uno.
   @override
   Widget build(BuildContext modalSheetContext) {
     return FractionallySizedBox(
@@ -1015,7 +982,7 @@ class _MisProductosModalWidget extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.of(modalSheetContext).pop(),
-                tooltip: 'Cerrar', // Tooltip para el botón de cerrar modal
+                tooltip: 'Cerrar',
               )
             ],
           ),
@@ -1040,17 +1007,9 @@ class _MisProductosModalWidget extends StatelessWidget {
                     return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
                   }
                   if (snapshot.hasError) {
-                    developer.log('Error cargando mis productos (modal) para user $userId: ${snapshot.error}');
-                    // Mensaje de error más informativo
-                    final errorMessage = 'Error al cargar tus productos. Esto puede deberse a problemas de conexión, permisos o la configuración de tus reglas en Firebase (posiblemente falta un índice compuesto para userId y creationDate). Por favor, intenta de nuevo o revisa la consola de depuración para más detalles.';
-                    return Center(
-                        child: Text(
-                            errorMessage,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)));
+                    return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    developer.log('No se encontraron productos para el usuario: $userId');
                     return const Center(
                         child: Padding(
                           padding: EdgeInsets.all(20.0),
@@ -1062,27 +1021,12 @@ class _MisProductosModalWidget extends StatelessWidget {
 
                   final userProducts = snapshot.data!.docs.map((doc) {
                     try {
-                      final data = doc.data();
-                      return Product.fromFirestore(data, doc.id);
-                    } catch (e, s) {
-                      developer.log('Error parseando producto en modal (ID: ${doc.id}): $e, Stack: $s, Data: ${doc.data()}');
+                      return Product.fromFirestore(doc.data(), doc.id);
+                    } catch (e) {
+                      developer.log('Error parseando producto en modal: $e');
                       return null;
                     }
-                  }).whereType<Product>().toList(); // `whereType<Product>()` filtra los nulos resultantes de errores de parseo.
-
-                  developer.log('Mis Productos Modal - Se encontraron ${userProducts.length} productos para el userId: $userId');
-
-                  if (userProducts.isEmpty) {
-                    // Este caso ocurriría si hay documentos en Firestore, pero ninguno pudo ser parseado.
-                    return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(20.0),
-                          child: Text('No se pudieron cargar tus productos válidos.\nRevisa la estructura de tus datos.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: APP_FONT_FAMILY, fontWeight: FontWeight.w600)),
-                        ));
-                  }
-
+                  }).whereType<Product>().toList();
 
                   return ListView.builder(
                     padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 60.0),
@@ -1122,20 +1066,17 @@ class _MisProductosModalWidget extends StatelessWidget {
                               Text('Stock: ${product.stock}', style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR, fontSize: 13)),
                             ],
                           ),
-                          // MODIFICACIÓN: Se añade un Row para contener múltiples acciones en el trailing.
                           trailing: Row(
-                            mainAxisSize: MainAxisSize.min, // Para que el Row ocupe solo el espacio necesario
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Icono de Editar directo
                               IconButton(
                                 icon: Image.asset(
                                   'assets/images/editar.png',
-                                  height: 50.0, // Altura deseada (mismo tamaño que eliminar.png)
-                                  width: 50.0,  // Ancho para mantener la proporción si es necesario
-                                  fit: BoxFit.contain, // Ajuste de la imagen dentro del espacio
+                                  height: 50.0,
+                                  width: 50.0,
+                                  fit: BoxFit.contain,
                                 ),
                                 onPressed: () {
-                                  // Cierra el modal actual para abrir el de edición desde el contexto padre
                                   Navigator.of(modalSheetContext).pop();
                                   showModalBottomSheet(
                                     context: parentContextForSnackbars,
@@ -1150,25 +1091,23 @@ class _MisProductosModalWidget extends StatelessWidget {
                                     },
                                   );
                                 },
-                                tooltip: 'Editar producto', // Etiqueta para accesibilidad
-                                padding: EdgeInsets.zero, // Elimina el padding interno predeterminado del IconButton
-                                constraints: const BoxConstraints(minWidth: 50, minHeight: 50), // Asegura que el área del botón sea de al menos 50x50
+                                tooltip: 'Editar producto',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 50, minHeight: 50),
                               ),
-                              // Botón de eliminar directo con imagen personalizada
                               IconButton(
                                 icon: Image.asset(
                                   'assets/images/eliminar.png',
-                                  height: 50.0, // Altura deseada
-                                  width: 50.0,  // Ancho para mantener la proporción si es necesario
-                                  fit: BoxFit.contain, // Ajuste de la imagen dentro del espacio
+                                  height: 50.0,
+                                  width: 50.0,
+                                  fit: BoxFit.contain,
                                 ),
                                 onPressed: () {
-                                  // Llama a la función estática para eliminar el producto
                                   _MisProductosModalWidget._deleteProductFromModal(itemBuildContext, product.id, product.name, product.userId);
                                 },
-                                tooltip: 'Eliminar producto', // Etiqueta para accesibilidad (ya existente)
-                                padding: EdgeInsets.zero, // Elimina el padding interno predeterminado del IconButton
-                                constraints: const BoxConstraints(minWidth: 50, minHeight: 50), // Asegura que el área del botón sea de al menos 50x50
+                                tooltip: 'Eliminar producto',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 50, minHeight: 50),
                               ),
                             ],
                           ),
@@ -1198,8 +1137,6 @@ class _MisProductosModalWidget extends StatelessWidget {
   }
 }
 
-/// Widget modal para editar los detalles de un producto existente.
-/// Recibe el producto a editar y un BuildContext padre para mostrar SnackBar.
 class _EditarProductoModalWidget extends StatefulWidget {
   final Product productToEdit;
   final BuildContext parentContextForSnackbars;
@@ -1214,7 +1151,6 @@ class _EditarProductoModalWidget extends StatefulWidget {
   __EditarProductoModalWidgetState createState() => __EditarProductoModalWidgetState();
 }
 
-/// Clase de estado para el widget _EditarProductoModalWidget.
 class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
@@ -1227,7 +1163,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
 
-  /// Inicializa los controladores de texto con los datos del producto a editar.
   @override
   void initState() {
     super.initState();
@@ -1239,7 +1174,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     _currentImagesInfo = List.from(widget.productToEdit.images);
   }
 
-  /// Libera los controladores de texto cuando el widget es desechado.
   @override
   void dispose() {
     _nameController.dispose();
@@ -1250,8 +1184,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     super.dispose();
   }
 
-  /// Permite al usuario seleccionar nuevas imágenes desde la galería o cámara.
-  /// Añade las imágenes seleccionadas a la lista de nuevas imágenes.
   Future<void> _pickImages() async {
     try {
       final List<XFile> pickedFiles = await _picker.pickMultiImage(imageQuality: 70, maxWidth: 1024);
@@ -1262,35 +1194,21 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
       }
     } catch (e) {
       developer.log("Error seleccionando imágenes para editar producto: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
-          SnackBar(content: Text('Error al seleccionar imágenes: $e', style: const TextStyle(fontFamily: APP_FONT_FAMILY))),
-        );
-      }
     }
   }
 
-  /// Elimina una imagen existente (ya subida a Storage) de la lista a mostrar.
   void _removeExistingImage(int index) {
     setState(() {
       _currentImagesInfo.removeAt(index);
     });
   }
 
-  /// Elimina una imagen recién seleccionada (aún no subida a Storage).
   void _removeNewImage(int index) {
     setState(() {
       _newImageFiles.removeAt(index);
     });
   }
 
-  /// Sube una imagen individual a Firebase Storage.
-  /// Retorna un objeto ProductImage con la URL de descarga y el publicId.
-  ///
-  /// Parámetros:
-  /// - `imageFile`: El archivo de imagen a subir.
-  /// - `productId`: El ID del producto al que pertenece la imagen (para la ruta de almacenamiento).
-  /// - `index`: El índice de la imagen (para el nombre del archivo).
   Future<ProductImage> _uploadImage(XFile imageFile, String productId, int index) async {
     String fileExtension = imageFile.name.split('.').last.toLowerCase();
     String fileName = 'products/$productId/image_${DateTime.now().millisecondsSinceEpoch}_$index.$fileExtension';
@@ -1309,8 +1227,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     return ProductImage(publicId: fileName, url: downloadUrl);
   }
 
-  /// Guarda los cambios del producto, subiendo nuevas imágenes, eliminando las antiguas si es necesario,
-  /// y actualizando los datos en Firestore.
+  // ===== CAMBIO #2: GUARDADO DE PRODUCTO CON KEYWORDS =====
   Future<void> _saveProductChanges() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -1322,13 +1239,11 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     try {
       List<ProductImage> finalImageInfos = List.from(_currentImagesInfo);
 
-      // Sube las nuevas imágenes y las añade a la lista final
       for (int i = 0; i < _newImageFiles.length; i++) {
         ProductImage newProductImage = await _uploadImage(_newImageFiles[i], widget.productToEdit.id, i);
         finalImageInfos.add(newProductImage);
       }
 
-      // Identifica y elimina las imágenes que ya no están en la lista actual
       List<String> originalUrls = widget.productToEdit.images.map((img) => img.url).toList();
       List<String> remainingUrls = _currentImagesInfo.map((img) => img.url).toList();
       List<String> urlsToDeleteFromStorage = originalUrls.where((url) => !remainingUrls.contains(url)).toList();
@@ -1337,17 +1252,30 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
         if (urlToDelete.startsWith('https://firebasestorage.googleapis.com')) {
           try {
             await FirebaseStorage.instance.refFromURL(urlToDelete).delete();
-            developer.log('Imagen antigua eliminada de Storage: $urlToDelete');
           } catch (e) {
-            developer.log('Error eliminando imagen antigua de Storage ($urlToDelete): $e');
+            developer.log('Error eliminando imagen antigua ($urlToDelete): $e');
           }
         }
       }
 
-      // Prepara los datos actualizados para Firestore
+      // ---- INICIO DE LA LÓGICA DE KEYWORDS ----
+      // Se toma el nombre del producto.
+      final String productName = _nameController.text.trim();
+
+      // Se procesa para crear la lista de palabras clave (keywords).
+      final List<String> searchKeywords = productName
+          .toLowerCase() // 1. Convertir a minúsculas: "comida para gatos"
+          .replaceAll(RegExp(r'[^\w\s]+'), '') // 2. Opcional: quitar puntuación
+          .split(' ') // 3. Dividir por espacios: ["comida", "para", "gatos"]
+          .where((s) => s.isNotEmpty) // 4. Quitar posibles espacios vacíos
+          .toSet() // 5. Opcional: eliminar duplicados
+          .toList(); // 6. Convertir de nuevo a una lista
+      // ---- FIN DE LA LÓGICA DE KEYWORDS ----
+
       Map<String, dynamic> updatedData = {
-        'name': _nameController.text.trim(),
-        'nameLower': _nameController.text.trim().toLowerCase(), // <-- ¡NUEVO CAMBIO AQUÍ PARA GUARDAR EL NOMBRE EN MINÚSCULAS!
+        'name': productName,
+        'nameLower': productName.toLowerCase(), // Es bueno conservarlo por si se usa en otro lado
+        'searchKeywords': searchKeywords, // <-- ¡NUEVO CAMPO PARA LA BÚSQUEDA!
         'description': _descriptionController.text.trim(),
         'price': double.tryParse(_priceController.text) ?? widget.productToEdit.price,
         'stock': int.tryParse(_stockController.text) ?? widget.productToEdit.stock,
@@ -1356,14 +1284,13 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
         'lastUpdated': FieldValue.serverTimestamp(),
       };
 
-      // Actualiza el documento del producto en Firestore
       await FirebaseFirestore.instance.collection('products').doc(widget.productToEdit.id).update(updatedData);
 
       if (mounted) {
         ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
           const SnackBar(content: Text('Producto actualizado correctamente.', style: TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.green),
         );
-        Navigator.of(context).pop(); // Cierra el modal después de guardar
+        Navigator.of(context).pop();
       }
     } catch (e) {
       developer.log("Error actualizando producto: $e");
@@ -1374,58 +1301,73 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
       }
     } finally {
       if (mounted) {
-        setState(() => _isUploading = false); // Finaliza el estado de carga
+        setState(() => _isUploading = false);
       }
     }
   }
 
-  /// Widget auxiliar para construir un campo de texto con estilo.
-  ///
-  /// Parámetros:
-  /// - `controller`: El controlador de texto para el campo.
-  /// - `label`: La etiqueta del campo.
-  /// - `keyboardType`: Tipo de teclado a usar (por defecto TextInputType.text).
-  /// - `maxLines`: Número máximo de líneas (por defecto 1).
-  /// - `validator`: Función de validación personalizada para el campo.
-  Widget _buildTextField({required TextEditingController controller, required String label, TextInputType keyboardType = TextInputType.text, int maxLines = 1, String? Function(String?)? validator}) {
+  // ===== CAMBIO #3: NUEVO MÉTODO PARA CREAR TEXTFIELD CON ICONO (MEJORA VISUAL) =====
+  Widget _buildTextFieldWithIcon({
+    required TextEditingController controller,
+    required String labelText,
+    required String iconPath,
+    required String tooltipMessage,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        controller: controller,
-        style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR, fontSize: 15),
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.black54, fontSize: 16),
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.92),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: const BorderSide(color: APP_PRIMARY_COLOR, width: 2.5)),
-          errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide(color: Colors.redAccent[700]!, width: 1.5)),
-          focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide(color: Colors.redAccent[700]!, width: 2.5)),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: maxLines > 1 ? 16 : 12),
-          errorStyle: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.red[600], fontWeight: FontWeight.w600),
+      child: SizedBox(
+        height: maxLines > 1 ? null : 60.0,
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              maxLines: maxLines,
+              minLines: maxLines > 1 ? 3 : 1,
+              style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR),
+              decoration: InputDecoration(
+                labelText: labelText,
+                labelStyle: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Colors.black54),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: Color(0xff707070)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: Color(0xff707070), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                  borderSide: const BorderSide(color: APP_PRIMARY_COLOR, width: 2.0),
+                ),
+                contentPadding: const EdgeInsets.only(left: 55.0, top: 20, bottom: 20, right: 16.0),
+              ),
+              validator: validator,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Tooltip(
+                message: tooltipMessage,
+                child: Image.asset(
+                  iconPath,
+                  width: 40.0,
+                  height: 40.0,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ],
         ),
-        validator: validator ?? (value) {
-          if (value == null || value.trim().isEmpty) {
-            return '$label no puede estar vacío.';
-          }
-          if (label.toLowerCase().contains("precio") && (double.tryParse(value) == null || double.parse(value) <= 0)) {
-            return 'Ingresa un precio válido mayor a cero.';
-          }
-          if (label.toLowerCase().contains("stock") && (int.tryParse(value) == null || int.parse(value) < 0)) {
-            return 'Ingresa un stock válido (0 o más).';
-          }
-          return null;
-        },
-        autovalidateMode: AutovalidateMode.onUserInteraction,
       ),
     );
   }
 
-  /// Construye la interfaz de usuario del modal de edición de producto.
-  /// Contiene un formulario para editar los detalles del producto y la gestión de imágenes.
   @override
   Widget build(BuildContext modalEditContext) {
     return FractionallySizedBox(
@@ -1452,7 +1394,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.of(modalEditContext).pop(),
-                tooltip: 'Cerrar', // Tooltip para el botón de cerrar modal
+                tooltip: 'Cerrar',
               )
             ],
           ),
@@ -1475,16 +1417,63 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        _buildTextField(controller: _nameController, label: "Nombre del Producto"),
-                        _buildTextField(controller: _descriptionController, label: "Descripción", maxLines: 4),
+                        // ===== APLICACIÓN DE LOS NUEVOS TEXTFIELDS CON ICONOS =====
+                        _buildTextFieldWithIcon(
+                          controller: _nameController,
+                          labelText: "Nombre del Producto",
+                          iconPath: 'assets/images/nombreproducto.png',
+                          tooltipMessage: 'Edita el nombre de tu producto',
+                          validator: (value) => value == null || value.trim().isEmpty ? 'El nombre no puede estar vacío.' : null,
+                        ),
+                        _buildTextFieldWithIcon(
+                          controller: _descriptionController,
+                          labelText: "Descripción",
+                          iconPath: 'assets/images/infoproducto.png',
+                          tooltipMessage: 'Edita la descripción del producto',
+                          maxLines: 4,
+                          validator: (value) => value == null || value.trim().isEmpty ? 'La descripción no puede estar vacía.' : null,
+                        ),
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _buildTextField(controller: _priceController, label: "Precio", keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                            Expanded(
+                              child: _buildTextFieldWithIcon(
+                                controller: _priceController,
+                                labelText: "Precio",
+                                iconPath: 'assets/images/price.png',
+                                tooltipMessage: 'Edita el precio del producto',
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) return 'Ingresa un precio.';
+                                  if (double.tryParse(value) == null || double.parse(value) <= 0) return 'Precio inválido.';
+                                  return null;
+                                },
+                              ),
+                            ),
                             const SizedBox(width: 10),
-                            Expanded(child: _buildTextField(controller: _stockController, label: "Stock", keyboardType: TextInputType.number)),
+                            Expanded(
+                              child: _buildTextFieldWithIcon(
+                                controller: _stockController,
+                                labelText: "Stock",
+                                iconPath: 'assets/images/stock.png',
+                                tooltipMessage: 'Edita el stock disponible',
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) return 'Ingresa el stock.';
+                                  if (int.tryParse(value) == null || int.parse(value) < 0) return 'Stock inválido.';
+                                  return null;
+                                },
+                              ),
+                            ),
                           ],
                         ),
-                        _buildTextField(controller: _categoryController, label: "Categoría"),
+                        _buildTextFieldWithIcon(
+                          controller: _categoryController,
+                          labelText: "Categoría",
+                          iconPath: 'assets/images/category.png',
+                          tooltipMessage: 'Edita la categoría del producto',
+                          validator: (value) => value == null || value.trim().isEmpty ? 'La categoría no puede estar vacía.' : null,
+                        ),
 
                         const SizedBox(height: 15),
                         Text("Imágenes:", style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.white.withOpacity(0.9), fontSize: 17, fontWeight: FontWeight.w600)),
@@ -1498,7 +1487,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                             spacing: 10.0,
                             runSpacing: 10.0,
                             children: [
-                              // Muestra las imágenes existentes (ya subidas)
                               ...List.generate(_currentImagesInfo.length, (index) {
                                 final imageInfo = _currentImagesInfo[index];
                                 return Stack(
@@ -1517,7 +1505,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                                       top: -10, right: -10,
                                       child: InkWell(
                                         onTap: () => _removeExistingImage(index),
-                                        child: Tooltip( // Tooltip para eliminar imagen
+                                        child: Tooltip(
                                           message: 'Eliminar imagen',
                                           child: Container(
                                             padding: const EdgeInsets.all(2),
@@ -1530,7 +1518,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                                   ],
                                 );
                               }),
-                              // Muestra las nuevas imágenes seleccionadas (aún no subidas)
                               ...List.generate(_newImageFiles.length, (index) {
                                 return Stack(
                                   clipBehavior: Clip.none,
@@ -1553,7 +1540,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                                       top: -10, right: -10,
                                       child: InkWell(
                                         onTap: () => _removeNewImage(index),
-                                        child: Tooltip( // Tooltip para eliminar nueva imagen
+                                        child: Tooltip(
                                           message: 'Eliminar nueva imagen',
                                           child: Container(
                                             padding: const EdgeInsets.all(2),
