@@ -830,7 +830,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                                         : null,
                                   ),
                                   const SizedBox(width: 10),
-                                  Expanded( // Para que el nombre no se desborde y el PopupMenuButton se alinee a la derecha
+                                  Expanded( // Para que el nombre no se desborde y los iconos se alineen a la derecha
                                     child: Text(
                                       widget.ownerUserName ?? 'Usuario',
                                       style: const TextStyle(
@@ -841,37 +841,55 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                                       ),
                                     ),
                                   ),
-                                  // --- NUEVO: PopupMenuButton para editar/eliminar Publicación ---
+                                  // ==================== INICIO DEL CAMBIO ====================
+                                  // NUEVO: Iconos para editar/eliminar Publicación
                                   if (isOwnPost)
-                                    PopupMenuButton<String>(
-                                      icon: const Icon(Icons.more_vert, color: Colors.black),
-                                      onSelected: (value) async { // Marcar como async
-                                        if (value == 'eliminar') {
-                                          _eliminarPublicacion(widget.publicationId);
-                                        } else if (value == 'editar') {
-                                          // Necesitamos el DocumentSnapshot de la publicación para pasarlo
-                                          // al diálogo de edición. Lo obtenemos aquí.
-                                          DocumentSnapshot publicacionDoc = await _firestore
-                                              .collection('publicaciones')
-                                              .doc(widget.publicationId)
-                                              .get();
-                                          if (publicacionDoc.exists) {
-                                            _mostrarDialogoEditarPublicacion(publicacionDoc);
-                                          } else {
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Error: No se encontró la publicación para editar.')),
-                                              );
-                                            }
-                                          }
-                                        }
-                                      },
-                                      itemBuilder: (BuildContext context) => [
-                                        const PopupMenuItem<String>(value: 'editar', child: Text('Editar publicación')),
-                                        const PopupMenuItem<String>(value: 'eliminar', child: Text('Eliminar publicación')),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Tooltip(
+                                          message: 'Editar publicación',
+                                          child: GestureDetector(
+                                            onTap: () async {
+                                              // Necesitamos el DocumentSnapshot de la publicación.
+                                              DocumentSnapshot publicacionDoc = await _firestore
+                                                  .collection('publicaciones')
+                                                  .doc(widget.publicationId)
+                                                  .get();
+                                              if (publicacionDoc.exists && mounted) {
+                                                _mostrarDialogoEditarPublicacion(publicacionDoc);
+                                              } else {
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text('Error: No se encontró la publicación para editar.')),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                            child: Image.asset(
+                                              'assets/images/editar.png',
+                                              height: 40.0,
+                                              width: 40.0,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8), // Espacio entre iconos
+                                        Tooltip(
+                                          message: 'Eliminar publicación',
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              _eliminarPublicacion(widget.publicationId);
+                                            },
+                                            child: Image.asset(
+                                              'assets/images/eliminar.png',
+                                              height: 40.0,
+                                              width: 40.0,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  // --- FIN PopupMenuButton Publicación ---
+                                  // ==================== FIN DEL CAMBIO ====================
                                 ],
                               ),
                               const SizedBox(height: 10),
@@ -963,24 +981,16 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
   }
 
   Widget _buildActionButtons(DocumentSnapshot publicacion, String? currentUserId) {
-    // === INICIO DE LA CORRECCIÓN PRINCIPAL ===
-    // Obtener el mapa de datos de la publicación de forma segura.
     final pubDataMap = publicacion.data() as Map<String, dynamic>?;
 
-    // Si el mapa de datos es nulo (por alguna razón inesperada, aunque publicacion.exists ya lo maneja),
-    // podemos retornar un widget vacío para evitar errores posteriores.
     if (pubDataMap == null) {
       developer.log('Error: pubDataMap es nulo para publicación: ${publicacion.id}', name: 'Detalles.buildActionButtons');
       return const SizedBox.shrink();
     }
 
-    // Ahora, usa pubDataMap para acceder a los campos. Esto es mucho más seguro.
     final likes = pubDataMap['likes'] as int? ?? 0;
     final likedBy = List<String>.from(pubDataMap['likedBy'] as List<dynamic>? ?? []);
-
-    // La lógica de comentariosCount ya estaba correcta, pero ahora se aplica sobre pubDataMap.
     final comentariosCount = (pubDataMap['comentariosCount'] as int?) ?? (pubDataMap['comentarios'] as int?) ?? 0;
-    // === FIN DE LA CORRECCIÓN PRINCIPAL ===
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 8.0),
@@ -1055,7 +1065,7 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
       stream: _firestore
           .collection('publicaciones')
           .doc(widget.publicationId)
-          .collection('comentarios') // Esta es la subcolección de comentarios, no el campo de conteo.
+          .collection('comentarios')
           .orderBy('timestamp', descending: false)
           .snapshots(),
       builder: (context, snapshot) {
@@ -1071,24 +1081,24 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
         }
 
         final comments = snapshot.data!.docs;
-        final currentUserId = _auth.currentUser?.uid; // Obtener el ID del usuario actual
-        final bool isPostOwner = widget.ownerUserId == currentUserId; // Verificar si el usuario actual es el dueño de la publicación
+        final currentUserId = _auth.currentUser?.uid;
+        final bool isPostOwner = widget.ownerUserId == currentUserId;
 
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: comments.length,
           itemBuilder: (context, index) {
-            final commentDoc = comments[index]; // DocumentSnapshot del comentario
-            final String commentId = commentDoc.id; // ID del documento del comentario
-            final Map<String, dynamic> commentData = commentDoc.data() as Map<String, dynamic>; // Datos del comentario
+            final commentDoc = comments[index];
+            final String commentId = commentDoc.id;
+            final Map<String, dynamic> commentData = commentDoc.data() as Map<String, dynamic>;
 
             final String commenterId = commentData['usuarioId'] as String? ?? '';
             final String commenterName = commentData['usuarioNombre'] ?? 'Usuario Anónimo';
             final String commenterText = commentData['texto'] ?? '';
             final String? commenterPhotoUrl = commentData['usuarioFotoUrl'] as String?;
 
-            final bool isCommentOwner = commenterId == currentUserId; // Es el dueño del comentario
+            final bool isCommentOwner = commenterId == currentUserId;
 
             return Container(
               margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -1137,53 +1147,44 @@ class _DetallesdeFotooVideoState extends State<DetallesdeFotooVideo> {
                       ],
                     ),
                   ),
-                  // Menú de opciones para editar/eliminar comentario
-                  if (isCommentOwner || isPostOwner) // Si es dueño del comentario o de la publicación
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, color: Colors.black),
-                      onSelected: (value) {
-                        if (value == 'edit' && isCommentOwner) {
-                          _showEditCommentDialog(widget.publicationId, commentId, commenterText);
-                        } else if (value == 'delete') {
-                          _deleteComment(widget.publicationId, commentId);
-                        }
-                      },
-                      itemBuilder: (BuildContext context) {
-                        List<PopupMenuEntry<String>> items = [];
-                        if (isCommentOwner) {
-                          items.add(
-                            PopupMenuItem<String>(
-                              value: 'edit',
-                              child: Row(
-                                children: [
-                                  Image.asset('assets/images/editar.png', width: 20, height: 20),
-                                  const SizedBox(width: 8),
-                                  const Text('Editar comentario', style: TextStyle(fontFamily: 'Comic Sans MS')),
-                                ],
+                  // ==================== INICIO DEL CAMBIO ====================
+                  // NUEVO: Iconos para editar/eliminar Comentario
+                  if (isCommentOwner || isPostOwner) // Visible para dueño de comentario o de publicación
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // El icono de editar solo es visible para el dueño del comentario
+                        if (isCommentOwner)
+                          Tooltip(
+                            message: 'Editar comentario',
+                            child: GestureDetector(
+                              onTap: () {
+                                _showEditCommentDialog(widget.publicationId, commentId, commenterText);
+                              },
+                              child: Image.asset(
+                                'assets/images/editar.png',
+                                height: 40.0,
+                                width: 40.0,
                               ),
                             ),
-                          );
-                        }
-                        // El dueño del comentario SIEMPRE puede eliminarlo.
-                        // El dueño de la publicación puede eliminar CUALQUIER comentario.
-                        // Por eso, la condición es (isCommentOwner || isPostOwner).
-                        if (isCommentOwner || isPostOwner) {
-                          items.add(
-                            PopupMenuItem<String>(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Image.asset('assets/images/eliminar.png', width: 20, height: 20),
-                                  const SizedBox(width: 8),
-                                  const Text('Eliminar comentario', style: TextStyle(fontFamily: 'Comic Sans MS')),
-                                ],
-                              ),
+                          ),
+                        // El icono de eliminar es visible para el dueño del comentario O el dueño de la publicación
+                        Tooltip(
+                          message: 'Eliminar comentario',
+                          child: GestureDetector(
+                            onTap: () {
+                              _deleteComment(widget.publicationId, commentId);
+                            },
+                            child: Image.asset(
+                              'assets/images/eliminar.png',
+                              height: 40.0,
+                              width: 40.0,
                             ),
-                          );
-                        }
-                        return items;
-                      },
+                          ),
+                        ),
+                      ],
                     ),
+                  // ==================== FIN DEL CAMBIO ====================
                 ],
               ),
             );
