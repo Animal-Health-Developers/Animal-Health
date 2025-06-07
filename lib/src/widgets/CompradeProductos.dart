@@ -48,55 +48,52 @@ class _CompradeProductosState extends State<CompradeProductos> {
     super.initState();
     developer.log('CompradeProductos initState: Initializing search controller and updating product stream.');
     // La búsqueda se inicia vacía para mostrar todos los productos.
-    _updateProductStream();
+    _updateProductStream('');
     _searchController.addListener(() {
-      setState(() {
-        // Esto es para que el botón de limpiar (X) aparezca/desaparezca instantáneamente
-      });
+      if (mounted) {
+        setState(() {});
+      }
     });
   }
 
-  // ===== CAMBIO #1: LÓGICA DE BÚSQUEDA AVANZADA =====
-  /// Actualiza el stream para buscar por palabras clave individuales.
-  void _updateProductStream() {
-    // Obtenemos el término de búsqueda y lo preparamos
-    String searchTerm = _searchController.text.trim().toLowerCase();
-
-    // La consulta base apunta a la colección de productos.
+  /// Actualiza el stream de productos basado en un término de búsqueda.
+  /// Busca por palabras clave individuales en el campo 'searchKeywords'.
+  void _updateProductStream(String searchTerm) {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection('products');
 
     if (searchTerm.isNotEmpty) {
-      // Si hay un término de búsqueda, usamos 'array-contains'.
-      // Esto busca si el término exacto (en minúsculas) existe en el array 'searchKeywords'.
-      // Ejemplo: Si el usuario busca "gatos", encontrará productos con ["comida", "para", "gatos"] en sus keywords.
-      query = query.where('searchKeywords', arrayContains: searchTerm);
-
+      // Búsqueda por palabra clave. Encuentra documentos donde el array 'searchKeywords' contiene el término de búsqueda.
+      query = query.where('searchKeywords', arrayContains: searchTerm.toLowerCase());
       developer.log('CompradeProductos _updateProductStream: Searching for keyword: "$searchTerm"');
     } else {
-      // Si la barra de búsqueda está vacía, muestra todos los productos, ordenados por fecha de creación.
+      // Si no hay búsqueda, muestra todos los productos.
       query = query.orderBy('creationDate', descending: true);
       developer.log('CompradeProductos _updateProductStream: Search term is empty, showing all products.');
     }
 
-    setState(() {
-      _productsStream = query.snapshots();
-    });
+    if (mounted) {
+      setState(() {
+        _productsStream = query.snapshots();
+      });
+    }
   }
 
   void _performSearch() {
-    developer.log('CompradeProductos _performSearch: Starting search for: "${_searchController.text.trim()}"');
-    FocusScope.of(context).unfocus(); // Oculta el teclado
-    _updateProductStream();
-    _searchTermNotifier.value = _searchController.text.trim(); // Notifica al ValueListenableBuilder para la animación
+    final searchTerm = _searchController.text.trim();
+    developer.log('CompradeProductos _performSearch: Starting search for: "$searchTerm"');
+    FocusScope.of(context).unfocus();
+    _updateProductStream(searchTerm);
+    _searchTermNotifier.value = searchTerm;
   }
 
   void _clearSearch() {
     developer.log('CompradeProductos _clearSearch: Clearing search bar');
     _searchController.clear();
-    _updateProductStream(); // Actualiza el stream para mostrar todos los productos de nuevo
+    _updateProductStream('');
     _searchTermNotifier.value = '';
     FocusScope.of(context).unfocus();
   }
+
 
   @override
   void dispose() {
@@ -107,10 +104,10 @@ class _CompradeProductosState extends State<CompradeProductos> {
     super.dispose();
   }
 
-  // El resto de tus métodos (como _mostrarModalMisProductos, _buildProductCard, etc.) permanecen mayormente iguales,
-  // ya que la lógica principal de la búsqueda se ha centralizado en _updateProductStream.
-  // ... (El resto de tu código de la clase `_CompradeProductosState` sigue aquí)
-  // [COPIA Y PEGA EL RESTO DE TU CÓDIGO DE `_CompradeProductosState` DESDE AQUÍ]
+  // --- El resto de tu código de la clase _CompradeProductosState permanece sin cambios ---
+  // --- (build, _buildProductCard, _mostrarModalMisProductos, etc.) ---
+  // --- A continuación, se pega todo el código restante sin modificar su funcionalidad, ---
+  // --- ya que la lógica central de la búsqueda ya es correcta. ---
 
   Future<void> _mostrarModalMisProductos() async {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -801,9 +798,8 @@ class _CompradeProductosState extends State<CompradeProductos> {
                       }
                       if (snapshot.hasError) {
                         String errorMessage = 'Error al cargar productos.';
-                        // Detección específica del error de índice faltante
                         if (snapshot.error.toString().contains('composite index') || snapshot.error.toString().contains('requires an index')) {
-                          errorMessage += '\n\nACCIÓN REQUERIDA:\nLa nueva búsqueda necesita un índice en Firebase. Revisa la consola de depuración (Run/Debug) de tu editor, allí encontrarás un enlace para crear el índice. Haz clic en él y créalo.';
+                          errorMessage += '\n\nACCIÓN REQUERIDA:\nLa búsqueda necesita un índice en Firebase. Revisa la consola de depuración (Run/Debug) de tu editor, allí encontrarás un enlace para crear el índice. Haz clic en él y créalo.';
                           developer.log("ERROR DE ÍNDICE DE FIRESTORE: ${snapshot.error}");
                         } else {
                           errorMessage += ' Por favor, revisa tu conexión a internet.';
@@ -819,7 +815,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                       }
                       if (!snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
                         String message = _searchController.text.isNotEmpty
-                            ? 'No se encontraron productos para "${_searchController.text}".\n\n(Asegúrate de que los productos existentes han sido actualizados con las nuevas palabras clave editándolos y guardándolos de nuevo).'
+                            ? 'No se encontraron productos para "${_searchController.text}".\n\n(Si tienes productos antiguos, edítalos y guárdalos una vez para que aparezcan en futuras búsquedas).'
                             : 'No hay productos disponibles.';
                         return Center(
                             child: Padding(
@@ -1137,6 +1133,9 @@ class _MisProductosModalWidget extends StatelessWidget {
   }
 }
 
+// ==============================================================================
+// ===== CLASE _EditarProductoModalWidget CON LA LÓGICA DE KEYWORDS CORRECTA ====
+// ==============================================================================
 class _EditarProductoModalWidget extends StatefulWidget {
   final Product productToEdit;
   final BuildContext parentContextForSnackbars;
@@ -1227,14 +1226,15 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     return ProductImage(publicId: fileName, url: downloadUrl);
   }
 
-  // ===== CAMBIO #2: GUARDADO DE PRODUCTO CON KEYWORDS =====
+  /// ESTA ES LA FUNCIÓN CLAVE. ASEGURA QUE CADA VEZ QUE SE GUARDA
+  /// UN PRODUCTO, SE GENERAN LAS PALABRAS CLAVE PARA LA BÚSQUEDA.
   Future<void> _saveProductChanges() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
     if (_isUploading) return;
 
-    setState(() => _isUploading = true);
+    if (mounted) setState(() => _isUploading = true);
 
     try {
       List<ProductImage> finalImageInfos = List.from(_currentImagesInfo);
@@ -1258,24 +1258,22 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
         }
       }
 
-      // ---- INICIO DE LA LÓGICA DE KEYWORDS ----
-      // Se toma el nombre del producto.
+      // ---- INICIO DE LA LÓGICA DE KEYWORDS (LA PARTE MÁS IMPORTANTE) ----
       final String productName = _nameController.text.trim();
 
-      // Se procesa para crear la lista de palabras clave (keywords).
+      // Procesa el nombre para crear la lista de palabras clave (keywords).
       final List<String> searchKeywords = productName
           .toLowerCase() // 1. Convertir a minúsculas: "comida para gatos"
-          .replaceAll(RegExp(r'[^\w\s]+'), '') // 2. Opcional: quitar puntuación
+          .replaceAll(RegExp(r'[^\w\s]'), '') // 2. Opcional: quitar puntuación
           .split(' ') // 3. Dividir por espacios: ["comida", "para", "gatos"]
-          .where((s) => s.isNotEmpty) // 4. Quitar posibles espacios vacíos
-          .toSet() // 5. Opcional: eliminar duplicados
+          .where((s) => s.isNotEmpty) // 4. Quitar posibles strings vacíos
+          .toSet() // 5. Opcional pero recomendado: eliminar duplicados
           .toList(); // 6. Convertir de nuevo a una lista
       // ---- FIN DE LA LÓGICA DE KEYWORDS ----
 
       Map<String, dynamic> updatedData = {
         'name': productName,
-        'nameLower': productName.toLowerCase(), // Es bueno conservarlo por si se usa en otro lado
-        'searchKeywords': searchKeywords, // <-- ¡NUEVO CAMPO PARA LA BÚSQUEDA!
+        'searchKeywords': searchKeywords, // <-- ¡EL CAMPO MÁGICO PARA LA BÚSQUEDA!
         'description': _descriptionController.text.trim(),
         'price': double.tryParse(_priceController.text) ?? widget.productToEdit.price,
         'stock': int.tryParse(_stockController.text) ?? widget.productToEdit.stock,
@@ -1306,7 +1304,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     }
   }
 
-  // ===== CAMBIO #3: NUEVO MÉTODO PARA CREAR TEXTFIELD CON ICONO (MEJORA VISUAL) =====
   Widget _buildTextFieldWithIcon({
     required TextEditingController controller,
     required String labelText,
@@ -1417,7 +1414,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        // ===== APLICACIÓN DE LOS NUEVOS TEXTFIELDS CON ICONOS =====
                         _buildTextFieldWithIcon(
                           controller: _nameController,
                           labelText: "Nombre del Producto",
@@ -1474,7 +1470,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                           tooltipMessage: 'Edita la categoría del producto',
                           validator: (value) => value == null || value.trim().isEmpty ? 'La categoría no puede estar vacía.' : null,
                         ),
-
                         const SizedBox(height: 15),
                         Text("Imágenes:", style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.white.withOpacity(0.9), fontSize: 17, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
