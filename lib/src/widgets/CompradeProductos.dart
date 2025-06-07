@@ -815,7 +815,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                       }
                       if (!snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
                         String message = _searchController.text.isNotEmpty
-                            ? 'No se encontraron productos para "${_searchController.text}".\n\n(Si tienes productos antiguos, edítalos y guárdalos una vez para que aparezcan en futuras búsquedas).'
+                            ? 'No se encontraron productos para "${_searchController.text}"'
                             : 'No hay productos disponibles.';
                         return Center(
                             child: Padding(
