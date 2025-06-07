@@ -65,16 +65,15 @@ class _VenderProductosState extends State<VenderProductos> {
 
   final ImagePicker _picker = ImagePicker();
 
-  // Helper para generar keywords (palabras clave para la búsqueda)
+  /// Genera una lista de palabras clave (keywords) a partir de una cadena de texto (nombre del producto).
+  /// Estas keywords se usarán para la búsqueda en Firestore.
   List<String> _generateSearchKeywords(String name) {
-    // Convierte el nombre a minúsculas, elimina caracteres no alfanuméricos
-    // y lo divide en palabras. Filtra palabras vacías.
     return name
         .toLowerCase()
         .replaceAll(RegExp(r'[^\w\s]'), '') // Elimina puntuación y símbolos
         .split(' ')
         .where((word) => word.isNotEmpty)
-        .toSet() // Usa Set para asegurar unicidad y luego convierte a List
+        .toSet() // Usa Set para asegurar que las palabras clave sean únicas
         .toList();
   }
 
@@ -107,18 +106,16 @@ class _VenderProductosState extends State<VenderProductos> {
     }
   }
 
-  Future<List<ProductImage>> _subirImagenes() async {
+  Future<List<Map<String, String>>> _subirImagenes() async {
     if (FirebaseAuth.instance.currentUser == null || _selectedImageWrappers.isEmpty) {
       return [];
     }
 
-    List<ProductImage> productImages = [];
+    List<Map<String, String>> productImagesData = [];
     String userId = FirebaseAuth.instance.currentUser!.uid;
 
     for (int i = 0; i < _selectedImageWrappers.length; i++) {
       final wrapper = _selectedImageWrappers[i];
-      // Para un nombre de archivo más limpio y amigable para URL/rutas:
-      // Reemplaza espacios con guiones bajos y elimina caracteres especiales del nombre original
       String cleanedOriginalName = wrapper.name.replaceAll(RegExp(r'[^\w\s.-]'), '').replaceAll(' ', '_');
       String imageName = '${DateTime.now().millisecondsSinceEpoch}_${i}_$cleanedOriginalName';
       String fileName = 'product_images/$userId/$imageName';
@@ -127,7 +124,7 @@ class _VenderProductosState extends State<VenderProductos> {
         UploadTask uploadTask;
         if (kIsWeb) {
           if (wrapper.bytes == null) continue;
-          final metadata = SettableMetadata(contentType: 'image/jpeg'); // Asume jpeg, ajusta según el tipo de imagen real
+          final metadata = SettableMetadata(contentType: 'image/jpeg');
           uploadTask = FirebaseStorage.instance.ref(fileName).putData(wrapper.bytes!, metadata);
         } else {
           if (wrapper.file == null) continue;
@@ -137,7 +134,8 @@ class _VenderProductosState extends State<VenderProductos> {
         TaskSnapshot snapshot = await uploadTask;
         String downloadUrl = await snapshot.ref.getDownloadURL();
         String publicId = snapshot.ref.fullPath;
-        productImages.add(ProductImage(publicId: publicId, url: downloadUrl));
+        // Creamos un mapa simple para la imagen, que es como Firestore lo espera
+        productImagesData.add({'publicId': publicId, 'url': downloadUrl});
       } catch (e) {
         developer.log("Error al subir imagen ${wrapper.name}: $e");
         if (mounted) {
@@ -147,9 +145,13 @@ class _VenderProductosState extends State<VenderProductos> {
         }
       }
     }
-    return productImages;
+    return productImagesData;
   }
 
+
+  // ==============================================================================
+  // ===== INICIO: FUNCIÓN _publicarProducto CORREGIDA PARA INCLUIR KEYWORDS =====
+  // ==============================================================================
   Future<void> _publicarProducto() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -177,9 +179,10 @@ class _VenderProductosState extends State<VenderProductos> {
       _isUploading = true;
     });
 
-    List<ProductImage> uploadedProductImages = await _subirImagenes();
+    // Subimos las imágenes y obtenemos una lista de mapas con sus datos
+    List<Map<String, String>> uploadedImagesData = await _subirImagenes();
 
-    if (uploadedProductImages.isEmpty && _selectedImageWrappers.isNotEmpty) {
+    if (uploadedImagesData.isEmpty && _selectedImageWrappers.isNotEmpty) {
       developer.log("Error: Se intentaron subir imágenes pero ninguna tuvo éxito.");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -193,32 +196,31 @@ class _VenderProductosState extends State<VenderProductos> {
     }
 
     try {
-      // Calculamos nameLower y keywords antes de crear el objeto Product
+      // 1. Obtener el nombre del producto
       final String productName = _nombreController.text.trim();
-      final String productNameLower = productName.toLowerCase();
-      final List<String> productKeywords = _generateSearchKeywords(productName);
 
-      String tempIdForModel = FirebaseFirestore.instance.collection('temp').doc().id; // Placeholder ID
+      // 2. ¡LA PARTE MÁS IMPORTANTE! Generar las palabras clave para la búsqueda.
+      final List<String> searchKeywords = _generateSearchKeywords(productName);
 
-      final product = Product(
-        id: tempIdForModel, // Este ID será sobrescrito por Firestore al añadirlo.
-        name: productName,
-        nameLower: productNameLower, // <-- ¡Asignado aquí!
-        keywords: productKeywords, // <-- ¡Asignado aquí!
-        price: double.tryParse(_precioController.text.trim()) ?? 0.0,
-        description: _descripcionController.text.trim(),
-        category: _categoriaSeleccionada!,
-        seller: _empresaController.text.trim(),
-        stock: int.tryParse(_cantidadController.text.trim()) ?? 0,
-        images: uploadedProductImages,
-        userId: FirebaseAuth.instance.currentUser!.uid,
-        creationDate: DateTime.now(),
-        // qualification y qualificationsNumber se inicializan con valor por defecto en el modelo Product
-      );
+      // 3. Crear el mapa de datos que se guardará en Firestore
+      final Map<String, dynamic> productData = {
+        'name': productName,
+        'searchKeywords': searchKeywords, // <-- ¡CAMPO AÑADIDO! Esto hace que el producto sea buscable.
+        'price': double.tryParse(_precioController.text.trim()) ?? 0.0,
+        'description': _descripcionController.text.trim(),
+        'category': _categoriaSeleccionada!,
+        'seller': _empresaController.text.trim(),
+        'stock': int.tryParse(_cantidadController.text.trim()) ?? 0,
+        'images': uploadedImagesData, // La lista de mapas de imágenes
+        'userId': FirebaseAuth.instance.currentUser!.uid,
+        'creationDate': FieldValue.serverTimestamp(),
+        // Añadimos valores por defecto para los campos de calificación
+        'qualification': 0.0,
+        'qualificationsNumber': 0,
+      };
 
-      // Ahora enviamos el objeto Product completo a Firestore.
-      // Su método toJson() ya incluye nameLower y keywords.
-      await product.crearProductoEnFirestore();
+      // 4. Guardar el mapa de datos directamente en Firestore
+      await FirebaseFirestore.instance.collection('products').add(productData);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -255,8 +257,13 @@ class _VenderProductosState extends State<VenderProductos> {
       }
     }
   }
+  // ============================================================================
+  // ===== FIN: FUNCIÓN _publicarProducto CORREGIDA =============================
+  // ============================================================================
 
-  // --- MÉTODO _buildTextField con icono y Tooltip ---
+
+  // --- El resto del código no necesita cambios, ya que la UI y la lógica de los widgets son correctas ---
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
@@ -264,20 +271,20 @@ class _VenderProductosState extends State<VenderProductos> {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
     int maxLines = 1,
-    required String iconPath, // Nuevo parámetro para la ruta del icono
-    required String tooltipMessage, // <--- Nuevo parámetro para el tooltip
+    required String iconPath,
+    required String tooltipMessage,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: SizedBox(
-        height: maxLines > 1 ? null : 60.0, // Altura ajustada para campos de una línea
+        height: maxLines > 1 ? null : 60.0,
         child: Stack(
           children: [
             TextFormField(
               controller: controller,
               keyboardType: keyboardType,
               maxLines: maxLines,
-              minLines: maxLines > 1 ? 3 : 1, // Asegura altura mínima para multilinea
+              minLines: maxLines > 1 ? 3 : 1,
               style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR),
               decoration: InputDecoration(
                 labelText: labelText,
@@ -298,7 +305,7 @@ class _VenderProductosState extends State<VenderProductos> {
                   borderRadius: BorderRadius.circular(10.0),
                   borderSide: const BorderSide(color: APP_PRIMARY_COLOR, width: 2.0),
                 ),
-                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 16.0), // Espacio para el icono
+                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 16.0),
               ),
               validator: validator ??
                       (value) {
@@ -318,15 +325,15 @@ class _VenderProductosState extends State<VenderProductos> {
             ),
             Positioned(
               left: 5,
-              top: maxLines > 1 ? 10 : 0, // Ajusta la posición superior para multilinea
-              bottom: maxLines > 1 ? null : 10, // Ajusta la posición inferior para una línea
-              child: Tooltip( // <--- Tooltip agregado
+              top: maxLines > 1 ? 10 : 0,
+              bottom: maxLines > 1 ? null : 10,
+              child: Tooltip(
                 message: tooltipMessage,
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    width: 37.0, // Ancho del icono
-                    height: 40.0, // Alto del icono
+                    width: 37.0,
+                    height: 40.0,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: AssetImage(iconPath),
@@ -342,14 +349,12 @@ class _VenderProductosState extends State<VenderProductos> {
       ),
     );
   }
-  // --- FIN MÉTODO _buildTextField ---
 
-  // --- MÉTODO _buildCategoryDropdown con icono y Tooltip ---
-  Widget _buildCategoryDropdown({required String iconPath, required String tooltipMessage}) { // <--- Nuevo parámetro
+  Widget _buildCategoryDropdown({required String iconPath, required String tooltipMessage}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: SizedBox(
-        height: 60.0, // Altura fija para el dropdown
+        height: 60.0,
         child: Stack(
           children: [
             DropdownButtonFormField<String>(
@@ -374,7 +379,7 @@ class _VenderProductosState extends State<VenderProductos> {
                   borderRadius: BorderRadius.circular(10.0),
                   borderSide: const BorderSide(color: APP_PRIMARY_COLOR, width: 2.0),
                 ),
-                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 16.0), // Espacio para el icono
+                contentPadding: const EdgeInsets.only(left: 50.0, top: 15, bottom: 15, right: 16.0),
               ),
               icon: const Icon(Icons.arrow_drop_down_circle, color: APP_PRIMARY_COLOR),
               style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR),
@@ -401,13 +406,13 @@ class _VenderProductosState extends State<VenderProductos> {
               left: 5,
               top: 0,
               bottom: 10,
-              child: Tooltip( // <--- Tooltip agregado
+              child: Tooltip(
                 message: tooltipMessage,
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    width: 40.0, // Ancho del icono
-                    height: 40.0, // Alto del icono
+                    width: 40.0,
+                    height: 40.0,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: AssetImage(iconPath),
@@ -423,7 +428,6 @@ class _VenderProductosState extends State<VenderProductos> {
       ),
     );
   }
-  // --- FIN MÉTODO _buildCategoryDropdown ---
 
   Widget _buildSelectedImagesPreview() {
     if (_selectedImageWrappers.isEmpty) {
@@ -462,7 +466,7 @@ class _VenderProductosState extends State<VenderProductos> {
                 ),
                 Material(
                   color: Colors.transparent,
-                  child: Tooltip( // <--- Tooltip para el botón de remover imagen
+                  child: Tooltip(
                     message: 'Remover imagen',
                     child: InkWell(
                       onTap: () => _removerImagenSeleccionada(index),
@@ -511,11 +515,10 @@ class _VenderProductosState extends State<VenderProductos> {
               ),
             ),
           ),
-          // Botón de Volver
           Pinned.fromPins(
             Pin(size: 52.9, start: 9.1),
             Pin(size: 50.0, start: 49.0),
-            child: Tooltip( // <--- Tooltip agregado
+            child: Tooltip(
               message: 'Volver a Comprar Productos',
               child: PageLink(
                 links: [
@@ -534,11 +537,10 @@ class _VenderProductosState extends State<VenderProductos> {
               ),
             ),
           ),
-          // Logo (Ir a Inicio)
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
-            child: Tooltip( // <--- Tooltip agregado
+            child: Tooltip(
               message: 'Ir a Inicio',
               child: PageLink(
                 links: [
@@ -562,11 +564,10 @@ class _VenderProductosState extends State<VenderProductos> {
               ),
             ),
           ),
-          // Botón Carrito de compras
           Pinned.fromPins(
             Pin(size: 47.2, middle: 0.6987),
             Pin(size: 50.0, start: 49.0),
-            child: Tooltip( // <--- Tooltip agregado
+            child: Tooltip(
               message: 'Carrito de compras',
               child: PageLink(
                 links: [
@@ -588,11 +589,10 @@ class _VenderProductosState extends State<VenderProductos> {
               ),
             ),
           ),
-          // Botón Ayuda
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
-            child: Tooltip( // <--- Tooltip agregado
+            child: Tooltip(
               message: 'Ayuda',
               child: PageLink(
                 links: [
@@ -614,11 +614,10 @@ class _VenderProductosState extends State<VenderProductos> {
               ),
             ),
           ),
-          // Botón Configuración
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
-            child: Tooltip( // <--- Tooltip agregado
+            child: Tooltip(
               message: 'Configuración',
               child: PageLink(
                 links: [
@@ -640,7 +639,6 @@ class _VenderProductosState extends State<VenderProductos> {
               ),
             ),
           ),
-          // Mini foto de perfil (Ver mi perfil)
           Pinned.fromPins(
             Pin(size: 60.0, start: 13.0),
             Pin(size: 60.0, start: 115.0),
@@ -663,7 +661,7 @@ class _VenderProductosState extends State<VenderProductos> {
                     profilePhotoUrl = null;
                   }
                 }
-                return Tooltip( // <--- Tooltip agregado
+                return Tooltip(
                   message: 'Ver mi perfil',
                   child: PageLink(
                     links: [
@@ -703,11 +701,10 @@ class _VenderProductosState extends State<VenderProductos> {
               },
             ),
           ),
-          // Botón Lista de animales
           Pinned.fromPins(
             Pin(size: 60.1, end: 7.6),
             Pin(size: 60.0, start: 110.0),
-            child: Tooltip( // <--- Tooltip agregado
+            child: Tooltip(
               message: 'Mi lista de animales',
               child: PageLink(
                 links: [
@@ -756,7 +753,7 @@ class _VenderProductosState extends State<VenderProductos> {
             ),
           ),
           Positioned.fill(
-            top: 175.0, // Espacio para el título "Vender Productos"
+            top: 175.0,
             left: 20.0,
             right: 20.0,
             bottom: 20.0,
@@ -766,12 +763,11 @@ class _VenderProductosState extends State<VenderProductos> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    // --- CAMPO: Nombre del Producto con ICONO CORRECTO y Tooltip ---
                     _buildTextField(
                       controller: _nombreController,
                       labelText: 'Nombre del Producto',
                       originalHint: 'Nombre del Producto',
-                      iconPath: 'assets/images/nombreproducto.png', // <-- ¡RUTA DEL ICONO ACTUALIZADA!
+                      iconPath: 'assets/images/nombreproducto.png',
                       tooltipMessage: 'Ingresa el nombre de tu producto',
                     ),
                     _buildTextField(
@@ -809,12 +805,11 @@ class _VenderProductosState extends State<VenderProductos> {
                       iconPath: 'assets/images/company.png',
                       tooltipMessage: 'Ingresa el nombre de tu empresa o negocio',
                     ),
-                    // --- FIN CAMPOS DEL FORMULARIO ---
                     const SizedBox(height: 16.0),
 
                     _buildSelectedImagesPreview(),
 
-                    Tooltip( // <--- Tooltip para el botón de cargar imágenes
+                    Tooltip(
                       message: _selectedImageWrappers.isEmpty ? 'Seleccionar imágenes para el producto' : 'Añadir más imágenes al producto',
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.add_a_photo_outlined, color: APP_TEXT_COLOR),
@@ -827,7 +822,7 @@ class _VenderProductosState extends State<VenderProductos> {
                               fontWeight: FontWeight.w700),
                         ),
                         style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff4ec8dd), // Un color que contraste un poco
+                            backgroundColor: const Color(0xff4ec8dd),
                             padding: const EdgeInsets.symmetric(vertical: 12.0),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15.0),
@@ -851,7 +846,7 @@ class _VenderProductosState extends State<VenderProductos> {
                           ],
                         )
                     )
-                        : Tooltip( // <--- Tooltip para el botón de Publicar Producto
+                        : Tooltip(
                       message: 'Publica tu producto para venderlo',
                       child: ElevatedButton(
                         onPressed: _publicarProducto,
@@ -875,7 +870,7 @@ class _VenderProductosState extends State<VenderProductos> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 0.0), // Espacio al final del scroll
+                    const SizedBox(height: 20.0),
                   ],
                 ),
               ),
