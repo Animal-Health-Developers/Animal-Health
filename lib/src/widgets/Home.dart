@@ -22,12 +22,12 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb; // Para detectar si es web
-import 'dart:typed_data'; // Para Uint8List
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
 
 
 // --- CONFIGURACIÓN DE API KEYS ---
-const String GEMINI_API_KEY_HOME = 'AIzaSyBYFGiQrNtcOkfbf3Pz1rGKsgoYPyQejmM'; // TU API KEY DE GEMINI AQUÍ
+const String GEMINI_API_KEY_HOME = 'AIzaSyBYFGiQrNtcOkfbf3Pz1rGKsgoYPyQejmM';
 // ---------------------------------
 
 class Home extends StatefulWidget {
@@ -49,9 +49,9 @@ class _HomeState extends State<Home> {
   }
 
   void _initializeGemini() {
-    if (GEMINI_API_KEY_HOME.isNotEmpty && GEMINI_API_KEY_HOME != 'AIzaSyD4FUbajaBbCslYPKZNyF-WGwrJZPcBZss') { // Reemplaza con tu placeholder si es diferente
+    if (GEMINI_API_KEY_HOME.isNotEmpty && !GEMINI_API_KEY_HOME.startsWith('AIzaSyD4F')) {
       _geminiModel = GenerativeModel(
-        model: 'gemini-1.5-flash', // Cambiado a un modelo más reciente y ligero
+        model: 'gemini-1.5-flash',
         apiKey: GEMINI_API_KEY_HOME,
       );
       developer.log("Modelo Gemini inicializado en Home.", name: "Home.Gemini");
@@ -81,18 +81,18 @@ class _HomeState extends State<Home> {
     });
 
     try {
-      final prompt = 'Busca información o un consejo de cuidado relevante para mascotas sobre: "$query". Proporciona una respuesta concisa y útil. Si es un animal, menciona algún dato curioso o consejo de cuidado principal. Si es un producto o servicio, describe brevemente su utilidad para mascotas.';
-      final content = [Content.text(prompt)];
+      const promptTemplate = 'Busca información o un consejo de cuidado relevante para mascotas sobre: "\$query". Proporciona una respuesta concisa y útil. Si es un animal, menciona algún dato curioso o consejo de cuidado principal. Si es un producto o servicio, describe brevemente su utilidad para mascotas.';
+      final content = [Content.text(promptTemplate)];
       final response = await _geminiModel!.generateContent(content).timeout(const Duration(seconds: 20));
 
-      developer.log("Respuesta de Gemini para búsqueda '$query': ${response.text}", name: "Home.Search");
+      developer.log("Respuesta de Gemini para búsqueda '\$query': \${response.text}", name: "Home.Search");
 
       if (mounted) {
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Resultado para: $query'),
+              title: Text('Resultado para: \$query'),
               content: SingleChildScrollView(child: Text(response.text ?? 'No se encontró información.')),
               actions: <Widget>[
                 TextButton(
@@ -107,7 +107,7 @@ class _HomeState extends State<Home> {
         );
       }
     } catch (e) {
-      developer.log("Error al buscar con Gemini: $e", error: e, name: "Home.Search");
+      developer.log("Error al buscar con Gemini: \$e", error: e, name: "Home.Search");
       String errorMessage = "Hubo un problema al realizar la búsqueda con IA.";
       if (e is GenerativeAIException && e.message.contains('API key not valid')) {
         errorMessage = "Error: La API Key de Gemini no es válida. Por favor, verifica la configuración.";
@@ -140,7 +140,7 @@ class _HomeState extends State<Home> {
     bool isHighlighted = false,
     double? fixedWidth,
     double height = 60.0,
-    required String tooltipMessage, // Nuevo parámetro
+    required String tooltipMessage,
   }) {
     double itemWidth;
     if (fixedWidth != null) {
@@ -154,7 +154,7 @@ class _HomeState extends State<Home> {
       else itemWidth = 60.0;
     }
 
-    return Tooltip( // Envuelve con Tooltip
+    return Tooltip(
       message: tooltipMessage,
       child: Container(
         width: itemWidth,
@@ -185,7 +185,7 @@ class _HomeState extends State<Home> {
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
         return EditarPublicacionWidget(
-          key: Key('edit_$publicacionId'),
+          key: Key('edit_\$publicacionId'),
           publicacionId: publicacionId,
           captionActual: captionActual ?? '',
           mediaUrlActual: mediaUrlActual,
@@ -229,7 +229,7 @@ class _HomeState extends State<Home> {
           Pinned.fromPins(
             Pin(size: 40.5, middle: 0.8328),
             Pin(size: 50.0, start: 49.0),
-            child: Tooltip( // Tooltip para el botón de Ayuda
+            child: Tooltip(
               message: 'Ayuda',
               child: PageLink(
                 links: [
@@ -265,12 +265,12 @@ class _HomeState extends State<Home> {
               ),
               child: Row(
                 children: [
-                  Tooltip( // Tooltip para el ícono de búsqueda decorativo
+                  const Tooltip(
                     message: 'Icono de Búsqueda',
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Image.asset(
-                        'assets/images/busqueda1.png',
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Image(
+                        image: AssetImage('assets/images/busqueda1.png'),
                         width: 24.0,
                         height: 24.0,
                       ),
@@ -312,7 +312,7 @@ class _HomeState extends State<Home> {
                       ),
                     )
                   else
-                    Tooltip( // Tooltip para el botón de búsqueda
+                    Tooltip(
                       message: 'Buscar',
                       child: IconButton(
                         icon: const Icon(Icons.search, color: Colors.black54),
@@ -338,7 +338,7 @@ class _HomeState extends State<Home> {
               builder: (context, snapshot) {
                 final data = snapshot.data?.data() as Map<String, dynamic>?;
                 final profilePhotoUrl = data?['profilePhotoUrl'] as String?;
-                return Tooltip( // Tooltip para el botón de Perfil Público
+                return Tooltip(
                   message: 'Ver Perfil',
                   child: PageLink(
                     links: [
@@ -368,7 +368,7 @@ class _HomeState extends State<Home> {
                               ),
                             ),
                             errorWidget: (context, url, error) {
-                              developer.log('Error CachedNetworkImage (Perfil): $error, URL: $url', name: "Home.ProfilePic");
+                              developer.log('Error CachedNetworkImage (Perfil): \$error, URL: \$url', name: "Home.ProfilePic");
                               return const Center(child: Icon(Icons.person, size: 30, color: Colors.grey));
                             })
                             : const Center(child: Icon(Icons.person, size: 30, color: Colors.grey)),
@@ -382,7 +382,7 @@ class _HomeState extends State<Home> {
           Pinned.fromPins(
             Pin(size: 47.2, end: 7.6),
             Pin(size: 50.0, start: 49.0),
-            child: Tooltip( // Tooltip para el botón de Configuración
+            child: Tooltip(
               message: 'Configuración',
               child: PageLink(
                 links: [
@@ -404,7 +404,7 @@ class _HomeState extends State<Home> {
           Pinned.fromPins(
             Pin(size: 58.5, end: 2.0),
             Pin(size: 60.0, start: 105.0),
-            child: Tooltip( // Tooltip para el botón de Tienda/Comprar Productos
+            child: Tooltip(
               message: 'Tienda de Productos',
               child: PageLink(
                 links: [
@@ -426,7 +426,7 @@ class _HomeState extends State<Home> {
           Pinned.fromPins(
             Pin(size: 60.1, start: 6.0),
             Pin(size: 60.0, start: 44.0),
-            child: Tooltip( // Tooltip para el botón de Lista de Animales
+            child: Tooltip(
               message: 'Lista de Animales',
               child: PageLink(
                 links: [
@@ -458,7 +458,7 @@ class _HomeState extends State<Home> {
                   imagePath: 'assets/images/noticias.png',
                   isHighlighted: true,
                   fixedWidth: 54.3,
-                  tooltipMessage: 'Noticias', // Tooltip para Noticias
+                  tooltipMessage: 'Noticias',
                 ),
                 PageLink(
                   links: [
@@ -472,7 +472,7 @@ class _HomeState extends State<Home> {
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/cuidadosrecomendaciones.png',
                     fixedWidth: 63.0,
-                    tooltipMessage: 'Cuidados y Recomendaciones', // Tooltip para Cuidados
+                    tooltipMessage: 'Cuidados y Recomendaciones',
                   ),
                 ),
                 PageLink(
@@ -487,7 +487,7 @@ class _HomeState extends State<Home> {
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/emergencias.png',
                     fixedWidth: 65.0,
-                    tooltipMessage: 'Emergencias', // Tooltip para Emergencias
+                    tooltipMessage: 'Emergencias',
                   ),
                 ),
                 PageLink(
@@ -502,7 +502,7 @@ class _HomeState extends State<Home> {
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/comunidad.png',
                     fixedWidth: 67.0,
-                    tooltipMessage: 'Comunidad', // Tooltip para Comunidad
+                    tooltipMessage: 'Comunidad',
                   ),
                 ),
                 PageLink(
@@ -517,7 +517,7 @@ class _HomeState extends State<Home> {
                   child: _buildNavigationButtonItem(
                     imagePath: 'assets/images/crearpublicacion.png',
                     fixedWidth: 53.6,
-                    tooltipMessage: 'Crear Publicación', // Tooltip para Crear Publicación
+                    tooltipMessage: 'Crear Publicación',
                   ),
                 ),
               ],
@@ -533,8 +533,8 @@ class _HomeState extends State<Home> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  developer.log('Error en StreamBuilder (publicaciones): ${snapshot.error}', name: "Home.PubStream", error: snapshot.error);
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  developer.log('Error en StreamBuilder (publicaciones): \${snapshot.error}', name: "Home.PubStream", error: snapshot.error);
+                  return Center(child: Text('Error: \${snapshot.error}'));
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(child: Text('No hay publicaciones aún'));
@@ -569,7 +569,6 @@ class _HomeState extends State<Home> {
     final postOwnerId = pubDataMap?['usuarioId'] as String?;
     final isOwnPost = currentUserId != null && postOwnerId == currentUserId;
     final likes = pubDataMap?['likes'] as int? ?? 0;
-    // Asegura que likedBy sea una lista de Strings, incluso si es null o no es una lista
     final likedBy = List<String>.from(pubDataMap?['likedBy'] as List<dynamic>? ?? []);
     final isLikedByCurrentUser = currentUserId != null && likedBy.contains(currentUserId);
 
@@ -589,7 +588,7 @@ class _HomeState extends State<Home> {
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
-                Tooltip( // Tooltip para la foto de perfil del propietario
+                Tooltip(
                   message: 'Ver Perfil del Autor',
                   child: PageLink(
                     links: [
@@ -597,7 +596,7 @@ class _HomeState extends State<Home> {
                         transition: LinkTransition.Fade,
                         ease: Curves.easeOut,
                         duration: 0.3,
-                        pageBuilder: () => PerfilPublico(key: Key('PerfilPublicoOwner_${postOwnerId ?? "anon"}'), /* userId: postOwnerId */), // Asegúrate de que PerfilPublico pueda manejar un userId
+                        pageBuilder: () => PerfilPublico(key: Key('PerfilPublicoOwner_\${postOwnerId ?? "anon"}')),
                       ),
                     ],
                     child: StreamBuilder<DocumentSnapshot>(
@@ -607,7 +606,7 @@ class _HomeState extends State<Home> {
                           return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
                         }
                         if (userSnapshot.hasError) {
-                          developer.log('Error cargando datos de usuario para publicación: ${userSnapshot.error}', name: "Home.PubUserStream", error: userSnapshot.error);
+                          developer.log('Error cargando datos de usuario para publicación: \${userSnapshot.error}', name: "Home.PubUserStream", error: userSnapshot.error);
                           return const CircleAvatar(radius: 20, backgroundColor: Colors.grey, child: Icon(Icons.error, color: Colors.white));
                         }
                         if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
@@ -636,9 +635,9 @@ class _HomeState extends State<Home> {
                       ),
                       Row(
                         children: [
-                          Tooltip( // Tooltip para el ícono de tipo de publicación
+                          const Tooltip(
                             message: 'Visibilidad: Público',
-                            child: Image.asset('assets/images/publico.png', width: 15, height: 15),
+                            child: Image(image: AssetImage('assets/images/publico.png'), width: 15, height: 15),
                           ),
                           const SizedBox(width: 5),
                           Text(pubDataMap?['tipoPublicacion'] ?? 'Público', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 14)),
@@ -651,36 +650,36 @@ class _HomeState extends State<Home> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Tooltip( // Tooltip para el botón de Editar
+                      Tooltip(
                         message: 'Editar Publicación',
                         child: IconButton(
-                          icon: Image.asset(
-                            'assets/images/editar.png',
-                            height: 40, // Altura del icono
-                            width: 40, // Ancho del icono
+                          icon: const Image(
+                            image: AssetImage('assets/images/editar.png'),
+                            height: 40,
+                            width: 40,
                           ),
                           onPressed: () {
                             _mostrarDialogoEditarPublicacion(publicacion);
                           },
-                          padding: EdgeInsets.zero, // Eliminar padding extra
-                          constraints: const BoxConstraints(), // Eliminar constraints mínimos
-                          splashRadius: 20, // Ajustar tamaño del efecto de splash
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          splashRadius: 20,
                         ),
                       ),
-                      Tooltip( // Tooltip para el botón de Eliminar
+                      Tooltip(
                         message: 'Eliminar Publicación',
                         child: IconButton(
-                          icon: Image.asset(
-                            'assets/images/eliminar.png',
-                            height: 40, // Altura del icono
-                            width: 40, // Ancho del icono
+                          icon: const Image(
+                            image: AssetImage('assets/images/eliminar.png'),
+                            height: 40,
+                            width: 40,
                           ),
                           onPressed: () {
                             _eliminarPublicacion(publicacion.id, context);
                           },
-                          padding: EdgeInsets.zero, // Eliminar padding extra
-                          constraints: const BoxConstraints(), // Eliminar constraints mínimos
-                          splashRadius: 20, // Ajustar tamaño del efecto de splash
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          splashRadius: 20,
                         ),
                       ),
                     ],
@@ -688,15 +687,38 @@ class _HomeState extends State<Home> {
               ],
             ),
           ),
+
+          // --- INICIO DE LA MODIFICACIÓN ---
           if (hasValidMedia)
-            SizedBox(
-              width: double.infinity,
-              child: isVideo
-                  ? _VideoPlayerWidget(key: Key('video_pub_${publicacion.id}'), videoUrl: mediaUrl)
-                  : _buildImageWidget(mediaUrl, context),
+            GestureDetector(
+              onTap: () {
+                // Navegación a Detalles, igual que en PerfilPúblico
+                String pubId = publicacion.id;
+                String? ownerProfilePic = pubDataMap?['usuarioFotoUrl'] as String? ?? pubDataMap?['profilePhotoUrl'] as String?;
+                Navigator.push(context, MaterialPageRoute(builder: (_) => DetallesdeFotooVideo(
+                  key: Key('Detalles_Home_\$pubId'),
+                  publicationId: pubId,
+                  mediaUrl: mediaUrl,
+                  isVideo: isVideo,
+                  caption: pubDataMap?['caption'] as String?,
+                  ownerUserId: postOwnerId,
+                  ownerUserName: pubDataMap?['usuarioNombre'] as String?,
+                  ownerUserProfilePic: ownerProfilePic,
+                )));
+              },
+              child: Container(
+                width: double.infinity,
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.55),
+                color: Colors.grey[200],
+                child: isVideo
+                    ? _VideoPlayerWidget(key: Key('video_pub_\${publicacion.id}'), videoUrl: mediaUrl!)
+                    : _buildImageWidget(mediaUrl!, context),
+              ),
             )
           else
             _buildNoImageWidget(),
+          // --- FIN DE LA MODIFICACIÓN ---
+
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
@@ -709,15 +731,14 @@ class _HomeState extends State<Home> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Tooltip( // Tooltip para el botón de Me gusta
+                Tooltip(
                   message: isLikedByCurrentUser ? 'Quitar Me gusta' : 'Me gusta',
                   child: GestureDetector(
-                    onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, context),
+                    onTap: () => _toggleLike(publicacion.id, currentUserId, isLikedByCurrentUser),
                     child: Row(
                       children: [
-                        // Cambia la imagen según si el usuario actual ha dado like
                         Image.asset(
-                          isLikedByCurrentUser ? 'assets/images/like.png' : 'assets/images/like.png',
+                          'assets/images/like.png',
                           width: 40,
                           height: 40,
                         ),
@@ -727,7 +748,7 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                 ),
-                Tooltip( // Tooltip para el botón de Comentarios
+                Tooltip(
                   message: 'Ver Comentarios',
                   child: PageLink(
                     links: [
@@ -737,17 +758,17 @@ class _HomeState extends State<Home> {
                         duration: 0.3,
                         pageBuilder: () {
                           String pubId = publicacion.id;
-                          developer.log("Navegando a Detalles: publicationId = '$pubId'", name: "Home.Navigation");
+                          developer.log("Navegando a Detalles: publicationId = '\$pubId'", name: "Home.Navigation");
 
                           String? ownerProfilePic;
                           if (pubDataMap != null && pubDataMap.containsKey('usuarioFotoUrl')) {
                             ownerProfilePic = pubDataMap['usuarioFotoUrl'] as String?;
-                          } else if (pubDataMap != null && pubDataMap.containsKey('profilePhotoUrl')) { // Fallback por si acaso
+                          } else if (pubDataMap != null && pubDataMap.containsKey('profilePhotoUrl')) {
                             ownerProfilePic = pubDataMap['profilePhotoUrl'] as String?;
                           }
 
                           return DetallesdeFotooVideo(
-                            key: Key('Detalles_$pubId'),
+                            key: Key('Detalles_\$pubId'),
                             publicationId: pubId,
                             mediaUrl: mediaUrl,
                             isVideo: isVideo,
@@ -776,7 +797,7 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                 ),
-                Tooltip( // Tooltip para el botón de Compartir
+                Tooltip(
                   message: 'Compartir Publicación',
                   child: PageLink(
                     links: [
@@ -785,7 +806,7 @@ class _HomeState extends State<Home> {
                         ease: Curves.easeOut,
                         duration: 0.3,
                         pageBuilder: () => CompartirPublicacion(
-                          key: Key('Compartir_${publicacion.id}'),
+                          key: Key('Compartir_\${publicacion.id}'),
                           publicationId: publicacion.id,
                           mediaUrl: mediaUrl,
                           caption: pubDataMap?['caption'] as String?,
@@ -801,7 +822,7 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                 ),
-                Tooltip( // Tooltip para el botón de Guardar
+                Tooltip(
                   message: 'Guardar Publicación',
                   child: GestureDetector(
                     onTap: () => _guardarPublicacion(publicacion.id, context),
@@ -822,25 +843,24 @@ class _HomeState extends State<Home> {
     );
   }
 
+  // --- INICIO DE LA MODIFICACIÓN ---
   Widget _buildImageWidget(String imageUrl, BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8.0),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        height: 300,
-        placeholder: (context, url) => const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)),
-          ),
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      fit: BoxFit.cover, // Usar cover para que llene el ancho
+      // Se elimina la altura fija para que el contenedor padre la controle
+      placeholder: (context, url) => const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd)),
         ),
-        errorWidget: (context, url, error) {
-          developer.log('Error CachedNetworkImage (Publicación): $error, URL: $url', name: "Home.Image", error: error);
-          return _buildImageErrorWidget();
-        },
       ),
+      errorWidget: (context, url, error) {
+        developer.log('Error CachedNetworkImage (Publicación): \$error, URL: \$url', name: "Home.Image", error: error);
+        return _buildImageErrorWidget();
+      },
     );
   }
+  // --- FIN DE LA MODIFICACIÓN ---
 
   Widget _buildImageErrorWidget() {
     return Container(
@@ -874,48 +894,32 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // --- NUEVA FUNCIÓN PARA TOGGLE LIKES ---
-  Future<void> _toggleLike(String postId, String? userId, List<String> likedBy, BuildContext context) async {
+  Future<void> _toggleLike(String postId, String? userId, bool isCurrentlyLiked) async {
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debes iniciar sesión para dar like')),
+        const SnackBar(content: Text('Debes iniciar sesión para dar me gusta')),
       );
       return;
     }
+
+    final postRef = FirebaseFirestore.instance.collection('publicaciones').doc(postId);
+
     try {
-      final postRef = FirebaseFirestore.instance.collection('publicaciones').doc(postId);
-
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        final postSnapshot = await transaction.get(postRef);
-        if (!postSnapshot.exists) {
-          developer.log('Error: Publicación no encontrada para dar like: $postId', name: "Home.Like");
-          throw Exception("Publicación no encontrada.");
-        }
-
-        final postData = postSnapshot.data() as Map<String, dynamic>?;
-        // Asegúrate de que 'likedBy' sea una lista de Strings.
-        List<String> currentLikedBy = List<String>.from(postData?['likedBy'] as List<dynamic>? ?? []);
-
-        final bool isLiked = currentLikedBy.contains(userId);
-        List<String> newLikedBy;
-
-        if (isLiked) {
-          // Si ya le dio like, quitar el like
-          newLikedBy = currentLikedBy.where((id) => id != userId).toList();
-        } else {
-          // Si no le ha dado like, añadir el like
-          newLikedBy = [...currentLikedBy, userId];
-        }
-
-        transaction.update(postRef, {
-          'likes': newLikedBy.length,
-          'likedBy': newLikedBy,
+      if (isCurrentlyLiked) {
+        await postRef.update({
+          'likes': FieldValue.increment(-1),
+          'likedBy': FieldValue.arrayRemove([userId])
         });
-      });
+      } else {
+        await postRef.update({
+          'likes': FieldValue.increment(1),
+          'likedBy': FieldValue.arrayUnion([userId])
+        });
+      }
     } catch (e) {
-      developer.log('Error al actualizar like: $e', error: e, name: "Home.Like");
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al actualizar like: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...')));
+      developer.log('Error al actualizar like: \$e', error: e, name: "Home.Like");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al procesar el "Me gusta"')));
       }
     }
   }
@@ -924,33 +928,32 @@ class _HomeState extends State<Home> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Debes iniciar sesión para guardar publicaciones')));
         }
         return;
       }
-      // Guardar en la subcolección del usuario
       final userSavedPubRef = FirebaseFirestore.instance.collection('users').doc(user.uid).collection('publicacionesGuardadas').doc(publicacionId);
       final doc = await userSavedPubRef.get();
 
       if (doc.exists) {
         await userSavedPubRef.delete();
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación eliminada de guardados'), backgroundColor: Colors.orangeAccent));
         }
       } else {
         await userSavedPubRef.set({
-          'publicacionId': publicacionId, // Puedes guardar solo el ID o más datos si lo necesitas
+          'publicacionId': publicacionId,
           'fechaGuardado': FieldValue.serverTimestamp(),
         });
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación guardada correctamente'), backgroundColor: Colors.green));
         }
       }
     } catch (e) {
-      developer.log('Error al guardar/desguardar publicación: $e', error: e, name: "Home.Save");
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al procesar guardado: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'), backgroundColor: Colors.red));
+      developer.log('Error al guardar/desguardar publicación: \$e', error: e, name: "Home.Save");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al procesar guardado'), backgroundColor: Colors.red));
       }
     }
   }
@@ -992,27 +995,26 @@ class _HomeState extends State<Home> {
           try {
             if (mediaUrlToDelete.startsWith('https://firebasestorage.googleapis.com')) {
               await FirebaseStorage.instance.refFromURL(mediaUrlToDelete).delete();
-              developer.log('Medio eliminado de Storage: $mediaUrlToDelete', name: "Home.DeleteStorage");
+              developer.log('Medio eliminado de Storage: \$mediaUrlToDelete', name: "Home.DeleteStorage");
             }
           } catch (storageError) {
-            developer.log('Error eliminando medio de Storage: $storageError. URL: $mediaUrlToDelete', name: "Home.DeleteStorage", error: storageError);
+            developer.log('Error eliminando medio de Storage: \$storageError. URL: \$mediaUrlToDelete', name: "Home.DeleteStorage", error: storageError);
           }
         }
       }
 
       await FirebaseFirestore.instance.collection('publicaciones').doc(publicacionId).delete();
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Publicación eliminada correctamente'), backgroundColor: Colors.green));
       }
     } catch (e) {
-      developer.log('Error al eliminar publicación: $e', error: e, name: "Home.Delete");
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al eliminar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...'), backgroundColor: Colors.red));
+      developer.log('Error al eliminar publicación: \$e', error: e, name: "Home.Delete");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al eliminar la publicación.'), backgroundColor: Colors.red));
       }
     }
   }
 }
-
 
 // --- WIDGET PARA EL MODAL DE EDICIÓN ---
 class EditarPublicacionWidget extends StatefulWidget {
@@ -1048,7 +1050,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
   void initState() {
     super.initState();
     _captionController = TextEditingController(text: widget.captionActual);
-    _esNuevoMedioVideo = widget.esVideoActual; // Inicializa con el estado actual
+    _esNuevoMedioVideo = widget.esVideoActual;
     if (widget.mediaUrlActual != null && widget.esVideoActual) {
       _initializeVideoPlayerPreview(widget.mediaUrlActual!);
     }
@@ -1059,10 +1061,10 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
 
     Uri? uri = Uri.tryParse(url);
     if (uri == null) {
-      developer.log("URL inválida para VideoPlayer: $url", name: "EditWidget.Video");
+      developer.log("URL inválida para VideoPlayer: \$url", name: "EditWidget.Video");
       if (mounted) {
         ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-          SnackBar(content: Text('URL de video inválida: $url')),
+          SnackBar(content: Text('URL de video inválida: \$url')),
         );
       }
       return;
@@ -1070,10 +1072,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
 
     if (isFile && !kIsWeb) {
       _videoPlayerControllerPreview = VideoPlayerController.file(File(url));
-    } else if (kIsWeb && isFile) {
-      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
-    }
-    else {
+    } else {
       _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
     }
 
@@ -1082,7 +1081,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
       if (mounted) setState(() {});
       _videoPlayerControllerPreview!.setLooping(true);
     } catch (e) {
-      developer.log("Error inicializando VideoPlayer preview para edición: $e, URL: $url", name: "EditWidget.Video");
+      developer.log("Error inicializando VideoPlayer preview para edición: \$e, URL: \$url", name: "EditWidget.Video");
       if (mounted) {
         ScaffoldMessenger.of(widget.parentContext).showSnackBar(
           const SnackBar(content: Text('Error al cargar la vista previa del video.')),
@@ -1121,10 +1120,10 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
         }
       }
     } catch (e) {
-      developer.log("Error seleccionando media para editar: $e", name: "EditWidget.Picker");
+      developer.log("Error seleccionando media para editar: \$e", name: "EditWidget.Picker");
       if (mounted) {
         ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-          SnackBar(content: Text('Error al seleccionar: ${e.toString()}')),
+          SnackBar(content: Text('Error al seleccionar: \${e.toString()}')),
         );
       }
     }
@@ -1143,9 +1142,6 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
       hayCambios = true;
     }
 
-    String? mediaUrlParaActualizar = widget.mediaUrlActual;
-    bool esVideoParaActualizar = widget.esVideoActual;
-
     if (_nuevoMedioFile != null) {
       hayCambios = true;
       try {
@@ -1156,58 +1152,40 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
           if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) fileExtension = 'jpeg';
         }
 
-        String fileName = 'publicaciones/${widget.publicacionId}/media_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
-        String contentType = _esNuevoMedioVideo ? 'video/$fileExtension' : 'image/$fileExtension';
+        String fileName = 'publicaciones/\${widget.publicacionId}/media_\${DateTime.now().millisecondsSinceEpoch}.\$fileExtension';
+        String contentType = _esNuevoMedioVideo ? 'video/\$fileExtension' : 'image/\$fileExtension';
         if (_esNuevoMedioVideo && fileExtension == 'mov') contentType = 'video/quicktime';
 
 
         UploadTask uploadTask;
         if (kIsWeb) {
-          Uint8List? bytesParaSubir;
-          if(_esNuevoMedioVideo) {
-            bytesParaSubir = await _nuevoMedioFile!.readAsBytes(); // Leer bytes del video para web
-          } else {
-            bytesParaSubir = _nuevoMedioBytesPreview; // Usar bytes de imagen ya leídos
-          }
-
-          if (bytesParaSubir != null) {
-            uploadTask = FirebaseStorage.instance.ref(fileName).putData(bytesParaSubir, SettableMetadata(contentType: contentType));
-          } else {
-            // Si es video y no se pudieron leer bytes (debería ser raro, pero como fallback)
-            // o si _nuevoMedioBytesPreview es null para una imagen (también raro si se seleccionó)
-            // intentamos con putFile que en web espera una blob URL (que es lo que XFile.path es en web)
-            developer.log("Intentando putFile para web con path: ${_nuevoMedioFile!.path}", name: "EditWidget.UploadWeb");
-            uploadTask = FirebaseStorage.instance.ref(fileName).putFile(
-                _nuevoMedioFile!, // En web, esto es una blob URL
-                SettableMetadata(contentType: contentType)
-            );
-          }
+          Uint8List? bytesParaSubir = await _nuevoMedioFile!.readAsBytes();
+          uploadTask = FirebaseStorage.instance.ref(fileName).putData(bytesParaSubir, SettableMetadata(contentType: contentType));
         } else {
           uploadTask = FirebaseStorage.instance.ref(fileName).putFile(_nuevoMedioFile!);
         }
 
         TaskSnapshot snapshot = await uploadTask;
-        mediaUrlParaActualizar = await snapshot.ref.getDownloadURL();
-        esVideoParaActualizar = _esNuevoMedioVideo;
+        String mediaUrlParaActualizar = await snapshot.ref.getDownloadURL();
 
         datosParaActualizar['imagenUrl'] = mediaUrlParaActualizar;
-        datosParaActualizar['esVideo'] = esVideoParaActualizar;
+        datosParaActualizar['esVideo'] = _esNuevoMedioVideo;
 
         if (widget.mediaUrlActual != null && widget.mediaUrlActual!.isNotEmpty && widget.mediaUrlActual != mediaUrlParaActualizar) {
           try {
             if (widget.mediaUrlActual!.startsWith('https://firebasestorage.googleapis.com')) {
               await FirebaseStorage.instance.refFromURL(widget.mediaUrlActual!).delete();
-              developer.log('Medio antiguo eliminado de Storage: ${widget.mediaUrlActual}', name: "EditWidget.DeleteOldStorage");
+              developer.log('Medio antiguo eliminado de Storage: \${widget.mediaUrlActual}', name: "EditWidget.DeleteOldStorage");
             }
           } catch (e) {
-            developer.log('Error eliminando medio antiguo de Storage: $e', name: "EditWidget.DeleteOldStorage", error: e);
+            developer.log('Error eliminando medio antiguo de Storage: \$e', name: "EditWidget.DeleteOldStorage", error: e);
           }
         }
       } catch (e) {
-        developer.log('Error subiendo nuevo medio: $e', name: "EditWidget.Upload", error: e);
+        developer.log('Error subiendo nuevo medio: \$e', name: "EditWidget.Upload", error: e);
         if (mounted) {
           ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-            SnackBar(content: Text('Error al subir el nuevo medio: ${e.toString()}')),
+            SnackBar(content: Text('Error al subir el nuevo medio: \${e.toString()}')),
           );
         }
         setState(() => _isUploading = false);
@@ -1226,10 +1204,10 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
           Navigator.of(context).pop();
         }
       } catch (e) {
-        developer.log('Error actualizando publicación: $e', name: "EditWidget.FirestoreUpdate", error: e);
+        developer.log('Error actualizando publicación: \$e', name: "EditWidget.FirestoreUpdate", error: e);
         if (mounted) {
           ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-            SnackBar(content: Text('Error al actualizar la publicación: ${e.toString()}')),
+            SnackBar(content: Text('Error al actualizar la publicación: \${e.toString()}')),
           );
         }
       }
@@ -1303,7 +1281,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Tooltip( // Tooltip para el botón de Cambiar Foto
+                        Tooltip(
                           message: 'Cambiar Foto',
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.image, color: Colors.white),
@@ -1312,7 +1290,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
                             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff54d1e0), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
                           ),
                         ),
-                        Tooltip( // Tooltip para el botón de Cambiar Video
+                        Tooltip(
                           message: 'Cambiar Video',
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.videocam, color: Colors.white),
@@ -1349,7 +1327,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
 
                     _isUploading
                         ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff54d1e0))))
-                        : Tooltip( // Tooltip para el botón Guardar Cambios
+                        : Tooltip(
                       message: 'Guardar cambios realizados',
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.save_outlined, color: Colors.white),
@@ -1364,7 +1342,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Tooltip( // Tooltip para el botón Cancelar
+                    Tooltip(
                       message: 'Descartar cambios',
                       child: TextButton(
                         onPressed: () => Navigator.of(context).pop(),
@@ -1386,11 +1364,8 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
   }
 
   Widget _buildMediaPreview() {
-    // Si hay un nuevo archivo de video seleccionado
     if (_nuevoMedioFile != null && _esNuevoMedioVideo) {
       if (kIsWeb) {
-        // En web, la previsualización de video local (File) es complicada con VideoPlayerController.file.
-        // Se muestra un placeholder. Una solución más avanzada implicaría usar `video_player_web` y `createObjectURL` si se tienen los bytes.
         return Container(height: 200, color: Colors.black, child: const Center(child: Text("Previsualización de video no disponible para web antes de subir.", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontFamily: "Comic Sans MS"))));
       }
       if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
@@ -1408,7 +1383,6 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
         return Container(height: 200, color: Colors.black, child: const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff54d1e0)))));
       }
     }
-    // Si hay un nuevo archivo de imagen seleccionado
     else if (_nuevoMedioFile != null && !_esNuevoMedioVideo) {
       if (kIsWeb && _nuevoMedioBytesPreview != null) {
         return Image.memory(_nuevoMedioBytesPreview!, height: 200, fit: BoxFit.contain);
@@ -1418,7 +1392,6 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
         return Container(height: 200, color: Colors.grey[300], child: const Center(child: Text("Cargando previsualización...", style: TextStyle(fontFamily: "Comic Sans MS"))));
       }
     }
-    // Si hay un video actual y no se ha seleccionado uno nuevo
     else if (widget.mediaUrlActual != null && widget.esVideoActual) {
       if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
         return AspectRatio(
@@ -1435,7 +1408,6 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
         return Container(height: 200, color: Colors.black, child: const Center(child: Text("Cargando video...", style: TextStyle(color: Colors.white, fontFamily: "Comic Sans MS"))));
       }
     }
-    // Si hay una imagen actual y no se ha seleccionado una nueva
     else if (widget.mediaUrlActual != null && !widget.esVideoActual) {
       return CachedNetworkImage(
         imageUrl: widget.mediaUrlActual!,
@@ -1453,7 +1425,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
       ),
       child: const Center(
         child: Text(
-          'No hay medio adjunto o no se ha seleccionado uno nuevo.\nPresiona "Cambiar Foto" o "Cambiar Video" para añadir o reemplazar.',
+          'No hay medio adjunto o no se ha seleccionado uno nuevo.\\nPresiona "Cambiar Foto" o "Cambiar Video" para añadir o reemplazar.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white70, fontFamily: 'Comic Sans MS'),
         ),
@@ -1491,7 +1463,6 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
   }
 }
 
-
 // --- CLASE _VideoPlayerWidget ---
 class _VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
@@ -1521,35 +1492,23 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
     }
   }
 
-
   void _initializePlayer() {
-    _hasError = false; // Resetear error en reinicialización
+    _hasError = false;
     Uri? uri = Uri.tryParse(widget.videoUrl);
-    // Corrección: para web, !uri.isAbsolute puede ser falso para blob URLs, que son válidas.
-    // Es mejor chequear si la URI es nula. Si no es absoluta Y no es web Y no es un path local, entonces es inválida.
-    if (uri == null || (!uri.isAbsolute && !kIsWeb && !widget.videoUrl.startsWith('/'))) {
-      developer.log("URL de video inválida o no absoluta para VideoPlayer: ${widget.videoUrl}", name: "VideoPlayer");
-      if (mounted) {
-        setState(() {
-          _hasError = true;
-        });
-      }
-      _initializeVideoPlayerFuture = Future.error("URL inválida: ${widget.videoUrl}");
+
+    if (uri == null || !uri.isAbsolute) {
+      developer.log("URL de video inválida o no absoluta para VideoPlayer: \${widget.videoUrl}", name: "VideoPlayerHome");
+      if (mounted) setState(() => _hasError = true);
+      _initializeVideoPlayerFuture = Future.error("URL inválida: \${widget.videoUrl}");
       return;
     }
 
     _controller = VideoPlayerController.networkUrl(uri);
     _initializeVideoPlayerFuture = _controller.initialize().then((_) {
-      if (mounted) {
-        setState(() {});
-      }
+      if (mounted) setState(() {});
     }).catchError((error) {
-      developer.log("Error inicializando VideoPlayer: $error, URL: ${widget.videoUrl}", name: "VideoPlayer", error: error);
-      if (mounted) {
-        setState(() {
-          _hasError = true;
-        });
-      }
+      developer.log("Error inicializando VideoPlayer (Home): \$error, URL: \${widget.videoUrl}", name: "VideoPlayerHome", error: error);
+      if (mounted) setState(() => _hasError = true);
     });
     _controller.setLooping(true);
   }
@@ -1562,22 +1521,17 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_hasError) {
-      return _buildVideoErrorWidget();
-    }
+    if (_hasError) return _buildVideoErrorWidget();
 
     return FutureBuilder(
       future: _initializeVideoPlayerFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done && !_hasError) {
           if (_controller.value.hasError) {
-            developer.log("Error en VideoPlayerController: ${_controller.value.errorDescription}, URL: ${widget.videoUrl}", name: "VideoPlayer", error: _controller.value.errorDescription);
+            developer.log("Error en VideoPlayerController (Home): \${_controller.value.errorDescription}, URL: \${widget.videoUrl}", name: "VideoPlayerHome", error: _controller.value.errorDescription);
             return _buildVideoErrorWidget();
           }
           if (!_controller.value.isInitialized) {
-            // Esto puede pasar si hay un error después de 'done' pero antes de setear _hasError.
-            // O si el controlador no se inicializó correctamente por alguna razón no capturada por el catchError.
-            developer.log("VideoPlayerController no inicializado después de Future. URL: ${widget.videoUrl}", name: "VideoPlayer");
             return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xff4ec8dd))));
           }
 
@@ -1595,7 +1549,7 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
             ),
           );
         } else if (snapshot.hasError || _hasError) {
-          developer.log("Error en FutureBuilder de VideoPlayer: ${snapshot.error}, URL: ${widget.videoUrl}", name: "VideoPlayer", error: snapshot.error);
+          developer.log("Error en FutureBuilder de VideoPlayer (Home): \${snapshot.error}, URL: \${widget.videoUrl}", name: "VideoPlayerHome", error: snapshot.error);
           return _buildVideoErrorWidget();
         }
         else {
@@ -1622,9 +1576,9 @@ class __VideoPlayerWidgetState extends State<_VideoPlayerWidget> {
         duration: const Duration(milliseconds: 300),
         child: Container(
           color: Colors.black26,
-          child: Center(
+          child: const Center(
             child: Icon(
-              Icons.play_arrow, // Siempre mostrar play, el overlay solo aparece cuando está pausado
+              Icons.play_arrow,
               color: Colors.white,
               size: 50.0,
             ),

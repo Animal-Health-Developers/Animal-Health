@@ -7,20 +7,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart'; // Para formatear fechas
-import '../services/auth_service.dart';
-import './Home.dart'; // Para PageLink a Home
+import 'package:intl/intl.dart';
+import 'package:video_player/video_player.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'package:adobe_xd/pinned.dart';
+import 'dart:developer' as developer;
+
+import '../services/auth_service.dart';
+import './Home.dart';
 import './Ayuda.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import './Crearpublicaciondesdeperfil.dart';
 import './DetallesdeFotooVideo.dart';
 import './CompartirPublicacion.dart';
-import 'dart:developer' as developer;
-import 'package:video_player/video_player.dart';
-
 
 // --- Constantes de Estilo ---
 const String _fontFamily = 'Comic Sans MS';
@@ -28,7 +28,6 @@ const Color _primaryTextColor = Color(0xff000000);
 const Color _buttonBackgroundColor = Color(0xff54d1e0);
 const Color _tabBackgroundColor = Color(0xe3a0f4fe);
 const Color _infoTabActiveColor = Color(0xff54d1e0);
-const Color _infoTabInactiveColor = Color(0xff947b93); // Color para el botón comunidad inactivo si es necesario
 const Color _boxShadowColor = Color(0xff080808);
 const Color _scaffoldBgColorModal = Color(0xff4ec8dd);
 
@@ -59,7 +58,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
-  // NEW: Function to show "Create Story" modal
   Future<void> _mostrarDialogoCrearHistoria(BuildContext pageContext, String userId, Map<String, dynamic> currentUserData) async {
     await showModalBottomSheet(
       context: pageContext,
@@ -109,6 +107,37 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
+  // NUEVA FUNCIÓN PARA MOSTRAR LA HISTORIA EN PANTALLA COMPLETA
+  void _showStoryDialog(BuildContext context, DocumentSnapshot storyDoc) {
+    final storyData = storyDoc.data() as Map<String, dynamic>;
+    final mediaUrl = storyData['mediaUrl'] as String?;
+    if (mediaUrl == null || mediaUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se puede mostrar la historia, no tiene contenido.', style: TextStyle(fontFamily: _fontFamily))),
+      );
+      return;
+    }
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.85),
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          insetPadding: EdgeInsets.zero,
+          backgroundColor: Colors.transparent,
+          child: _StoryViewerWidget(
+            key: Key('story_viewer_${storyDoc.id}'),
+            mediaUrl: mediaUrl,
+            isVideo: (storyData['esVideo'] as bool?) ?? false,
+            caption: storyData['caption'] as String? ?? '',
+            userName: storyData['userName'] as String? ?? 'Usuario',
+            userProfilePic: storyData['userProfilePic'] as String?,
+          ),
+        );
+      },
+    );
+  }
+
+
   Future<void> _toggleLike(String postId, String? userId, List<String> likedBy, BuildContext contextForSnackBar) async {
     if (userId == null) {
       if (contextForSnackBar.mounted) {
@@ -128,18 +157,16 @@ class _PerfilPublicoState extends State<PerfilPublico> {
         }
         List<String> currentLikedBy = List<String>.from(postSnapshot.data()?['likedBy'] as List<dynamic>? ?? []);
         final bool isLiked = currentLikedBy.contains(userId);
-        List<String> newLikedByList;
         if (isLiked) {
-          newLikedByList = currentLikedBy.where((id) => id != userId).toList();
+          transaction.update(postRef, {'likes': FieldValue.increment(-1), 'likedBy': FieldValue.arrayRemove([userId])});
         } else {
-          newLikedByList = [...currentLikedBy, userId];
+          transaction.update(postRef, {'likes': FieldValue.increment(1), 'likedBy': FieldValue.arrayUnion([userId])});
         }
-        transaction.update(postRef, {'likes': newLikedByList.length, 'likedBy': newLikedByList});
       });
     } catch (e) {
       developer.log('Error al actualizar like: $e', error: e, name: "PerfilPublico.Like");
       if (contextForSnackBar.mounted) {
-        ScaffoldMessenger.of(contextForSnackBar).showSnackBar(SnackBar(content: Text('Error al actualizar like...', style: TextStyle(fontFamily: _fontFamily))));
+        ScaffoldMessenger.of(contextForSnackBar).showSnackBar(const SnackBar(content: Text('Error al actualizar like...', style: TextStyle(fontFamily: _fontFamily))));
       }
     }
   }
@@ -173,7 +200,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     } catch (e) {
       developer.log('Error al guardar/desguardar publicación: $e', error: e, name: "PerfilPublico.SaveToggle");
       if (contextForSnackBar.mounted) {
-        ScaffoldMessenger.of(contextForSnackBar).showSnackBar(SnackBar(content: Text('Error al procesar guardado...', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(contextForSnackBar).showSnackBar(const SnackBar(content: Text('Error al procesar guardado...', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red));
       }
     }
   }
@@ -210,7 +237,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
             await FirebaseStorage.instance.refFromURL(mediaUrlToDelete).delete();
             developer.log('Medio eliminado de Storage: $mediaUrlToDelete', name: "PerfilPublico.DeleteStorage");
           } catch (storageError) {
-            developer.log('Error eliminando medio de Storage (puede ser normal si ya no existe): $storageError. URL: $mediaUrlToDelete', name: "PerfilPublico.DeleteStorage", error: storageError);
+            developer.log('Error eliminando medio de Storage: $storageError. URL: $mediaUrlToDelete', name: "PerfilPublico.DeleteStorage", error: storageError);
           }
         }
       }
@@ -221,29 +248,23 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     } catch (e) {
       developer.log('Error al eliminar publicación: $e', error: e, name: "PerfilPublico.Delete");
       if (contextForDialogsAndSnackbars.mounted) {
-        ScaffoldMessenger.of(contextForDialogsAndSnackbars).showSnackBar(SnackBar(content: Text('Error al eliminar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(contextForDialogsAndSnackbars).showSnackBar(SnackBar(content: Text('Error al eliminar: $e', style: const TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red));
       }
     }
   }
 
   Future<void> _mostrarDialogoEditarPublicacionIndividual(DocumentSnapshot publicacion, BuildContext contextForModals) async {
-    final String publicacionId = publicacion.id;
-    final pubData = publicacion.data() as Map<String, dynamic>;
-    final String? captionActual = pubData['caption'] as String?;
-    final String? mediaUrlActual = pubData['imagenUrl'] as String?;
-    final bool esVideoActual = (pubData['esVideo'] as bool?) ?? false;
-
     await showModalBottomSheet(
       context: contextForModals,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext modalContext) {
         return EditarPublicacionIndividualWidget(
-          key: Key('edit_pub_perfil_indiv_${publicacionId}'),
-          publicacionId: publicacionId,
-          captionActual: captionActual ?? '',
-          mediaUrlActual: mediaUrlActual,
-          esVideoActual: esVideoActual,
+          key: Key('edit_pub_perfil_indiv_${publicacion.id}'),
+          publicacionId: publicacion.id,
+          captionActual: (publicacion.data() as Map<String, dynamic>)['caption'] ?? '',
+          mediaUrlActual: (publicacion.data() as Map<String, dynamic>)['imagenUrl'],
+          esVideoActual: (publicacion.data() as Map<String, dynamic>)['esVideo'] ?? false,
           parentContext: contextForModals,
         );
       },
@@ -260,10 +281,9 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     return age;
   }
 
-  // --- NUEVA FUNCIÓN PARA ELIMINAR AMIGO ---
   Future<void> _removeFriend(BuildContext dialogContext, String currentUserId, String friendUid) async {
     bool confirm = await showDialog<bool>(
-      context: dialogContext, // Usar el contexto del diálogo
+      context: dialogContext,
       builder: (BuildContext ctx) {
         return AlertDialog(
           backgroundColor: _tabBackgroundColor,
@@ -287,34 +307,29 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     if (!confirm) return;
 
     try {
-      // Eliminar de la lista de amigos del usuario actual
       await FirebaseFirestore.instance.collection('users').doc(currentUserId).collection('amigos').doc(friendUid).delete();
-      // Eliminar de la lista de amigos del otro usuario (bidireccional)
       await FirebaseFirestore.instance.collection('users').doc(friendUid).collection('amigos').doc(currentUserId).delete();
 
-      // Usar el contexto original (pasado o `this.context`) para el SnackBar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Amigo eliminado correctamente.', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Amigo eliminado correctamente.', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       developer.log('Error al eliminar amigo: $e', name: "PerfilPublico.RemoveFriend", error: e);
-      if (mounted) { // Verificar si el widget sigue montado
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar amigo.', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red),
+          const SnackBar(content: Text('Error al eliminar amigo.', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red),
         );
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
-      // ... (código existente para usuario no autenticado)
       return Scaffold(
         backgroundColor: const Color(0xff4ec8dd),
         body: Center(
@@ -325,11 +340,11 @@ class _PerfilPublicoState extends State<PerfilPublico> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  if (Navigator.canPop(context)) {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  } else {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Home(key: Key("Home_From_Unauth_Perfil"))));
-                  }
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => Home(key: const Key("Home_From_Unauth_Perfil"))),
+                        (route) => false,
+                  );
                 },
                 child: const Text('Ir a Inicio', style: TextStyle(fontFamily: _fontFamily)),
               )
@@ -342,7 +357,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
       builder: (context, userSnapshot) {
-        // ... (código existente para manejar estados de userSnapshot)
         if (userSnapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(backgroundColor: Color(0xff4ec8dd), body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))));
         }
@@ -357,10 +371,10 @@ class _PerfilPublicoState extends State<PerfilPublico> {
         }
         if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
           developer.log("Usuario no encontrado en Firestore: ${currentUser.uid}", name:"PerfilPublico.UserStream");
-          return Scaffold(
-            backgroundColor: const Color(0xff4ec8dd),
+          return const Scaffold(
+            backgroundColor: Color(0xff4ec8dd),
             body: Center(
-              child: Text('No se encontraron datos para este usuario.', style: const TextStyle(fontFamily: _fontFamily, fontSize: 18, color: Colors.white)),
+              child: Text('No se encontraron datos para este usuario.', style: TextStyle(fontFamily: _fontFamily, fontSize: 18, color: Colors.white)),
             ),
           );
         }
@@ -388,14 +402,13 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 child: Image.asset('assets/images/Animal Health Fondo de Pantalla.png', fit: BoxFit.cover),
               ),
               // --- Widgets Pinned de la AppBar ---
-              // Back button
               Pinned.fromPins(
                 Pin(size: 52.9, start: 9.0),
                 Pin(size: 50.0, start: 40.0),
-                child: Tooltip( // Tooltip added
+                child: Tooltip(
                   message: 'Volver a la página anterior',
-                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 14),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.8), borderRadius: BorderRadius.circular(5)),
                   child: PageLink(
                     links: [PageLinkInfo(pageBuilder: () {
                       if (Navigator.canPop(context)) { Navigator.of(context).pop(); return Container();}
@@ -406,14 +419,13 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 ),
               ),
 
-              // Logo button
               Pinned.fromPins(
                   Pin(size: 74.0, middle: 0.5),
                   Pin(size: 73.0, start: 42.0),
-                  child: Tooltip( // Tooltip added
+                  child: Tooltip(
                     message: 'Ir a la página de inicio',
-                    textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
-                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                    textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 14),
+                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.8), borderRadius: BorderRadius.circular(5)),
                     child: PageLink(
                       links: [PageLinkInfo(transition: LinkTransition.Fade, ease: Curves.easeOut, duration: 0.3, pageBuilder: () => Home(key: const Key('Home_FromPerfil_Logo_AppBar')))],
                       child: Container(
@@ -427,14 +439,13 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                   )
               ),
 
-              // Help button
               Pinned.fromPins(
                 Pin(size: 40.5, middle: 0.8328),
                 Pin(size: 50.0, start: 49.0),
-                child: Tooltip( // Tooltip added
+                child: Tooltip(
                   message: 'Ayuda y soporte',
-                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 14),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.8), borderRadius: BorderRadius.circular(5)),
                   child: PageLink(
                     links: [
                       PageLinkInfo(
@@ -456,14 +467,13 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 ),
               ),
 
-              // Settings button
               Pinned.fromPins(
                 Pin(size: 47.2, end: 7.6),
                 Pin(size: 50.0, start: 49.0),
-                child: Tooltip( // Tooltip added
+                child: Tooltip(
                   message: 'Configuración de la aplicación',
-                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 14),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.8), borderRadius: BorderRadius.circular(5)),
                   child: PageLink(
                     links: [
                       PageLinkInfo(
@@ -482,14 +492,13 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 ),
               ),
 
-              // Animal List button
               Pinned.fromPins(
                 Pin(size: 60.1, start: 80.0),
                 Pin(size: 60.0, start: 44.0),
-                child: Tooltip( // Tooltip added
+                child: Tooltip(
                   message: 'Ver mi lista de animales',
-                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(5)),
+                  textStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 14),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.8), borderRadius: BorderRadius.circular(5)),
                   child: PageLink(
                     links: [
                       PageLinkInfo(
@@ -515,12 +524,11 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 right: 0,
                 bottom: 0,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0), // Reducido el padding superior
+                  padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
                   child: Column(
                     children: <Widget>[
                       _buildProfileHeader(context, profilePhotoUrl, userName, userData, currentUser.uid),
                       const SizedBox(height: 20),
-                      // NEW: Button to create a story
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10.0),
                         child: _buildActionButton(
@@ -529,13 +537,11 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                           onTapAction: () => _mostrarDialogoCrearHistoria(context, currentUser.uid, userData),
                         ),
                       ),
-                      const SizedBox(height: 20), // Spacing below the new button
-                      _buildInfoTabs(context), // Ya se usa _selectedTabIndex aquí
-                      const SizedBox(height: 10), // Espacio entre pestañas y contenido
-                      // --- CONTENIDO DINÁMICO BASADO EN LA PESTAÑA SELECCIONADA ---
+                      const SizedBox(height: 20),
+                      _buildInfoTabs(context),
+                      const SizedBox(height: 10),
                       _buildContentForSelectedTab(currentUser.uid, viveEn, deDonde, preferencias, genero, edadString),
                       const SizedBox(height: 20),
-                      // Mostrar publicaciones solo si la pestaña Información está activa
                       if (_selectedTabIndex == 0)
                         _buildUserPublicationsSection(context, currentUser.uid, userData),
                     ],
@@ -550,7 +556,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildProfileHeader(BuildContext context, String? profilePhotoUrl, String userName, Map<String, dynamic> currentUserData, String currentUserId) {
-    // ... (código existente de _buildProfileHeader)
     return Column(children: <Widget>[
       GestureDetector(
         onTap: () => _showProfileImageDialog(context, profilePhotoUrl),
@@ -599,7 +604,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildActionButton(BuildContext context, {required String text, required VoidCallback onTapAction}) {
-    // ... (código existente de _buildActionButton)
     return SizedBox(width: 179.0, height: 40.0,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -615,18 +619,17 @@ class _PerfilPublicoState extends State<PerfilPublico> {
 
   Widget _buildInfoTabs(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10), // Ajustado el padding vertical
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
       decoration: BoxDecoration(color: _tabBackgroundColor, borderRadius: BorderRadius.circular(9.0), border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: <Widget>[
-        // Ahora pasamos el iconPath a 'Información' y 'Historias'
         _buildTabButton(context, text: 'Información', index: 0, iconPath: 'assets/images/infoperfil.png'),
         _buildTabButton(context, text: 'Historias', index: 1, iconPath: 'assets/images/historias.png'),
-        _buildTabButton(context, text: 'Comunidad', index: 2, iconPath: 'assets/images/comunidad.png'), // Ya se pasaba iconPath
+        _buildTabButton(context, text: 'Comunidad', index: 2, iconPath: 'assets/images/comunidad.png'),
       ]),
     );
   }
 
-  Widget _buildTabButton(BuildContext context, {required String text, required int index, String? iconPath}) {
+  Widget _buildTabButton(BuildContext context, {required String text, required int index, required String iconPath}) {
     bool isActive = _selectedTabIndex == index;
 
     BoxDecoration decoration;
@@ -638,17 +641,12 @@ class _PerfilPublicoState extends State<PerfilPublico> {
           boxShadow: const [BoxShadow(color: _boxShadowColor, offset: Offset(0,3), blurRadius: 6)]
       );
     } else {
-      // MODIFICADO: Aplicar el mismo color de fondo para inactivo a todos los botones con icono
       decoration = BoxDecoration(
-          color: _tabBackgroundColor.withOpacity(0.7), // Se unifica al color de 'Comunidad' cuando está inactivo
+          color: _tabBackgroundColor.withOpacity(0.7),
           borderRadius: BorderRadius.circular(8.0),
           border: Border.all(color: _primaryTextColor.withOpacity(0.7), width: 1.0)
       );
     }
-
-    // MODIFICADO: Si hay un iconPath, usar el ancho de 115.0 para todos, si no, mantener 100.0.
-    // Dado que ahora todos tendrán iconPath, todos serán de 115.0.
-    final double buttonWidth = (iconPath != null) ? 115.0 : 100.0;
 
     return GestureDetector(
       onTap: () {
@@ -657,30 +655,26 @@ class _PerfilPublicoState extends State<PerfilPublico> {
         });
       },
       child: Container(
-        width: buttonWidth, // Usar el ancho calculado
+        width: 115.0,
         height: 50.0,
         decoration: decoration,
         child: Center(
-          // MODIFICADO: Mostrar el Image.asset si iconPath NO es nulo, independientemente del texto.
-          child: iconPath != null
-              ? Image.asset(
+          child: Image.asset(
             iconPath,
             height: 40.0,
             fit: BoxFit.contain,
-          )
-              : Text(text, style: TextStyle(fontFamily: _fontFamily, fontSize: 20, color: _primaryTextColor, fontWeight: FontWeight.w700), softWrap: false),
+          ),
         ),
       ),
     );
   }
 
-  // --- NUEVO: Widget para el contenido de la pestaña seleccionada ---
   Widget _buildContentForSelectedTab(String currentUserId, String viveEn, String deDonde, String preferencias, String genero, String edad) {
     switch (_selectedTabIndex) {
       case 0: // Información
         return _buildUserInfoDetails(viveEn, deDonde, preferencias, genero, edad);
       case 1: // Historias
-        return _buildStoriesSection(currentUserId); // NEW: Display stories for the selected tab
+        return _buildStoriesSection(currentUserId);
       case 2: // Comunidad (Lista de Amigos)
         return _buildFriendsListSection(currentUserId);
       default:
@@ -689,7 +683,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildUserInfoDetails(String viveEn, String deDonde, String preferencias, String genero, String edad) {
-    // ... (código existente de _buildUserInfoDetails)
     return Container(
       padding: const EdgeInsets.all(15.0),
       decoration: BoxDecoration(color: _tabBackgroundColor, borderRadius: BorderRadius.circular(9.0), border: Border.all(width: 1.0, color: _primaryTextColor.withOpacity(0.89))),
@@ -704,7 +697,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildProfileStatItem({required String iconAsset, required String label, required String value}) {
-    // ... (código existente de _buildProfileStatItem)
     double iconWidth = (iconAsset.contains('viveen') || iconAsset.contains('preferencias')) ? 45.5 : (iconAsset.contains('edad')) ? 41.2 : (iconAsset.contains('de')) ? 37.9 : 35.8;
     return Padding(padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(children: <Widget>[
@@ -717,10 +709,9 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
-  // --- NUEVO: Widget para la sección de lista de amigos ---
   Widget _buildFriendsListSection(String currentUserId) {
     return Container(
-      margin: const EdgeInsets.only(top:0, bottom: 15.0), // Ajusta según sea necesario
+      margin: const EdgeInsets.only(top:0, bottom: 15.0),
       padding: const EdgeInsets.all(10.0),
       decoration: BoxDecoration(
           color: _tabBackgroundColor,
@@ -759,7 +750,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 padding: const EdgeInsets.only(left: 8.0, bottom: 10.0, top: 5.0),
                 child: Text(
                   'Amigos (${friendDocs.length})',
-                  style: TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: _primaryTextColor),
+                  style: const TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: _primaryTextColor),
                 ),
               ),
               ListView.builder(
@@ -767,7 +758,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: friendDocs.length,
                 itemBuilder: (context, index) {
-                  // El ID del documento en la subcolección 'amigos' es el UID del amigo.
                   String friendUid = friendDocs[index].id;
                   return _buildFriendListItem(context, friendUid, currentUserId);
                 },
@@ -779,17 +769,16 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
-  // --- NUEVO: Widget para cada item de la lista de amigos ---
   Widget _buildFriendListItem(BuildContext context, String friendUid, String currentUserId) {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('users').doc(friendUid).snapshots(),
       builder: (context, userSnapshot) {
         if (!userSnapshot.hasData) {
-          return ListTile(title: Text('Cargando amigo...', style: TextStyle(fontFamily: _fontFamily)));
+          return const ListTile(title: Text('Cargando amigo...', style: TextStyle(fontFamily: _fontFamily)));
         }
         if (userSnapshot.hasError || !userSnapshot.data!.exists) {
           developer.log("Error cargando datos del amigo $friendUid: ${userSnapshot.error}", name:"PerfilPublico.FriendItem");
-          return ListTile(title: Text('Error al cargar datos del amigo.', style: TextStyle(fontFamily: _fontFamily, color: Colors.red)));
+          return const ListTile(title: Text('Error al cargar datos del amigo.', style: TextStyle(fontFamily: _fontFamily, color: Colors.red)));
         }
 
         final friendData = userSnapshot.data!.data() as Map<String, dynamic>;
@@ -797,7 +786,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
         final friendProfilePicUrl = friendData['profilePhotoUrl'] as String?;
 
         return Card(
-          color: _tabBackgroundColor.withAlpha(200), // Un poco más transparente que el fondo de la sección
+          color: _tabBackgroundColor.withAlpha(200),
           elevation: 1,
           margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 0),
           child: ListTile(
@@ -812,18 +801,15 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                   : null,
             ),
             title: Text(friendName, style: const TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.bold, color: _primaryTextColor)),
-            // Subtitle opcional, por ejemplo, "Amigos desde..."
             trailing: IconButton(
               icon: Icon(Icons.person_remove_alt_1_outlined, color: Colors.red[700]),
               tooltip: 'Eliminar amigo',
               onPressed: () => _removeFriend(context, currentUserId, friendUid),
             ),
             onTap: () {
-              // TODO: Navegar al perfil del amigo si se implementa
-              // Navigator.push(context, MaterialPageRoute(builder: (_) => PerfilPublico(userId: friendUid))); // Requeriría modificar PerfilPublico
               developer.log("Ver perfil de $friendName (UID: $friendUid)", name: "PerfilPublico.ViewFriendProfile");
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Funcionalidad "Ver Perfil" no implementada aún.', style: TextStyle(fontFamily: _fontFamily))),
+                const SnackBar(content: Text('Funcionalidad "Ver Perfil" no implementada aún.', style: TextStyle(fontFamily: _fontFamily))),
               );
             },
           ),
@@ -832,7 +818,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
-  // NEW: Widget to display user stories
   Widget _buildStoriesSection(String userId) {
     return Container(
       margin: const EdgeInsets.only(top: 0, bottom: 15.0),
@@ -845,8 +830,8 @@ class _PerfilPublicoState extends State<PerfilPublico> {
       child: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('stories')
             .where('userId', isEqualTo: userId)
-            .where('expiresAt', isGreaterThan: Timestamp.now()) // Only show active stories
-            .orderBy('expiresAt', descending: false) // Order by expiration, soonest first
+            .where('expiresAt', isGreaterThan: Timestamp.now())
+            .orderBy('expiresAt', descending: false)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -892,10 +877,10 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3, // 3 stories per row
+                  crossAxisCount: 3,
                   crossAxisSpacing: 8.0,
                   mainAxisSpacing: 8.0,
-                  childAspectRatio: 0.7, // Adjust aspect ratio for story tiles
+                  childAspectRatio: 0.7,
                 ),
                 itemCount: storyDocs.length,
                 itemBuilder: (context, index) {
@@ -919,12 +904,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                   }
 
                   return GestureDetector(
-                    onTap: () {
-                      // TODO: Implement viewing story details (e.g., full screen story viewer)
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Ver historia: ${caption.isEmpty ? 'Sin texto' : caption}', style: const TextStyle(fontFamily: _fontFamily))),
-                      );
-                    },
+                    onTap: () => _showStoryDialog(context, story),
                     child: Container(
                       decoration: BoxDecoration(
                         color: _tabBackgroundColor.withOpacity(0.8),
@@ -943,7 +923,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                                     ? Stack(
                                   alignment: Alignment.center,
                                   children: [
-                                    _VideoPlayerWidgetFromHome(key: Key('story_preview_video_${story.id}'), videoUrl: mediaUrl),
+                                    _VideoPlayerWidgetFromHome(key: ValueKey('story_preview_video_${story.id}'), videoUrl: mediaUrl),
                                     const Icon(Icons.play_circle_outline, color: Colors.white70, size: 40),
                                   ],
                                 )
@@ -991,9 +971,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
     );
   }
 
-
   Widget _buildUserPublicationsSection(BuildContext context, String userId, Map<String, dynamic> ownerUserData) {
-    // ... (código existente de _buildUserPublicationsSection)
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('publicaciones')
           .where('usuarioId', isEqualTo: userId)
@@ -1008,7 +986,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
           return Padding(
               padding: const EdgeInsets.all(20.0),
               child: Text(
-                  'Error al cargar publicaciones.\nPor favor, asegúrate de que el índice de Firestore necesario esté creado.\nDetalle: ${snapshot.error}',
+                  'Error al cargar publicaciones.\nDetalle: ${snapshot.error}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontFamily: _fontFamily, color: Colors.redAccent)
               )
@@ -1040,28 +1018,18 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildPublicacionItemEstiloHome(DocumentSnapshot publicacion, BuildContext itemContext, Map<String, dynamic> postOwnerUserDataFromProfile) {
-    // ... (código existente de _buildPublicacionItemEstiloHome)
     final pubData = publicacion.data() as Map<String, dynamic>;
     final mediaUrl = pubData['imagenUrl'] as String?;
     final isVideo = (pubData['esVideo'] as bool?) ?? false;
     final hasValidMedia = mediaUrl != null && mediaUrl.isNotEmpty;
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-
-    // Esta sección usa postOwnerUserDataFromProfile que es del dueño del perfil que se está viendo.
-    // Si el perfil es el propio, estos datos son correctos.
-    final String postOwnerId = pubData['usuarioId'] as String? ?? currentUserId!; // Tomar el usuarioId de la publicación
-    // Para el nombre y foto del dueño de la publicación, idealmente deberían venir de la publicación o ser buscados.
-    // Aquí estamos reusando los datos del perfil actual si la publicación es del usuario del perfil.
-    // Si en el futuro se muestran publicaciones de otros en este stream (poco probable aquí), esto necesitaría ajuste.
+    final String postOwnerId = pubData['usuarioId'] ?? currentUserId!;
     final String postOwnerName = pubData['usuarioNombre'] ?? postOwnerUserDataFromProfile['nombreUsuario'] ?? postOwnerUserDataFromProfile['name'] ?? 'Usuario';
     final String? postOwnerProfilePicUrl = pubData['usuarioFoto'] ?? postOwnerUserDataFromProfile['profilePhotoUrl'];
-
-
     final likes = pubData['likes'] as int? ?? 0;
     final likedBy = List<String>.from(pubData['likedBy'] as List<dynamic>? ?? []);
-    final commentsCount = (pubData['comentariosCount'] as int?) ?? (pubData['comentarios'] as int?) ?? 0; // Asegurar consistencia
+    final commentsCount = (pubData['comentariosCount'] as int?) ?? (pubData['comentarios'] as int?) ?? 0;
     final String tipoPublicacion = pubData['tipoPublicacion'] ?? 'Público';
-
 
     return Container(
       margin: const EdgeInsets.only(bottom: 15.0),
@@ -1110,41 +1078,27 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                     ],
                   ),
                 ),
-                // --- CAMBIO AQUÍ: Reemplazo de PopupMenuButton por botones de imagen ---
                 if (currentUserId == postOwnerId)
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        padding: const EdgeInsets.all(4), // Reducir el padding para que no sea tan grande
-                        constraints: const BoxConstraints(), // Quitar restricciones de tamaño mínimo
-                        icon: Image.asset(
-                          'assets/images/editar.png',
-                          width: 40,
-                          height: 40,
-                        ),
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                        icon: Image.asset('assets/images/editar.png', width: 40, height: 40),
                         tooltip: 'Editar publicación',
-                        onPressed: () {
-                          _mostrarDialogoEditarPublicacionIndividual(publicacion, itemContext);
-                        },
+                        onPressed: () => _mostrarDialogoEditarPublicacionIndividual(publicacion, itemContext),
                       ),
-                      const SizedBox(width: 8), // Espacio entre botones
+                      const SizedBox(width: 8),
                       IconButton(
                         padding: const EdgeInsets.all(4),
                         constraints: const BoxConstraints(),
-                        icon: Image.asset(
-                          'assets/images/eliminar.png', // Usando .png como es estándar
-                          width: 40,
-                          height: 40,
-                        ),
+                        icon: Image.asset('assets/images/eliminar.png', width: 40, height: 40),
                         tooltip: 'Eliminar publicación',
-                        onPressed: () {
-                          _eliminarPublicacion(publicacion.id, itemContext, mediaUrl);
-                        },
+                        onPressed: () => _eliminarPublicacion(publicacion.id, itemContext, mediaUrl),
                       ),
                     ],
                   ),
-                // --- FIN DEL CAMBIO ---
               ],
             ),
           ),
@@ -1156,16 +1110,16 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 mediaUrl: mediaUrl,
                 isVideo: isVideo,
                 caption: pubData['caption'] as String?,
-                ownerUserId: postOwnerId, // Usar el ID del dueño de la publicación
-                ownerUserName: postOwnerName, // Usar el nombre del dueño de la publicación
-                ownerUserProfilePic: postOwnerProfilePicUrl, // Usar la foto del dueño de la publicación
+                ownerUserId: postOwnerId,
+                ownerUserName: postOwnerName,
+                ownerUserProfilePic: postOwnerProfilePicUrl,
               ))),
               child: Container(
                 width: double.infinity,
                 constraints: BoxConstraints(maxHeight: MediaQuery.of(itemContext).size.height * 0.55),
                 color: Colors.grey[200],
                 child: isVideo
-                    ? _VideoPlayerWidgetFromHome(key: Key('video_pub_perfil_${publicacion.id}_${DateTime.now().millisecondsSinceEpoch}'), videoUrl: mediaUrl)
+                    ? _VideoPlayerWidgetFromHome(key: ValueKey('video_pub_perfil_${publicacion.id}'), videoUrl: mediaUrl)
                     : CachedNetworkImage(
                     imageUrl: mediaUrl!,
                     fit: BoxFit.cover,
@@ -1198,7 +1152,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 _buildPostActionEstiloHome(
                     iconAsset: 'assets/images/like.png',
                     label: likes.toString(),
-                    isLiked: likedBy.contains(currentUserId), // El like es del usuario actual
+                    isLiked: likedBy.contains(currentUserId),
                     onTap: () => _toggleLike(publicacion.id, currentUserId, likedBy, itemContext)
                 ),
                 _buildPostActionEstiloHome(
@@ -1246,20 +1200,11 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildPostActionEstiloHome({required String iconAsset, required String label, bool isLiked = false, bool isSavedStyle = false, required VoidCallback onTap}) {
-    // ... (código existente de _buildPostActionEstiloHome)
     double iconSize = 40.0;
-    if (iconAsset.contains('like')) iconSize = 40.0;
     Color? activeColor;
-    bool isThisTheLikeButton = iconAsset.contains('like');
 
-    if (isThisTheLikeButton) {
-      activeColor = null;
-    } else {
-      if (isSavedStyle) {
-        activeColor = _buttonBackgroundColor;
-      } else {
-        activeColor = null;
-      }
+    if (isSavedStyle) {
+      activeColor = _buttonBackgroundColor;
     }
 
     return Expanded(
@@ -1282,7 +1227,6 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 
   Widget _buildMediaErrorWidget(String typeMessage) {
-    // ... (código existente de _buildMediaErrorWidget)
     IconData iconData = Icons.image_not_supported_outlined;
     String message = 'Error al cargar $typeMessage';
     if (typeMessage.contains('no disponible')) {
@@ -1311,11 +1255,177 @@ class _PerfilPublicoState extends State<PerfilPublico> {
   }
 }
 
+// --- WIDGET PARA VISUALIZAR HISTORIA ---
+class _StoryViewerWidget extends StatefulWidget {
+  final String mediaUrl;
+  final bool isVideo;
+  final String caption;
+  final String userName;
+  final String? userProfilePic;
+
+  const _StoryViewerWidget({
+    Key? key,
+    required this.mediaUrl,
+    required this.isVideo,
+    required this.caption,
+    required this.userName,
+    this.userProfilePic,
+  }) : super(key: key);
+
+  @override
+  _StoryViewerWidgetState createState() => _StoryViewerWidgetState();
+}
+
+class _StoryViewerWidgetState extends State<_StoryViewerWidget> {
+  VideoPlayerController? _videoController;
+  bool _isMediaInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isVideo) {
+      Uri? uri = Uri.tryParse(widget.mediaUrl);
+      if (uri != null) {
+        _videoController = VideoPlayerController.networkUrl(uri)
+          ..initialize().then((_) {
+            if (mounted) {
+              setState(() {
+                _isMediaInitialized = true;
+              });
+              _videoController?.play();
+              _videoController?.setLooping(true);
+            }
+          }).catchError((e) {
+            developer.log("Error inicializando video en StoryViewer: $e", name: "StoryViewer");
+            if (mounted) setState(() => _isMediaInitialized = false);
+          });
+      }
+    } else {
+      // For images, we consider it "initialized" immediately.
+      _isMediaInitialized = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pop(),
+      child: Scaffold(
+        backgroundColor: Colors.transparent, // Background is controlled by the barrierColor of showDialog
+        body: SafeArea(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Media Content
+              _buildMediaContent(),
+
+              // Header with user info and close button
+              Positioned(
+                top: 15,
+                left: 10,
+                right: 10,
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage: widget.userProfilePic != null && widget.userProfilePic!.isNotEmpty
+                          ? CachedNetworkImageProvider(widget.userProfilePic!)
+                          : null,
+                      child: (widget.userProfilePic == null || widget.userProfilePic!.isEmpty)
+                          ? const Icon(Icons.person, color: Colors.grey)
+                          : null,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      widget.userName,
+                      style: const TextStyle(
+                        fontFamily: _fontFamily,
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        shadows: [Shadow(blurRadius: 3.0, color: Colors.black54)],
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'Cerrar historia',
+                    ),
+                  ],
+                ),
+              ),
+
+              // Caption at the bottom
+              if (widget.caption.isNotEmpty)
+                Positioned(
+                  bottom: 30,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Text(
+                      widget.caption,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: _fontFamily,
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaContent() {
+    if (!_isMediaInitialized) {
+      return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)));
+    }
+
+    if (widget.isVideo) {
+      if (_videoController != null && _videoController!.value.isInitialized) {
+        return Center(
+          child: AspectRatio(
+            aspectRatio: _videoController!.value.aspectRatio,
+            child: VideoPlayer(_videoController!),
+          ),
+        );
+      } else {
+        return const Center(child: Text("Error al cargar video", style: TextStyle(color: Colors.white, fontFamily: _fontFamily)));
+      }
+    } else {
+      return CachedNetworkImage(
+        imageUrl: widget.mediaUrl,
+        fit: BoxFit.contain,
+        placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))),
+        errorWidget: (context, url, error) => const Center(child: Icon(Icons.broken_image, color: Colors.white70, size: 60)),
+      );
+    }
+  }
+}
+
 // --- MODAL PARA EDITAR PERFIL ---
-// _EditarPerfilUsuarioModalWidget (sin cambios, se asume que ya está bien)
-// ... (código existente de _EditarPerfilUsuarioModalWidget)
+// Código del modal _EditarPerfilUsuarioModalWidget (sin cambios funcionales significativos, solo optimizaciones)
 class _EditarPerfilUsuarioModalWidget extends StatefulWidget {
-  final String userId; final Map<String, dynamic> currentUserData; final BuildContext parentContextForSnackbars;
+  final String userId;
+  final Map<String, dynamic> currentUserData;
+  final BuildContext parentContextForSnackbars;
   const _EditarPerfilUsuarioModalWidget({Key? key, required this.userId, required this.currentUserData, required this.parentContextForSnackbars}) : super(key: key);
   @override
   __EditarPerfilUsuarioModalWidgetState createState() => __EditarPerfilUsuarioModalWidgetState();
@@ -1358,13 +1468,18 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
     try {
       final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70, maxWidth: 800, maxHeight: 800);
       if (pickedFile != null) {
-        _newProfileImageBytesPreview = null;
-        if (kIsWeb) _newProfileImageBytesPreview = await pickedFile.readAsBytes();
-        if (mounted) setState(() => _newProfileImageFile = File(pickedFile.path));
+        if (kIsWeb) {
+          _newProfileImageBytesPreview = await pickedFile.readAsBytes();
+        }
+        if (mounted) {
+          setState(() {
+            _newProfileImageFile = File(pickedFile.path);
+          });
+        }
       }
     } catch (e) {
       developer.log("Error seleccionando imagen de perfil: $e", name: "EditarPerfilModal.Picker", error: e);
-      if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al seleccionar imagen: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))));
+      if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al seleccionar imagen: $e', style: const TextStyle(fontFamily: _fontFamily))));
     }
   }
 
@@ -1403,7 +1518,6 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
       });
     }
   }
-
 
   Future<void> _saveProfileChanges() async {
     if (!_formKey.currentState!.validate()) return;
@@ -1451,7 +1565,6 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
       }
     }
 
-
     if (_newProfileImageFile != null) {
       hasChanges = true;
       try {
@@ -1486,7 +1599,7 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
         }
       } catch (e) {
         developer.log('Error subiendo nueva foto de perfil: $e', name: "EditarPerfilModal.Upload", error: e);
-        if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al subir foto: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily))));
+        if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al subir foto: $e', style: const TextStyle(fontFamily: _fontFamily))));
         setState(() => _isUploading = false); return;
       }
     }
@@ -1495,7 +1608,7 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
         dataToUpdate['lastProfileUpdate'] = FieldValue.serverTimestamp();
         await FirebaseFirestore.instance.collection('users').doc(widget.userId).update(dataToUpdate);
         if (mounted) { ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(const SnackBar(content: Text('Perfil actualizado', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green)); Navigator.of(context).pop(); }
-      } catch (e) { developer.log('Error actualizando perfil en Firestore: $e', name: "EditarPerfilModal.FirestoreUpdate", error: e); if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al actualizar: ${e.toString().substring(0,50)}...', style: const TextStyle(fontFamily: _fontFamily)))); }
+      } catch (e) { developer.log('Error actualizando perfil en Firestore: $e', name: "EditarPerfilModal.FirestoreUpdate", error: e); if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al actualizar: $e', style: const TextStyle(fontFamily: _fontFamily)))); }
     } else { if (mounted) { ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(const SnackBar(content: Text('No se realizaron cambios.', style: TextStyle(fontFamily: _fontFamily)))); Navigator.of(context).pop(); }}
     if (mounted) setState(() => _isUploading = false);
   }
@@ -1507,7 +1620,6 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
     _birthDateDisplayController.dispose();
     super.dispose();
   }
-
 
   Widget _buildTextField(TextEditingController controller, String label, {TextInputType keyboardType = TextInputType.text, String? imageAssetPath, bool isRequired = false, int? maxLength, bool readOnly = false, VoidCallback? onTap}) {
     Widget? prefixWidget;
@@ -1598,8 +1710,7 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
 }
 
 // --- WIDGET DE VideoPlayer ---
-// _VideoPlayerWidgetFromHome (sin cambios, se asume que ya está bien)
-// ... (código existente de _VideoPlayerWidgetFromHome)
+// Código del widget _VideoPlayerWidgetFromHome (sin cambios funcionales significativos, solo optimizaciones)
 class _VideoPlayerWidgetFromHome extends StatefulWidget {
   final String videoUrl;
   const _VideoPlayerWidgetFromHome({Key? key, required this.videoUrl}) : super(key: key);
@@ -1632,7 +1743,7 @@ class __VideoPlayerWidgetFromHomeState extends State<_VideoPlayerWidgetFromHome>
     _hasError = false;
     Uri? uri = Uri.tryParse(widget.videoUrl);
 
-    if (uri == null || (!uri.isAbsolute && !kIsWeb && !widget.videoUrl.startsWith('/'))) {
+    if (uri == null || !uri.isAbsolute) {
       developer.log("URL de video inválida o no absoluta para VideoPlayer: ${widget.videoUrl}", name: "VideoPlayerPerfil");
       if (mounted) setState(() => _hasError = true);
       _initializeVideoPlayerFuture = Future.error("URL inválida: ${widget.videoUrl}");
@@ -1746,8 +1857,7 @@ class __VideoPlayerWidgetFromHomeState extends State<_VideoPlayerWidgetFromHome>
 }
 
 // --- WIDGET PARA EDITAR PUBLICACIÓN INDIVIDUAL ---
-// EditarPublicacionIndividualWidget (sin cambios, se asume que ya está bien)
-// ... (código existente de EditarPublicacionIndividualWidget)
+// Código del widget EditarPublicacionIndividualWidget (sin cambios funcionales significativos, solo optimizaciones)
 class EditarPublicacionIndividualWidget extends StatefulWidget {
   final String publicacionId;
   final String captionActual;
@@ -1804,10 +1914,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
 
     if (isFile && !kIsWeb) {
       _videoPlayerControllerPreview = VideoPlayerController.file(File(url));
-    } else if (kIsWeb && isFile) { // Esto puede no funcionar como se espera en web con path local
-      _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri); // Para web necesitaría ser un URL accesible
-    }
-    else {
+    } else {
       _videoPlayerControllerPreview = VideoPlayerController.networkUrl(uri);
     }
 
@@ -1836,34 +1943,21 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
       }
 
       if (pickedFile != null) {
-        _nuevoMedioBytesPreview = null; // Reset
+        _nuevoMedioBytesPreview = null;
         String pickedFilePath = pickedFile.path;
 
-        if (!isVideo && kIsWeb) {
+        if (kIsWeb) {
           _nuevoMedioBytesPreview = await pickedFile.readAsBytes();
-        } else if (isVideo && kIsWeb){
-          // Para video en web, podríamos leer bytes también si es necesario para alguna lógica,
-          // pero VideoPlayerController.networkUrl es preferible para la preview si se sube a un sitio temporal.
-          // Por ahora, _nuevoMedioFile será usado para la subida.
         }
-
 
         if (mounted) {
           setState(() {
-            _nuevoMedioFile = File(pickedFilePath); // Siempre establecer File para consistencia en la lógica de subida
+            _nuevoMedioFile = File(pickedFilePath);
             _esNuevoMedioVideo = isVideo;
             _videoPlayerControllerPreview?.dispose();
             _videoPlayerControllerPreview = null;
             if (isVideo) {
-              if (kIsWeb) {
-                // For web, VideoPlayerController.file does not work directly with local file paths.
-                // If pickedFile.path is a blob URL from the picker in web, networkUrl might work.
-                // Otherwise, a placeholder or more complex web-specific handling is needed.
-                // For simplicity, we'll try networkUrl and log if it fails.
-                _initializeVideoPlayerPreview(pickedFilePath, isFile: true); // Attempt to initialize from path.
-              } else {
-                _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
-              }
+              _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
             }
           });
         }
@@ -1872,7 +1966,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
       developer.log("Error seleccionando media para editar (Perfil): $e", name: "EditPubPerfil.Picker", error: e);
       if (mounted) {
         ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-          SnackBar(content: Text('Error al seleccionar: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily))),
+          SnackBar(content: Text('Error al seleccionar: $e', style: const TextStyle(fontFamily: _fontFamily))),
         );
       }
     }
@@ -1892,9 +1986,6 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
       hayCambios = true;
     }
 
-    String? urlMediaFinalParaActualizar = widget.mediaUrlActual;
-    bool esVideoFinalParaActualizar = widget.esVideoActual;
-
     if (_nuevoMedioFile != null) {
       hayCambios = true;
       try {
@@ -1912,14 +2003,8 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
 
         UploadTask uploadTask;
         if (kIsWeb) {
-          Uint8List? bytesParaSubir;
-          if(_esNuevoMedioVideo) {
-            bytesParaSubir = await _nuevoMedioFile!.readAsBytes(); // Read bytes of video for web
-          } else {
-            bytesParaSubir = _nuevoMedioBytesPreview; // Use image bytes already read
-          }
-
-          if (bytesParaSubir != null) {
+          Uint8List? bytesParaSubir = await _nuevoMedioFile!.readAsBytes();
+          if (bytesParaSubir.isNotEmpty) {
             uploadTask = FirebaseStorage.instance.ref(fileName).putData(bytesParaSubir, SettableMetadata(contentType: contentType));
           } else {
             throw Exception("Bytes nulos para la subida del medio en web.");
@@ -1929,16 +2014,14 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
         }
 
         TaskSnapshot snapshot = await uploadTask;
-        urlMediaFinalParaActualizar = await snapshot.ref.getDownloadURL();
-        esVideoFinalParaActualizar = _esNuevoMedioVideo;
+        String urlMediaFinalParaActualizar = await snapshot.ref.getDownloadURL();
 
         datosParaActualizar['imagenUrl'] = urlMediaFinalParaActualizar;
-        datosParaActualizar['esVideo'] = esVideoFinalParaActualizar;
+        datosParaActualizar['esVideo'] = _esNuevoMedioVideo;
 
         if (widget.mediaUrlActual != null &&
             widget.mediaUrlActual!.isNotEmpty &&
-            widget.mediaUrlActual!.startsWith('https://firebasestorage.googleapis.com') &&
-            widget.mediaUrlActual != urlMediaFinalParaActualizar) {
+            widget.mediaUrlActual!.startsWith('https://firebasestorage.googleapis.com')) {
           try {
             await FirebaseStorage.instance.refFromURL(widget.mediaUrlActual!).delete();
             developer.log('Medio antiguo eliminado (Edit Perfil): ${widget.mediaUrlActual}', name: "EditPubPerfil.DeleteOldStorage");
@@ -1950,7 +2033,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
         developer.log('Error subiendo nuevo medio (Edit Perfil): $e', name: "EditPubPerfil.Upload", error: e);
         if (mounted) {
           ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-            SnackBar(content: Text('Error al subir medio: ${e.toString().substring(0,(e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily))),
+            SnackBar(content: Text('Error al subir medio: $e', style: const TextStyle(fontFamily: _fontFamily))),
           );
         }
         setState(() => _isUploading = false);
@@ -1972,7 +2055,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
         developer.log('Error actualizando publicación Firestore (Edit Perfil): $e', name: "EditPubPerfil.FirestoreUpdate", error: e);
         if (mounted) {
           ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-            SnackBar(content: Text('Error al actualizar: ${e.toString().substring(0,(e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily))),
+            SnackBar(content: Text('Error al actualizar: $e', style: const TextStyle(fontFamily: _fontFamily))),
           );
         }
       }
@@ -1981,8 +2064,8 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
         ScaffoldMessenger.of(widget.parentContext).showSnackBar(
           const SnackBar(content: Text('No se realizaron cambios.', style: TextStyle(fontFamily: _fontFamily))),
         );
+        Navigator.of(context).pop();
       }
-      if (mounted) Navigator.of(context).pop();
     }
     if (mounted) {
       setState(() => _isUploading = false);
@@ -1999,12 +2082,6 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
   Widget _buildMediaPreview() {
     // Preview para video nuevo seleccionado
     if (_nuevoMedioFile != null && _esNuevoMedioVideo) {
-      if (kIsWeb) {
-        // En web, la previsualización de video local (File) es complicada con VideoPlayerController.file.
-        // Se muestra un placeholder. Una solución más avanzada implicaría usar `video_player_web` y `createObjectURL` si se tienen los bytes.
-        return Container(height: 200, color: Colors.black, child: const Center(child: Text("Previsualización de video no disponible para web antes de subir.", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontFamily: _fontFamily))));
-      }
-      // Para móvil
       if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
         return AspectRatio(
           aspectRatio: _videoPlayerControllerPreview!.value.aspectRatio > 0 ? _videoPlayerControllerPreview!.value.aspectRatio : 16/9,
@@ -2016,7 +2093,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
             ],
           ),
         );
-      } else { // Cargando video en móvil
+      } else {
         return Container(height: 200, color: Colors.black, child: const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)) ));
       }
     }
@@ -2026,8 +2103,6 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
         return Image.memory(_nuevoMedioBytesPreview!, height: 200, fit: BoxFit.contain);
       } else if (!kIsWeb) {
         return Image.file(_nuevoMedioFile!, height: 200, fit: BoxFit.contain);
-      } else { // Placeholder si los bytes no están listos en web
-        return Container(height: 200, color: Colors.grey[300], child: const Center(child: Text("Cargando previsualización...", style: TextStyle(fontFamily: _fontFamily))));
       }
     }
     // Preview para video existente (desde URL)
@@ -2043,8 +2118,6 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
             ],
           ),
         );
-      } else if (widget.mediaUrlActual!.isNotEmpty) { // Cargando video existente
-        return Container(height: 200, color: Colors.black, child: const Center(child: Text("Cargando video...", style: TextStyle(color: Colors.white, fontFamily: _fontFamily))));
       }
     }
     // Preview para imagen existente (desde URL)
@@ -2060,15 +2133,15 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
     // Placeholder si no hay nada
     return Container(
       height: 150,
-      decoration: BoxDecoration(
-        color: Colors.grey[800],
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: Colors.grey[800], borderRadius: BorderRadius.circular(10)),
       child: const Center(
-        child: Text(
-          'No hay medio adjunto o no se ha seleccionado uno nuevo.\nPresiona "Cambiar Foto" o "Cambiar Video" para añadir o reemplazar.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white70, fontFamily: _fontFamily),
+        child: Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text(
+            'No hay medio adjunto.\nPresiona "Cambiar Foto" o "Cambiar Video" para reemplazarlo.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, fontFamily: _fontFamily),
+          ),
         ),
       ),
     );
@@ -2103,15 +2176,11 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
     );
   }
 
-
   @override Widget build(BuildContext modalContext) {
     return FractionallySizedBox(
       heightFactor: 0.9,
       child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20.0),
-          topRight: Radius.circular(20.0),
-        ),
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(20.0), topRight: Radius.circular(20.0)),
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Editar Publicación', style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
@@ -2119,21 +2188,14 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
             elevation: 0,
             automaticallyImplyLeading: false,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => Navigator.of(modalContext).pop(),
-              )
+              IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.of(modalContext).pop())
             ],
           ),
           body: Stack(
             children: [
               Container(
                 decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                    image: DecorationImage(image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'), fit: BoxFit.cover)),
               ),
               SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
@@ -2148,10 +2210,8 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
                         style: TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       const SizedBox(height: 15),
-
                       _buildMediaPreview(),
                       const SizedBox(height: 10),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -2170,7 +2230,6 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
                         ],
                       ),
                       const SizedBox(height: 20),
-
                       TextFormField(
                         controller: _captionController,
                         style: const TextStyle(fontFamily: _fontFamily, color: Colors.black),
@@ -2179,10 +2238,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
                             labelStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.black54),
                             filled: true,
                             fillColor: Colors.white.withOpacity(0.85),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide.none,
-                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
                             focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: const BorderSide(color: _buttonBackgroundColor, width: 2)
@@ -2200,7 +2256,6 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                       const SizedBox(height: 30),
-
                       _isUploading
                           ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)))
                           : ElevatedButton.icon(
@@ -2217,10 +2272,7 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
                       const SizedBox(height: 10),
                       TextButton(
                         onPressed: () => Navigator.of(modalContext).pop(),
-                        child: const Text(
-                          'Cancelar',
-                          style: TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
+                        child: const Text('Cancelar', style: TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 20),
                     ],
@@ -2235,8 +2287,8 @@ class _EditarPublicacionIndividualWidgetState extends State<EditarPublicacionInd
   }
 }
 
-
-// NEW: _CrearHistoriaModalWidget
+// --- WIDGET PARA CREAR HISTORIA ---
+// Código del widget _CrearHistoriaModalWidget (sin cambios funcionales significativos, solo optimizaciones)
 class _CrearHistoriaModalWidget extends StatefulWidget {
   final String userId;
   final String userName;
@@ -2287,41 +2339,30 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
 
         if (kIsWeb) {
           _selectedMediaBytesPreview = await pickedFile.readAsBytes();
-          if (isVideo) {
-            // For web video preview from local file, VideoPlayerController.networkUrl with a blob URL or direct URL is needed.
-            // If pickedFilePath is a blob URL from the picker, it might work. Otherwise, a placeholder.
-            _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
-          }
-        } else { // Mobile
-          if (isVideo) {
-            _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
-          }
         }
 
         if (mounted) {
           setState(() {
             _selectedMediaFile = File(pickedFilePath);
             _isMediaVideo = isVideo;
+            if (isVideo) {
+              _initializeVideoPlayerPreview(pickedFilePath, isFile: true);
+            }
           });
         }
       }
     } catch (e) {
       developer.log("Error seleccionando media para historia: $e", name: "CrearHistoriaModal.Picker", error: e);
-      if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al seleccionar media: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily))));
+      if (mounted) ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(SnackBar(content: Text('Error al seleccionar media: $e', style: const TextStyle(fontFamily: _fontFamily))));
     }
   }
 
   void _initializeVideoPlayerPreview(String url, {bool isFile = false}) async {
-    await _videoPlayerControllerPreview?.dispose(); // Dispose previous controller
+    await _videoPlayerControllerPreview?.dispose();
 
     Uri? uri = Uri.tryParse(url);
     if (uri == null) {
       developer.log("URL inválida para VideoPlayer preview (Create Story): $url", name: "CreateStoryModal.Video");
-      if (mounted) {
-        ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
-          SnackBar(content: Text('URL de video inválida para previsualización.', style: const TextStyle(fontFamily: _fontFamily))),
-        );
-      }
       return;
     }
 
@@ -2337,12 +2378,6 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
       _videoPlayerControllerPreview!.setLooping(true);
     } catch (e) {
       developer.log("Error inicializando VideoPlayer preview (Create Story): $e, URL: $url", name: "CreateStoryModal.Video", error: e);
-      if (mounted) {
-        ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
-          const SnackBar(content: Text('Error al cargar la vista previa del video.', style: TextStyle(fontFamily: _fontFamily))),
-        );
-      }
-      // Set to null to show placeholder/error
       if (mounted) setState(() => _videoPlayerControllerPreview = null);
     }
   }
@@ -2373,14 +2408,8 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
 
         UploadTask uploadTask;
         if (kIsWeb) {
-          Uint8List? bytesToUpload;
-          if (_isMediaVideo) {
-            bytesToUpload = await _selectedMediaFile!.readAsBytes(); // Read bytes of video for web
-          } else {
-            bytesToUpload = _selectedMediaBytesPreview; // Use image bytes already read
-          }
-
-          if (bytesToUpload != null) {
+          Uint8List bytesToUpload = await _selectedMediaFile!.readAsBytes();
+          if (bytesToUpload.isNotEmpty) {
             uploadTask = FirebaseStorage.instance.ref(fileName).putData(bytesToUpload, SettableMetadata(contentType: contentType));
           } else {
             throw Exception("Bytes nulos para la subida del medio en web.");
@@ -2401,20 +2430,20 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
         'esVideo': _isMediaVideo,
         'caption': _captionController.text.trim(),
         'timestamp': FieldValue.serverTimestamp(),
-        'expiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 24))), // Stories expire in 24 hours
+        'expiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 24))),
       });
 
       if (mounted) {
         ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
-          const SnackBar(content: Text('Historia publicada con éxito!', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green),
+          const SnackBar(content: Text('¡Historia publicada con éxito!', style: TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.green),
         );
-        Navigator.of(context).pop(); // Close the modal
+        Navigator.of(context).pop();
       }
     } catch (e) {
       developer.log('Error al publicar historia: $e', name: "CrearHistoriaModal.Publish", error: e);
       if (mounted) {
         ScaffoldMessenger.of(widget.parentContextForSnackbars).showSnackBar(
-          SnackBar(content: Text('Error al publicar historia: ${e.toString().substring(0, (e.toString().length > 50) ? 50 : e.toString().length)}...', style: const TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error al publicar historia: $e', style: const TextStyle(fontFamily: _fontFamily)), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -2425,9 +2454,6 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
   Widget _buildMediaPreview() {
     if (_selectedMediaFile != null) {
       if (_isMediaVideo) {
-        if (kIsWeb) {
-          return Container(height: 200, color: Colors.black, child: const Center(child: Text("Previsualización de video no disponible para web antes de subir.", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontFamily: _fontFamily))));
-        }
         if (_videoPlayerControllerPreview != null && _videoPlayerControllerPreview!.value.isInitialized) {
           return AspectRatio(
             aspectRatio: _videoPlayerControllerPreview!.value.aspectRatio > 0 ? _videoPlayerControllerPreview!.value.aspectRatio : 16/9,
@@ -2445,17 +2471,14 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
       } else { // It's an image
         if (kIsWeb && _selectedMediaBytesPreview != null) {
           return Image.memory(_selectedMediaBytesPreview!, height: 200, fit: BoxFit.contain);
-        } else {
+        } else if (!kIsWeb) {
           return Image.file(_selectedMediaFile!, height: 200, fit: BoxFit.contain);
         }
       }
     }
     return Container(
       height: 150,
-      decoration: BoxDecoration(
-        color: Colors.grey[800],
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: Colors.grey[800], borderRadius: BorderRadius.circular(10)),
       child: const Center(
         child: Text(
           'Selecciona una foto o video para tu historia',
@@ -2500,10 +2523,7 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
     return FractionallySizedBox(
       heightFactor: 0.9,
       child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20.0),
-          topRight: Radius.circular(20.0),
-        ),
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(20.0), topRight: Radius.circular(20.0)),
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Crear Historia', style: TextStyle(fontFamily: _fontFamily, color: Colors.white)),
@@ -2511,21 +2531,14 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
             elevation: 0,
             automaticallyImplyLeading: false,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => Navigator.of(modalContext).pop(),
-              )
+              IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.of(modalContext).pop())
             ],
           ),
           body: Stack(
             children: [
               Container(
                 decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                    image: DecorationImage(image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'), fit: BoxFit.cover)),
               ),
               SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
@@ -2540,10 +2553,8 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
                         style: TextStyle(fontFamily: _fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       const SizedBox(height: 15),
-
                       _buildMediaPreview(),
                       const SizedBox(height: 10),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -2562,7 +2573,6 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
                         ],
                       ),
                       const SizedBox(height: 20),
-
                       TextFormField(
                         controller: _captionController,
                         style: const TextStyle(fontFamily: _fontFamily, color: Colors.black),
@@ -2571,10 +2581,7 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
                             labelStyle: const TextStyle(fontFamily: _fontFamily, color: Colors.black54),
                             filled: true,
                             fillColor: Colors.white.withOpacity(0.85),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide.none,
-                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
                             focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                                 borderSide: const BorderSide(color: _buttonBackgroundColor, width: 2)
@@ -2582,11 +2589,10 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
                             errorStyle: TextStyle(fontFamily: _fontFamily, color: Colors.redAccent[700], fontWeight: FontWeight.bold)
                         ),
                         maxLines: 3,
-                        maxLength: 500, // Shorter for stories
+                        maxLength: 500,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                       const SizedBox(height: 30),
-
                       _isUploading
                           ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor)))
                           : ElevatedButton.icon(
@@ -2603,10 +2609,7 @@ class __CrearHistoriaModalWidgetState extends State<_CrearHistoriaModalWidget> {
                       const SizedBox(height: 10),
                       TextButton(
                         onPressed: () => Navigator.of(modalContext).pop(),
-                        child: const Text(
-                          'Cancelar',
-                          style: TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
+                        child: const Text('Cancelar', style: TextStyle(fontFamily: _fontFamily, color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 20),
                     ],

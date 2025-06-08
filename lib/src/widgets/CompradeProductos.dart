@@ -620,7 +620,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                 ),
                 // LOGO POSICIONADO
                 Positioned(
-                  top: 42.0,
+                  top: 40.0,
                   child: GestureDetector(
                     onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home(key: const Key('HomeLogoFromCompraProductosV6')))),
                     child: Tooltip(
@@ -649,9 +649,9 @@ class _CompradeProductosState extends State<CompradeProductos> {
             children: [
               _buildProfileIcon(),
               const Spacer(),
-              _buildIconButton(assetPath: 'assets/images/vender.png', width: 65.0, height: 60.0, tooltip: 'Vender un Producto', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => VenderProductos(key: const Key('VenderProductosDesdeCompraV6'))))),
+              _buildIconButton(assetPath: 'assets/images/vender.png', width: 60.0, height: 60.0, tooltip: 'Vender un Producto', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => VenderProductos(key: const Key('VenderProductosDesdeCompraV6'))))),
               const SizedBox(width: 8),
-              _buildIconButton(assetPath: 'assets/images/misproductos.png', width: 65.0, height: 60.0, tooltip: 'Mis Productos Publicados', onPressed: _mostrarModalMisProductos),
+              _buildIconButton(assetPath: 'assets/images/misproductos.png', width: 60.0, height: 60.0, tooltip: 'Mis Productos Publicados', onPressed: _mostrarModalMisProductos),
             ],
           ),
           const SizedBox(height: 15),
