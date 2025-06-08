@@ -1,7 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:adobe_xd/pinned.dart';
-import 'package:adobe_xd/page_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -39,75 +37,199 @@ class CompradeProductos extends StatefulWidget {
 
 class _CompradeProductosState extends State<CompradeProductos> {
   final TextEditingController _searchController = TextEditingController();
-  final ValueNotifier<String> _searchTermNotifier = ValueNotifier<String>('');
   final CartService _cartService = CartService();
-  Stream<QuerySnapshot<Map<String, dynamic>>>? _productsStream;
+
+  // Stream para obtener los productos. Se actualiza con los filtros.
+  Stream<List<Product>>? _productsStream;
+
+  // Estados para los filtros
+  String? _selectedCategoryFilter;
+  RangeValues? _priceRangeFilter;
+  // Lista de categorías que nos proporcionaste
+  final List<String> _listaDeCategorias = [
+    'Alimentos', 'Juguetes', 'Accesorios (Correas, Collares, Camas)',
+    'Productos de Aseo e Higiene', 'Medicamentos y Salud (Antipulgas, Vitaminas)',
+    'Snacks y Premios', 'Ropa', 'Transportadoras y Jaulas', 'Otros',
+  ];
 
   @override
   void initState() {
     super.initState();
     developer.log('CompradeProductos initState: Initializing search controller and updating product stream.');
-    // La búsqueda se inicia vacía para mostrar todos los productos.
-    _updateProductStream('');
-    _searchController.addListener(() {
-      if (mounted) {
-        setState(() {});
-      }
-    });
+    // Carga inicial de todos los productos sin filtros
+    _applyFiltersAndSearch();
   }
 
-  /// Actualiza el stream de productos basado en un término de búsqueda.
-  /// Busca por palabras clave individuales en el campo 'searchKeywords'.
-  void _updateProductStream(String searchTerm) {
+  /// Construye la consulta a Firestore y actualiza el stream de productos.
+  /// Combina la búsqueda por texto y los filtros de categoría y precio.
+  void _applyFiltersAndSearch() {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection('products');
+    final searchTerm = _searchController.text.trim().toLowerCase();
 
     if (searchTerm.isNotEmpty) {
-      // Búsqueda por palabra clave. Encuentra documentos donde el array 'searchKeywords' contiene el término de búsqueda.
-      query = query.where('searchKeywords', arrayContains: searchTerm.toLowerCase());
-      developer.log('CompradeProductos _updateProductStream: Searching for keyword: "$searchTerm"');
-    } else {
-      // Si no hay búsqueda, muestra todos los productos.
+      // La búsqueda por texto ahora filtra por palabras clave
+      query = query.where('searchKeywords', arrayContains: searchTerm);
+      developer.log('CompradeProductos: Searching for keyword: "$searchTerm"');
+    }
+
+    if (_selectedCategoryFilter != null) {
+      // Filtro por categoría
+      query = query.where('category', isEqualTo: _selectedCategoryFilter);
+      developer.log('CompradeProductos: Filtering by category: "$_selectedCategoryFilter"');
+    }
+
+    if (_priceRangeFilter != null) {
+      // Filtro por rango de precio
+      // IMPORTANTE: Esta consulta combinada requiere un ÍNDICE COMPUESTO en Firestore.
+      // Firebase te dará un error con un enlace para crearlo la primera vez que se ejecute.
+      query = query.where('price', isGreaterThanOrEqualTo: _priceRangeFilter!.start);
+      query = query.where('price', isLessThanOrEqualTo: _priceRangeFilter!.end);
+      developer.log('CompradeProductos: Filtering by price range: \$${_priceRangeFilter!.start.toStringAsFixed(0)} - \$${_priceRangeFilter!.end.toStringAsFixed(0)}');
+    }
+
+    // Si no hay búsqueda por texto, ordenamos por fecha. Si la hay, Firestore requiere que el orden sea por el mismo campo del 'array-contains'.
+    if (searchTerm.isEmpty) {
       query = query.orderBy('creationDate', descending: true);
-      developer.log('CompradeProductos _updateProductStream: Search term is empty, showing all products.');
     }
 
     if (mounted) {
       setState(() {
-        _productsStream = query.snapshots();
+        // Mapeamos el snapshot a una lista de objetos Product
+        _productsStream = query.snapshots().map((snapshot) {
+          return snapshot.docs.map((doc) {
+            try {
+              return Product.fromFirestore(doc.data(), doc.id);
+            } catch (e, s) {
+              developer.log('ERROR al parsear producto ${doc.id}: $e\nStackTrace: $s\nDatos: ${doc.data()}');
+              return null; // Devuelve null si hay un error
+            }
+          }).whereType<Product>().toList(); // Filtra los nulos
+        });
       });
     }
   }
 
-  void _performSearch() {
-    final searchTerm = _searchController.text.trim();
-    developer.log('CompradeProductos _performSearch: Starting search for: "$searchTerm"');
-    FocusScope.of(context).unfocus();
-    _updateProductStream(searchTerm);
-    _searchTermNotifier.value = searchTerm;
-  }
-
-  void _clearSearch() {
-    developer.log('CompradeProductos _clearSearch: Clearing search bar');
+  void _clearSearchAndFilters() {
+    developer.log('CompradeProductos: Clearing all search and filters');
     _searchController.clear();
-    _updateProductStream('');
-    _searchTermNotifier.value = '';
+    setState(() {
+      _selectedCategoryFilter = null;
+      _priceRangeFilter = null;
+    });
+    _applyFiltersAndSearch(); // Recargar todos los productos
     FocusScope.of(context).unfocus();
   }
 
+  // Muestra el diálogo para seleccionar los filtros
+  Future<void> _showFilterDialog() async {
+    // Usamos copias locales para que los cambios solo se apliquen al presionar "Aplicar"
+    String? tempCategory = _selectedCategoryFilter;
+    RangeValues tempPriceRange = _priceRangeFilter ?? const RangeValues(0, 5000); // Rango por defecto
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xfff0faff),
+              title: const Text('Filtrar Productos', style: TextStyle(fontFamily: APP_FONT_FAMILY)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Filtro de Categoría
+                    const Text('Categoría:', style: TextStyle(fontFamily: APP_FONT_FAMILY, fontWeight: FontWeight.bold)),
+                    DropdownButton<String>(
+                      isExpanded: true,
+                      value: tempCategory,
+                      hint: const Text('Todas las categorías'),
+                      items: [
+                        const DropdownMenuItem<String>(
+                          value: null,
+                          child: Text('Todas'),
+                        ),
+                        ..._listaDeCategorias.map((cat) => DropdownMenuItem(
+                          value: cat,
+                          child: Text(cat, style: const TextStyle(fontFamily: APP_FONT_FAMILY)),
+                        )).toList(),
+                      ],
+                      onChanged: (value) {
+                        setDialogState(() {
+                          tempCategory = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Filtro de Precio
+                    Text(
+                        'Rango de Precio: \$${tempPriceRange.start.toStringAsFixed(0)} - \$${tempPriceRange.end.toStringAsFixed(0)}',
+                        style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontWeight: FontWeight.bold)
+                    ),
+                    RangeSlider(
+                      values: tempPriceRange,
+                      min: 0,
+                      max: 10000, // Precio máximo ajustable
+                      divisions: 100,
+                      labels: RangeLabels(
+                        '\$${tempPriceRange.start.round()}',
+                        '\$${tempPriceRange.end.round()}',
+                      ),
+                      onChanged: (values) {
+                        setDialogState(() {
+                          tempPriceRange = values;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    // Limpiar filtros temporales y cerrar
+                    setDialogState(() {
+                      tempCategory = null;
+                      tempPriceRange = const RangeValues(0, 5000);
+                    });
+                    setState(() {
+                      _selectedCategoryFilter = null;
+                      _priceRangeFilter = null;
+                    });
+                    _applyFiltersAndSearch();
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Limpiar Filtros', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.red)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: APP_PRIMARY_COLOR),
+                  onPressed: () {
+                    // Aplicar filtros y cerrar
+                    setState(() {
+                      _selectedCategoryFilter = tempCategory;
+                      _priceRangeFilter = tempPriceRange;
+                    });
+                    _applyFiltersAndSearch();
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Aplicar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   void dispose() {
-    developer.log('CompradeProductos dispose: Disposing controllers and notifiers');
-    _searchController.removeListener(() {});
+    developer.log('CompradeProductos dispose: Disposing controllers');
     _searchController.dispose();
-    _searchTermNotifier.dispose();
     super.dispose();
   }
-
-  // --- El resto de tu código de la clase _CompradeProductosState permanece sin cambios ---
-  // --- (build, _buildProductCard, _mostrarModalMisProductos, etc.) ---
-  // --- A continuación, se pega todo el código restante sin modificar su funcionalidad, ---
-  // --- ya que la lógica central de la búsqueda ya es correcta. ---
 
   Future<void> _mostrarModalMisProductos() async {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -159,263 +281,196 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
-  Widget _buildProductCard(BuildContext context, Product product) {
+  // Widget para la tarjeta de producto, con los íconos de editar/eliminar restaurados
+  Widget _buildProductCard(Product product, {double width = 180}) {
     String? imageUrl = product.images.isNotEmpty ? product.images.first.url : null;
     final currentUser = FirebaseAuth.instance.currentUser;
     final bool isOwner = currentUser != null && product.userId.isNotEmpty && product.userId == currentUser.uid;
 
-    Future<void> _deleteProduct(String productId, String productName) async {
-      bool? confirmDelete = await showDialog<bool>(
-        context: context,
-        builder: (BuildContext dialogContext) {
-          return AlertDialog(
-            backgroundColor: const Color(0xe3a0f4fe),
-            title: const Text('Confirmar Eliminación', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
-            content: Text('¿Estás seguro de que quieres eliminar "$productName"? Esta acción no se puede deshacer.', style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Cancelar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.grey)),
-                onPressed: () {
-                  Navigator.of(dialogContext).pop(false);
-                },
-              ),
-              TextButton(
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Eliminar', style: TextStyle(fontFamily: APP_FONT_FAMILY)),
-                onPressed: () {
-                  Navigator.of(dialogContext).pop(true);
-                },
-              ),
-            ],
-          );
-        },
-      );
-
-      if (confirmDelete == true) {
-        try {
-          DocumentSnapshot productDoc = await FirebaseFirestore.instance.collection('products').doc(productId).get();
-          if (productDoc.exists) {
-            final productDataForDelete = Product.fromFirestore(productDoc.data() as Map<String, dynamic>, productDoc.id);
-            for (var imageInfo in productDataForDelete.images) {
-              if (imageInfo.url.startsWith('https://firebasestorage.googleapis.com')) {
-                try {
-                  await FirebaseStorage.instance.refFromURL(imageInfo.url).delete();
-                } catch (e) {
-                  developer.log('Error eliminando imagen de storage: ${imageInfo.url}, error: $e');
-                }
-              }
-            }
-          }
-
-          await FirebaseFirestore.instance.collection('products').doc(productId).delete();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Producto eliminado correctamente.', style: TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.green),
+    return SizedBox(
+      width: width,
+      child: Card(
+        elevation: 3.0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+        margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => DetallesdelProducto(key: Key('DetallesdelProducto_${product.id}'), product: product)),
             );
-          }
-        } catch (e) {
-          developer.log('Error al eliminar producto: $e');
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error al eliminar el producto: $e', style: const TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.red),
-            );
-          }
-        }
-      }
-    }
-
-    return Card(
-      elevation: 3.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      margin: const EdgeInsets.all(8.0),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DetallesdelProducto(
-                key: Key('DetallesdelProducto_${product.id}'),
-                product: product,
-              ),
-            ),
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Expanded(
-              flex: 3,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(15.0),
-                        topRight: Radius.circular(15.0),
-                      ),
-                      child: imageUrl != null && imageUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey[200],
-                          child: const Center(
-                              child: CircularProgressIndicator(
-                                valueColor:
-                                AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR),
-                              )),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.broken_image,
-                              size: 40, color: Colors.grey),
-                        ),
-                      )
-                          : Container(
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.inventory_2_outlined,
-                            size: 40, color: Colors.grey),
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              // Imagen
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(15.0)),
+                        child: imageUrl != null && imageUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(color: Colors.grey[200], child: const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR)))),
+                          errorWidget: (context, url, error) => Container(color: Colors.grey[300], child: const Icon(Icons.broken_image, size: 40, color: Colors.grey)),
+                        )
+                            : Container(color: Colors.grey[300], child: const Icon(Icons.inventory_2_outlined, size: 40, color: Colors.grey)),
                       ),
                     ),
-                  ),
-                  if (isOwner) ...[
-                    Positioned(
-                      top: 3,
-                      right: 2,
-                      child: Tooltip(
-                        message: 'Eliminar Producto',
-                        child: IconButton(
-                          icon: Image.asset(
-                            'assets/images/eliminar.png',
-                            width: 28.0,
-                            height: 28.0,
-                            fit: BoxFit.contain,
+                    // Íconos de editar y eliminar restaurados
+                    if (isOwner) ...[
+                      Positioned(
+                        top: 3,
+                        right: 2,
+                        child: Tooltip(
+                          message: 'Eliminar Producto',
+                          child: IconButton(
+                            icon: Image.asset(
+                              'assets/images/eliminar.png',
+                              width: 28.0,
+                              height: 28.0,
+                              fit: BoxFit.contain,
+                            ),
+                            onPressed: () {
+                              _confirmAndDeleteProduct(product);
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                            splashRadius: 20,
                           ),
-                          onPressed: () {
-                            _deleteProduct(product.id, product.name);
-                          },
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          splashRadius: 20,
                         ),
                       ),
+                      Positioned(
+                        top: 3,
+                        right: 2 + 28 + 4, // Posicionado a la izquierda del de eliminar
+                        child: Tooltip(
+                          message: 'Editar Producto',
+                          child: IconButton(
+                            icon: Image.asset(
+                              'assets/images/editar.png',
+                              width: 28.0,
+                              height: 28.0,
+                              fit: BoxFit.contain,
+                            ),
+                            onPressed: () {
+                              _mostrarModalEditarProducto(product, context);
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                            splashRadius: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // Detalles del producto
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      product.name,
+                      style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 16, color: APP_TEXT_COLOR, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Positioned(
-                      top: 3,
-                      right: 2 + 28 + 4,
-                      child: Tooltip(
-                        message: 'Editar Producto',
-                        child: IconButton(
-                          icon: Image.asset(
-                            'assets/images/editar.png',
-                            width: 28.0,
-                            height: 28.0,
-                            fit: BoxFit.contain,
-                          ),
-                          onPressed: () {
-                            _mostrarModalEditarProducto(product, context);
-                          },
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          splashRadius: 20,
-                        ),
-                      ),
+                    const SizedBox(height: 2.0),
+                    Text(
+                      '\$${product.price.toStringAsFixed(2)}',
+                      style: TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 17, color: Colors.green[700], fontWeight: FontWeight.bold),
                     ),
                   ],
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                      fontFamily: APP_FONT_FAMILY,
-                      fontSize: 16,
-                      color: APP_TEXT_COLOR,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    '\$${product.price.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontFamily: APP_FONT_FAMILY,
-                      fontSize: 17,
-                      color: Colors.green[700],
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: APP_PRIMARY_COLOR,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                ),
-                onPressed: () {
-                  _cartService.addToCart(product);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${product.name} agregado al carrito', style: const TextStyle(fontFamily: APP_FONT_FAMILY)),
-                      duration: const Duration(seconds: 2),
-                      action: SnackBarAction(
-                        label: 'VER CARRITO',
-                        textColor: Colors.white,
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => Carritodecompras(key: const Key('CarritoDesdeCompraProductosCardV4'))),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                },
-                child: SizedBox(
-                  height: 30.0,
-                  child: Center(
-                    child: Tooltip(
-                      message: 'Añadir al Carrito',
-                      child: Image.asset(
-                        'assets/images/carrito.png',
-                        height: 22.0,
-                        width: 22.0,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
                 ),
               ),
-            ),
-          ],
+              // Botón de agregar al carrito
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: APP_PRIMARY_COLOR,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  ),
+                  onPressed: () {
+                    _cartService.addToCart(product);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${product.name} agregado al carrito', style: const TextStyle(fontFamily: APP_FONT_FAMILY)),
+                        duration: const Duration(seconds: 2),
+                        action: SnackBarAction(
+                          label: 'VER CARRITO',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => Carritodecompras(key: const Key('CarritoDesdeCompraProductosCardV6'))));
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  icon: Image.asset('assets/images/carrito.png', height: 20.0, width: 20.0),
+                  label: const Text('Añadir', style: TextStyle(fontFamily: APP_FONT_FAMILY)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Future<void> _confirmAndDeleteProduct(Product product) async {
+    bool? confirmDelete = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xe3a0f4fe),
+        title: const Text('Confirmar Eliminación', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
+        content: Text('¿Estás seguro de que quieres eliminar "${product.name}"? Esta acción no se puede deshacer.', style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Cancelar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.grey)),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar', style: TextStyle(fontFamily: APP_FONT_FAMILY)),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmDelete == true && mounted) {
+      try {
+        // Eliminar imágenes de Firebase Storage
+        for (var imageInfo in product.images) {
+          if (imageInfo.url.startsWith('https://firebasestorage.googleapis.com')) {
+            await FirebaseStorage.instance.refFromURL(imageInfo.url).delete();
+          }
+        }
+        // Eliminar documento de Firestore
+        await FirebaseFirestore.instance.collection('products').doc(product.id).delete();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Producto eliminado correctamente.'), backgroundColor: Colors.green));
+      } catch (e) {
+        developer.log('Error al eliminar producto: $e');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al eliminar el producto: $e'), backgroundColor: Colors.red));
+      }
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: APP_PRIMARY_COLOR,
       body: Stack(
-        children: <Widget>[
+        children: [
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -424,367 +479,16 @@ class _CompradeProductosState extends State<CompradeProductos> {
               ),
             ),
           ),
-          Pinned.fromPins(
-            Pin(size: 52.9, start: 9.1),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  pageBuilder: () => Home(key: const Key("HomeFromCompraProductosV4")),
-                ),
-              ],
-              child: Tooltip(
-                message: 'Volver a Inicio',
-                child: Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/back.png'),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 74.0, middle: 0.5),
-            Pin(size: 73.0, start: 42.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Home(key: const Key('HomeLogoFromCompraProductosV4')),
-                ),
-              ],
-              child: Tooltip(
-                message: 'Ir a Inicio',
-                child: Container(
-                  decoration: BoxDecoration(
-                    image: const DecorationImage(
-                      image: AssetImage('assets/images/logo.png'),
-                      fit: BoxFit.cover,
-                    ),
-                    borderRadius: BorderRadius.circular(15.0),
-                    border: Border.all(width: 1.0, color: const Color(0xff000000)),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 47.2, middle: 0.6987),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Carritodecompras(key: const Key('CarritoIconFromCompraProductosV4')),
-                ),
-              ],
-              child: Tooltip(
-                message: 'Ver Carrito de Compras',
-                child: Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/carrito.png'),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 40.5, middle: 0.8328),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Ayuda(key: const Key('AyudaFromCompraProductosV4')),
-                ),
-              ],
-              child: Tooltip(
-                message: 'Ayuda',
-                child: Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/help.png'),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 47.2, end: 7.6),
-            Pin(size: 50.0, start: 49.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => Configuraciones(key: const Key('SettingsFromCompraProductosV4'), authService: AuthService()),
-                ),
-              ],
-              child: Tooltip(
-                message: 'Configuración',
-                child: Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/settingsbutton.png'),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 60.0, start: 13.0),
-            Pin(size: 60.0, start: 115.0),
-            child: StreamBuilder<DocumentSnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(FirebaseAuth.instance.currentUser?.uid)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                String? profilePhotoUrl;
-                final currentUserAuth = FirebaseAuth.instance.currentUser;
-                if (currentUserAuth?.photoURL != null && currentUserAuth!.photoURL!.isNotEmpty) {
-                  profilePhotoUrl = currentUserAuth.photoURL;
-                } else if (snapshot.hasData && snapshot.data!.exists) {
-                  try {
-                    final userData = snapshot.data!.data() as Map<String, dynamic>?;
-                    profilePhotoUrl = userData?['profilePhotoUrl'] as String?;
-                  } catch (e) {
-                    developer.log("Error al obtener profilePhotoUrl: $e");
-                    profilePhotoUrl = null;
-                  }
-                }
-
-                return PageLink(
-                  links: [
-                    PageLinkInfo(
-                      transition: LinkTransition.Fade,
-                      ease: Curves.easeOut,
-                      duration: 0.3,
-                      pageBuilder: () => PerfilPublico(key: const Key('PerfilPublicoFromCompraProductosV4')),
-                    ),
-                  ],
-                  child: Tooltip(
-                    message: 'Ver Perfil Público',
-                    child: Container(
-                      width: 60.0,
-                      height: 60.0,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(10.0),
-                        border: Border.all(color: APP_TEXT_COLOR, width: 0.5),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10.0),
-                        child: (profilePhotoUrl != null && profilePhotoUrl.isNotEmpty)
-                            ? CachedNetworkImage(
-                          imageUrl: profilePhotoUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.0,
-                              valueColor: AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => const Icon(
-                            Icons.person,
-                            size: 40.0,
-                            color: Colors.grey,
-                          ),
-                        )
-                            : const Icon(
-                          Icons.person,
-                          size: 40.0,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(middle: 0.5, size: 280.0),
-            Pin(size: 45.0, start: 148.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(5.0),
-                border: Border.all(width: 1.0, color: const Color(0xff707070)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12.0),
-                      child: TextField(
-                        controller: _searchController,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(
-                          fontFamily: APP_FONT_FAMILY,
-                          fontSize: 18,
-                          color: APP_TEXT_COLOR,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: '¿Qué Producto Buscas?',
-                          hintStyle: TextStyle(
-                            fontFamily: APP_FONT_FAMILY,
-                            fontSize: 18,
-                            color: Color(0xffa9a9a9),
-                            fontWeight: FontWeight.w700,
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
-                        ),
-                        textInputAction: TextInputAction.search,
-                        onSubmitted: (value) {
-                          _performSearch();
-                        },
-                      ),
-                    ),
-                  ),
-                  if (_searchController.text.isNotEmpty)
-                    IconButton(
-                      icon: Icon(Icons.clear, color: Colors.grey[600], size: 22),
-                      onPressed: _clearSearch,
-                      tooltip: 'Limpiar búsqueda',
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                      splashRadius: 20,
-                    ),
-                  GestureDetector(
-                    onTap: _performSearch,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 8.0, left: 6.0),
-                      child: Tooltip(
-                        message: 'Buscar',
-                        child: Image.asset(
-                          'assets/images/busqueda1.png',
-                          width: 31.0,
-                          height: 31.0,
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 60.1, end: 7.6),
-            Pin(size: 60.0, start: 110.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => ListadeAnimales(key: const Key('ListadeAnimalesFromCompraProductosV4')),
-                ),
-              ],
-              child: Tooltip(
-                message: 'Ver Lista de Animales',
-                child: Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/listaanimales.png'),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 65.0, end: 7.6),
-            Pin(size: 60.0, start: 198.0),
-            child: PageLink(
-              links: [
-                PageLinkInfo(
-                  transition: LinkTransition.Fade,
-                  ease: Curves.easeOut,
-                  duration: 0.3,
-                  pageBuilder: () => VenderProductos(key: const Key('VenderProductosDesdeCompraV4')),
-                ),
-              ],
-              child: Tooltip(
-                message: 'Vender un Producto',
-                child: Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/vender.png'),
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(size: 65.0, end: 7.6 + 65.0 + 10.0),
-            Pin(size: 60.0, start: 200.5),
-            child: GestureDetector(
-              onTap: _mostrarModalMisProductos,
-              child: Tooltip(
-                message: 'Mis Productos Publicados',
-                child: Container(
-                  padding: const EdgeInsets.all(4.0),
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/misproductos.png'),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Pinned.fromPins(
-            Pin(start: 8.0, end: 8.0),
-            Pin(start: 270.0, end: 0.0),
-            child: ValueListenableBuilder<String>(
-              valueListenable: _searchTermNotifier,
-              builder: (context, currentSearchTerm, child) {
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.05),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
-                  },
-                  key: ValueKey<String>('product_grid_for_term_${currentSearchTerm.isEmpty ? 'all' : currentSearchTerm}'),
-                  child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          SafeArea(
+            child: Column(
+              children: [
+                _buildCustomHeader(),
+                const SizedBox(height: 10.0),
+                Expanded(
+                  child: StreamBuilder<List<Product>>(
                     stream: _productsStream,
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting || _productsStream == null) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -799,7 +503,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                       if (snapshot.hasError) {
                         String errorMessage = 'Error al cargar productos.';
                         if (snapshot.error.toString().contains('composite index') || snapshot.error.toString().contains('requires an index')) {
-                          errorMessage += '\n\nACCIÓN REQUERIDA:\nLa búsqueda necesita un índice en Firebase. Revisa la consola de depuración (Run/Debug) de tu editor, allí encontrarás un enlace para crear el índice. Haz clic en él y créalo.';
+                          errorMessage += '\n\nACCIÓN REQUERIDA:\nLa búsqueda con filtros necesita un índice en Firebase. Revisa la consola de depuración (Run/Debug) de tu editor, allí encontrarás un enlace para crear el índice. Haz clic en él y créalo.';
                           developer.log("ERROR DE ÍNDICE DE FIRESTORE: ${snapshot.error}");
                         } else {
                           errorMessage += ' Por favor, revisa tu conexión a internet.';
@@ -808,58 +512,279 @@ class _CompradeProductosState extends State<CompradeProductos> {
                         return Center(
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
-                              child: Text(errorMessage,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, backgroundColor: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16)),
-                            ));
+                              child: Text(errorMessage, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, backgroundColor: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16)),
+                            )
+                        );
                       }
-                      if (!snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
-                        String message = _searchController.text.isNotEmpty
-                            ? 'No se encontraron productos para "${_searchController.text}"'
-                            : 'No hay productos disponibles.';
-                        return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                              child: Text(message,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)),
-                            ));
-                      }
-
-                      final List<Product> products = [];
-                      for (var doc in snapshot.data!.docs) {
-                        try {
-                          products.add(Product.fromFirestore(doc.data(), doc.id));
-                        } catch (e, s) {
-                          developer.log('ERROR al parsear producto ${doc.id}: $e\nStackTrace: $s\nDatos: ${doc.data()}');
-                        }
-                      }
-
-                      if (products.isEmpty) {
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return const Center(
-                            child: Text('No se pudieron cargar productos válidos.\nRevisa la estructura de los datos.',
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20.0),
+                            child: Text('No se encontraron productos que coincidan con tu búsqueda o filtros.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY)));
+                                style: TextStyle(color: Colors.white, fontFamily: APP_FONT_FAMILY, fontSize: 16)),
+                          ),
+                        );
                       }
 
-                      return GridView.builder(
-                        padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0, bottom: 80.0),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.60,
-                          crossAxisSpacing: 8.0,
-                          mainAxisSpacing: 8.0,
-                        ),
-                        itemCount: products.length,
+                      final allProducts = snapshot.data!;
+
+                      final Map<String, List<Product>> groupedProducts = {};
+                      for (var product in allProducts) {
+                        (groupedProducts[product.category] ??= []).add(product);
+                      }
+
+                      final sortedCategories = groupedProducts.keys.toList()
+                        ..sort((a, b) {
+                          int indexA = _listaDeCategorias.indexOf(a);
+                          int indexB = _listaDeCategorias.indexOf(b);
+                          if (indexA == -1) indexA = _listaDeCategorias.length;
+                          if (indexB == -1) indexB = _listaDeCategorias.length;
+                          return indexA.compareTo(indexB);
+                        });
+
+                      return ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: sortedCategories.length,
                         itemBuilder: (context, index) {
-                          final product = products[index];
-                          return _buildProductCard(context, product);
+                          final category = sortedCategories[index];
+                          final productsInCategory = groupedProducts[category]!;
+                          return _CategoryProductRow(
+                            categoryTitle: category,
+                            products: productsInCategory,
+                            buildProductCard: (product) => _buildProductCard(product),
+                          );
                         },
                       );
                     },
                   ),
-                );
-              },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget para la cabecera personalizada, con la nueva posición del icono de animales
+  Widget _buildCustomHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0).copyWith(top: 8),
+      child: Column(
+        children: [
+          // Fila superior ahora dentro de un Stack para posicionar el logo
+          SizedBox(
+            height: 90, // Altura para contener los iconos y el logo posicionado
+            child: Stack(
+              alignment: Alignment.center,
+              // ===== FIX: Allow the logo to draw outside the Stack's bounds =====
+              clipBehavior: Clip.none,
+              children: [
+                // Fila de iconos de los lados
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // GRUPO DE ICONOS IZQUIERDO
+                    Row(
+                      children: [
+                        _buildIconButton(
+                          assetPath: 'assets/images/back.png',
+                          tooltip: 'Volver a Inicio',
+                          width: 52.9,
+                          height: 50.0,
+                          onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home(key: const Key("HomeFromCompraProductosV6")))),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildIconButton(
+                            assetPath: 'assets/images/listaanimales.png',
+                            width: 60.1,
+                            height: 60.0,
+                            tooltip: 'Ver Lista de Animales',
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => ListadeAnimales(key: const Key('ListadeAnimalesFromCompraProductosV6'))))
+                        ),
+                      ],
+                    ),
+                    // GRUPO DE ICONOS DERECHO
+                    Row(
+                      children: [
+                        _buildIconButton(assetPath: 'assets/images/carrito.png', tooltip: 'Ver Carrito de Compras', width: 47.2, height: 50.0, onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Carritodecompras(key: const Key('CarritoIconFromCompraProductosV6'))))),
+                        const SizedBox(width: 8),
+                        _buildIconButton(assetPath: 'assets/images/help.png', tooltip: 'Ayuda', width: 40.5, height: 50.0, onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Ayuda(key: const Key('AyudaFromCompraProductosV6'))))),
+                        const SizedBox(width: 8),
+                        _buildIconButton(assetPath: 'assets/images/settingsbutton.png', tooltip: 'Configuración', width: 47.2, height: 50.0, onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Configuraciones(key: const Key('SettingsFromCompraProductosV6'), authService: AuthService())))),
+                      ],
+                    ),
+                  ],
+                ),
+                // LOGO POSICIONADO
+                Positioned(
+                  top: 42.0,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home(key: const Key('HomeLogoFromCompraProductosV6')))),
+                    child: Tooltip(
+                      message: 'Ir a Inicio',
+                      child: Container(
+                        height: 74,
+                        width: 74,
+                        decoration: BoxDecoration(
+                          image: const DecorationImage(image: AssetImage('assets/images/logo.png'), fit: BoxFit.cover),
+                          borderRadius: BorderRadius.circular(15.0),
+                          border: Border.all(color: const Color(0xff000000)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 5),
+
+          // Fila con perfil y otros botones
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildProfileIcon(),
+              const Spacer(),
+              _buildIconButton(assetPath: 'assets/images/vender.png', width: 65.0, height: 60.0, tooltip: 'Vender un Producto', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => VenderProductos(key: const Key('VenderProductosDesdeCompraV6'))))),
+              const SizedBox(width: 8),
+              _buildIconButton(assetPath: 'assets/images/misproductos.png', width: 65.0, height: 60.0, tooltip: 'Mis Productos Publicados', onPressed: _mostrarModalMisProductos),
+            ],
+          ),
+          const SizedBox(height: 15),
+
+          // Fila de búsqueda y filtros
+          Row(
+            children: [
+              Expanded(
+                child: _buildSearchBar(),
+              ),
+              const SizedBox(width: 8),
+              Tooltip(
+                message: 'Filtros',
+                child: IconButton(
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  icon: const Icon(Icons.filter_list_rounded, color: APP_PRIMARY_COLOR),
+                  onPressed: _showFilterDialog,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget para los íconos de acción reutilizable, aceptando ancho y alto específicos
+  Widget _buildIconButton({required String assetPath, required String tooltip, required VoidCallback onPressed, required double width, required double height}) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            image: DecorationImage(image: AssetImage(assetPath), fit: BoxFit.fill), // Usar fill para que se ajuste al contenedor
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Widget para el ícono de perfil
+  Widget _buildProfileIcon() {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PerfilPublico(key: const Key('PerfilPublicoFromCompraProductosV6')))),
+      child: Tooltip(
+        message: 'Ver Perfil Público',
+        child: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
+          builder: (context, snapshot) {
+            String? profilePhotoUrl;
+            if (FirebaseAuth.instance.currentUser?.photoURL != null) {
+              profilePhotoUrl = FirebaseAuth.instance.currentUser!.photoURL;
+            } else if (snapshot.hasData && snapshot.data!.exists) {
+              profilePhotoUrl = (snapshot.data!.data() as Map<String, dynamic>?)?['profilePhotoUrl'];
+            }
+
+            return Container(
+              width: 60.0, // Tamaño original
+              height: 60.0, // Tamaño original
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(10.0),
+                border: Border.all(color: APP_TEXT_COLOR, width: 0.5),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10.0),
+                child: profilePhotoUrl != null
+                    ? CachedNetworkImage(
+                  imageUrl: profilePhotoUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
+                  errorWidget: (context, url, error) => const Icon(Icons.person, size: 40.0, color: Colors.grey),
+                )
+                    : const Icon(Icons.person, size: 40.0, color: Colors.grey),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // Widget para la barra de búsqueda
+  Widget _buildSearchBar() {
+    return Container(
+      height: 45, // Altura original
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(5.0), // Radio original
+        border: Border.all(width: 1.0, color: const Color(0xff707070)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12.0, bottom: 4.0), // Ajuste para centrar verticalmente
+              child: TextField(
+                controller: _searchController,
+                style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, fontWeight: FontWeight.w700),
+                decoration: const InputDecoration(
+                  hintText: '¿Qué Producto Buscas?',
+                  hintStyle: TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: Color(0xffa9a9a9), fontWeight: FontWeight.w700),
+                  border: InputBorder.none,
+                ),
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _applyFiltersAndSearch(),
+              ),
+            ),
+          ),
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear, size: 22),
+              onPressed: _clearSearchAndFilters,
+              tooltip: 'Limpiar búsqueda y filtros',
+            ),
+          GestureDetector(
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              _applyFiltersAndSearch();
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Tooltip(
+                message: 'Buscar',
+                child: Image.asset('assets/images/busqueda1.png', width: 31, height: 31),
+              ),
             ),
           ),
         ],
@@ -867,6 +792,59 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 }
+
+/// Widget que representa una fila de una categoría con su lista de productos horizontal.
+class _CategoryProductRow extends StatelessWidget {
+  final String categoryTitle;
+  final List<Product> products;
+  final Widget Function(Product product) buildProductCard;
+
+  const _CategoryProductRow({
+    Key? key,
+    required this.categoryTitle,
+    required this.products,
+    required this.buildProductCard,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: Text(
+            categoryTitle,
+            style: const TextStyle(
+                fontFamily: APP_FONT_FAMILY,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                shadows: [Shadow(blurRadius: 2.0, color: Colors.black54)]
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 300, // Altura fija para la lista horizontal de productos
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              return buildProductCard(products[index]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+
+// ==============================================================================
+// === LOS WIDGETS MODALES (_MisProductosModalWidget y _EditarProductoModalWidget) ===
+// ===     PERMANECEN IGUALES YA QUE SU LÓGICA INTERNA ES CORRECTA.         ===
+// ==============================================================================
 
 class _MisProductosModalWidget extends StatelessWidget {
   final String userId;
@@ -1133,9 +1111,6 @@ class _MisProductosModalWidget extends StatelessWidget {
   }
 }
 
-// ==============================================================================
-// ===== CLASE _EditarProductoModalWidget CON LA LÓGICA DE KEYWORDS CORRECTA ====
-// ==============================================================================
 class _EditarProductoModalWidget extends StatefulWidget {
   final Product productToEdit;
   final BuildContext parentContextForSnackbars;
@@ -1161,6 +1136,12 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
   List<XFile> _newImageFiles = [];
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
+
+  final List<String> _listaDeCategorias = [
+    'Alimentos', 'Juguetes', 'Accesorios (Correas, Collares, Camas)',
+    'Productos de Aseo e Higiene', 'Medicamentos y Salud (Antipulgas, Vitaminas)',
+    'Snacks y Premios', 'Ropa', 'Transportadoras y Jaulas', 'Otros',
+  ];
 
   @override
   void initState() {
@@ -1277,7 +1258,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
         'description': _descriptionController.text.trim(),
         'price': double.tryParse(_priceController.text) ?? widget.productToEdit.price,
         'stock': int.tryParse(_stockController.text) ?? widget.productToEdit.stock,
-        'category': _categoryController.text.trim(),
+        'category': _categoryController.text.trim(), // Se guarda el texto del controlador
         'images': finalImageInfos.map((img) => img.toJson()).toList(),
         'lastUpdated': FieldValue.serverTimestamp(),
       };
@@ -1357,6 +1338,51 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                   height: 40.0,
                   fit: BoxFit.contain,
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget para el campo de categoría con un Dropdown
+  Widget _buildCategoryDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: SizedBox(
+        height: 60.0,
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _listaDeCategorias.contains(_categoryController.text) ? _categoryController.text : null,
+              hint: const Text("Selecciona una categoría", style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.black54)),
+              isExpanded: true,
+              items: _listaDeCategorias.map((String category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category, style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, color: APP_TEXT_COLOR)),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  _categoryController.text = newValue!;
+                });
+              },
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
+                contentPadding: const EdgeInsets.only(left: 55.0, right: 16.0),
+              ),
+              validator: (value) => value == null || value.isEmpty ? 'Debes seleccionar una categoría.' : null,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Tooltip(
+                message: 'Categoría del producto',
+                child: Image.asset('assets/images/category.png', width: 40.0, height: 40.0, fit: BoxFit.contain),
               ),
             ),
           ],
@@ -1463,13 +1489,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                             ),
                           ],
                         ),
-                        _buildTextFieldWithIcon(
-                          controller: _categoryController,
-                          labelText: "Categoría",
-                          iconPath: 'assets/images/category.png',
-                          tooltipMessage: 'Edita la categoría del producto',
-                          validator: (value) => value == null || value.trim().isEmpty ? 'La categoría no puede estar vacía.' : null,
-                        ),
+                        _buildCategoryDropdown(), // Usando el nuevo Dropdown para categoría
                         const SizedBox(height: 15),
                         Text("Imágenes:", style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.white.withOpacity(0.9), fontSize: 17, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
