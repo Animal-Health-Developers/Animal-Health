@@ -26,9 +26,20 @@ const Color APP_TEXT_COLOR = Color(0xff000000);
 const String APP_FONT_FAMILY = 'Comic Sans MS';
 
 
+// ==============================================================================
+// === CAMBIOS EN CONSTRUCTOR Y ESTADO INICIAL PARA ACEPTAR FILTROS EXTERNOS ===
+// ==============================================================================
+
 class CompradeProductos extends StatefulWidget {
+  final String? initialSearchTerm;
+  final String? initialCategory;
+  final RangeValues? initialPriceRange;
+
   const CompradeProductos({
     Key? key,
+    this.initialSearchTerm,
+    this.initialCategory,
+    this.initialPriceRange,
   }) : super(key: key);
 
   @override
@@ -39,13 +50,10 @@ class _CompradeProductosState extends State<CompradeProductos> {
   final TextEditingController _searchController = TextEditingController();
   final CartService _cartService = CartService();
 
-  // Stream para obtener los productos. Se actualiza con los filtros.
   Stream<List<Product>>? _productsStream;
 
-  // Estados para los filtros
   String? _selectedCategoryFilter;
   RangeValues? _priceRangeFilter;
-  // Lista de categorías que nos proporcionaste
   final List<String> _listaDeCategorias = [
     'Alimentos', 'Juguetes', 'Accesorios (Correas, Collares, Camas)',
     'Productos de Aseo e Higiene', 'Medicamentos y Salud (Antipulgas, Vitaminas)',
@@ -55,55 +63,58 @@ class _CompradeProductosState extends State<CompradeProductos> {
   @override
   void initState() {
     super.initState();
-    developer.log('CompradeProductos initState: Initializing search controller and updating product stream.');
-    // Carga inicial de todos los productos sin filtros
+    developer.log('CompradeProductos initState: Initializing with potential filters.');
+
+    // Usar filtros iniciales si se proporcionaron desde otro widget.
+    if (widget.initialSearchTerm != null) {
+      _searchController.text = widget.initialSearchTerm!;
+    }
+    if (widget.initialCategory != null) {
+      _selectedCategoryFilter = widget.initialCategory;
+    }
+    if (widget.initialPriceRange != null) {
+      _priceRangeFilter = widget.initialPriceRange;
+    }
+
+    // Carga inicial de productos aplicando los filtros (si los hay).
     _applyFiltersAndSearch();
   }
 
-  /// Construye la consulta a Firestore y actualiza el stream de productos.
-  /// Combina la búsqueda por texto y los filtros de categoría y precio.
   void _applyFiltersAndSearch() {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection('products');
     final searchTerm = _searchController.text.trim().toLowerCase();
 
     if (searchTerm.isNotEmpty) {
-      // La búsqueda por texto ahora filtra por palabras clave
       query = query.where('searchKeywords', arrayContains: searchTerm);
       developer.log('CompradeProductos: Searching for keyword: "$searchTerm"');
     }
 
     if (_selectedCategoryFilter != null) {
-      // Filtro por categoría
       query = query.where('category', isEqualTo: _selectedCategoryFilter);
       developer.log('CompradeProductos: Filtering by category: "$_selectedCategoryFilter"');
     }
 
     if (_priceRangeFilter != null) {
-      // Filtro por rango de precio
-      // IMPORTANTE: Esta consulta combinada requiere un ÍNDICE COMPUESTO en Firestore.
-      // Firebase te dará un error con un enlace para crearlo la primera vez que se ejecute.
       query = query.where('price', isGreaterThanOrEqualTo: _priceRangeFilter!.start);
       query = query.where('price', isLessThanOrEqualTo: _priceRangeFilter!.end);
       developer.log('CompradeProductos: Filtering by price range: \$${_priceRangeFilter!.start.toStringAsFixed(0)} - \$${_priceRangeFilter!.end.toStringAsFixed(0)}');
     }
 
-    // Si no hay búsqueda por texto, ordenamos por fecha. Si la hay, Firestore requiere que el orden sea por el mismo campo del 'array-contains'.
     if (searchTerm.isEmpty) {
       query = query.orderBy('creationDate', descending: true);
     }
 
     if (mounted) {
       setState(() {
-        // Mapeamos el snapshot a una lista de objetos Product
         _productsStream = query.snapshots().map((snapshot) {
           return snapshot.docs.map((doc) {
             try {
               return Product.fromFirestore(doc.data(), doc.id);
             } catch (e, s) {
               developer.log('ERROR al parsear producto ${doc.id}: $e\nStackTrace: $s\nDatos: ${doc.data()}');
-              return null; // Devuelve null si hay un error
+              return null;
             }
-          }).whereType<Product>().toList(); // Filtra los nulos
+          }).whereType<Product>().toList();
         });
       });
     }
@@ -116,15 +127,13 @@ class _CompradeProductosState extends State<CompradeProductos> {
       _selectedCategoryFilter = null;
       _priceRangeFilter = null;
     });
-    _applyFiltersAndSearch(); // Recargar todos los productos
+    _applyFiltersAndSearch();
     FocusScope.of(context).unfocus();
   }
 
-  // Muestra el diálogo para seleccionar los filtros
   Future<void> _showFilterDialog() async {
-    // Usamos copias locales para que los cambios solo se apliquen al presionar "Aplicar"
     String? tempCategory = _selectedCategoryFilter;
-    RangeValues tempPriceRange = _priceRangeFilter ?? const RangeValues(0, 5000); // Rango por defecto
+    RangeValues tempPriceRange = _priceRangeFilter ?? const RangeValues(0, 5000);
 
     await showDialog(
       context: context,
@@ -139,7 +148,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Filtro de Categoría
                     const Text('Categoría:', style: TextStyle(fontFamily: APP_FONT_FAMILY, fontWeight: FontWeight.bold)),
                     DropdownButton<String>(
                       isExpanded: true,
@@ -162,8 +170,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
                       },
                     ),
                     const SizedBox(height: 20),
-
-                    // Filtro de Precio
                     Text(
                         'Rango de Precio: \$${tempPriceRange.start.toStringAsFixed(0)} - \$${tempPriceRange.end.toStringAsFixed(0)}',
                         style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontWeight: FontWeight.bold)
@@ -171,8 +177,8 @@ class _CompradeProductosState extends State<CompradeProductos> {
                     RangeSlider(
                       values: tempPriceRange,
                       min: 0,
-                      max: 10000, // Precio máximo ajustable
-                      divisions: 100,
+                      max: 10000000, // Precio máximo ajustable
+                      divisions: 50,
                       labels: RangeLabels(
                         '\$${tempPriceRange.start.round()}',
                         '\$${tempPriceRange.end.round()}',
@@ -189,7 +195,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    // Limpiar filtros temporales y cerrar
                     setDialogState(() {
                       tempCategory = null;
                       tempPriceRange = const RangeValues(0, 5000);
@@ -206,7 +211,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: APP_PRIMARY_COLOR),
                   onPressed: () {
-                    // Aplicar filtros y cerrar
                     setState(() {
                       _selectedCategoryFilter = tempCategory;
                       _priceRangeFilter = tempPriceRange;
@@ -281,7 +285,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
-  // Widget para la tarjeta de producto, con los íconos de editar/eliminar restaurados
   Widget _buildProductCard(Product product, {double width = 180}) {
     String? imageUrl = product.images.isNotEmpty ? product.images.first.url : null;
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -304,7 +307,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // Imagen
               Expanded(
                 child: Stack(
                   children: [
@@ -321,7 +323,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
                             : Container(color: Colors.grey[300], child: const Icon(Icons.inventory_2_outlined, size: 40, color: Colors.grey)),
                       ),
                     ),
-                    // Íconos de editar y eliminar restaurados
                     if (isOwner) ...[
                       Positioned(
                         top: 3,
@@ -346,7 +347,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                       ),
                       Positioned(
                         top: 3,
-                        right: 2 + 28 + 4, // Posicionado a la izquierda del de eliminar
+                        right: 2 + 28 + 4,
                         child: Tooltip(
                           message: 'Editar Producto',
                           child: IconButton(
@@ -369,7 +370,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   ],
                 ),
               ),
-              // Detalles del producto
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
@@ -389,7 +389,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
                   ],
                 ),
               ),
-              // Botón de agregar al carrito
               Padding(
                 padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
                 child: ElevatedButton.icon(
@@ -449,13 +448,11 @@ class _CompradeProductosState extends State<CompradeProductos> {
 
     if (confirmDelete == true && mounted) {
       try {
-        // Eliminar imágenes de Firebase Storage
         for (var imageInfo in product.images) {
           if (imageInfo.url.startsWith('https://firebasestorage.googleapis.com')) {
             await FirebaseStorage.instance.refFromURL(imageInfo.url).delete();
           }
         }
-        // Eliminar documento de Firestore
         await FirebaseFirestore.instance.collection('products').doc(product.id).delete();
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Producto eliminado correctamente.'), backgroundColor: Colors.green));
       } catch (e) {
@@ -567,26 +564,21 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
-  // Widget para la cabecera personalizada, con la nueva posición del icono de animales
   Widget _buildCustomHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0).copyWith(top: 8),
       child: Column(
         children: [
-          // Fila superior ahora dentro de un Stack para posicionar el logo
           SizedBox(
-            height: 90, // Altura para contener los iconos y el logo posicionado
+            height: 90,
             child: Stack(
               alignment: Alignment.center,
-              // ===== FIX: Allow the logo to draw outside the Stack's bounds =====
               clipBehavior: Clip.none,
               children: [
-                // Fila de iconos de los lados
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // GRUPO DE ICONOS IZQUIERDO
                     Row(
                       children: [
                         _buildIconButton(
@@ -606,7 +598,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
                         ),
                       ],
                     ),
-                    // GRUPO DE ICONOS DERECHO
                     Row(
                       children: [
                         _buildIconButton(assetPath: 'assets/images/carrito.png', tooltip: 'Ver Carrito de Compras', width: 47.2, height: 50.0, onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Carritodecompras(key: const Key('CarritoIconFromCompraProductosV6'))))),
@@ -618,7 +609,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
                     ),
                   ],
                 ),
-                // LOGO POSICIONADO
                 Positioned(
                   top: 40.0,
                   child: GestureDetector(
@@ -641,8 +631,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
             ),
           ),
           const SizedBox(height: 5),
-
-          // Fila con perfil y otros botones
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -655,8 +643,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
             ],
           ),
           const SizedBox(height: 15),
-
-          // Fila de búsqueda y filtros
           Row(
             children: [
               Expanded(
@@ -681,7 +667,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
-  // Widget para los íconos de acción reutilizable, aceptando ancho y alto específicos
   Widget _buildIconButton({required String assetPath, required String tooltip, required VoidCallback onPressed, required double width, required double height}) {
     return Tooltip(
       message: tooltip,
@@ -691,14 +676,13 @@ class _CompradeProductosState extends State<CompradeProductos> {
           width: width,
           height: height,
           decoration: BoxDecoration(
-            image: DecorationImage(image: AssetImage(assetPath), fit: BoxFit.fill), // Usar fill para que se ajuste al contenedor
+            image: DecorationImage(image: AssetImage(assetPath), fit: BoxFit.fill),
           ),
         ),
       ),
     );
   }
 
-  // Widget para el ícono de perfil
   Widget _buildProfileIcon() {
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PerfilPublico(key: const Key('PerfilPublicoFromCompraProductosV6')))),
@@ -715,8 +699,8 @@ class _CompradeProductosState extends State<CompradeProductos> {
             }
 
             return Container(
-              width: 60.0, // Tamaño original
-              height: 60.0, // Tamaño original
+              width: 60.0,
+              height: 60.0,
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(10.0),
@@ -740,13 +724,12 @@ class _CompradeProductosState extends State<CompradeProductos> {
     );
   }
 
-  // Widget para la barra de búsqueda
   Widget _buildSearchBar() {
     return Container(
-      height: 45, // Altura original
+      height: 45,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(5.0), // Radio original
+        borderRadius: BorderRadius.circular(5.0),
         border: Border.all(width: 1.0, color: const Color(0xff707070)),
       ),
       child: Row(
@@ -754,7 +737,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 12.0, bottom: 4.0), // Ajuste para centrar verticalmente
+              padding: const EdgeInsets.only(left: 12.0, bottom: 4.0),
               child: TextField(
                 controller: _searchController,
                 style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 18, fontWeight: FontWeight.w700),
@@ -793,7 +776,6 @@ class _CompradeProductosState extends State<CompradeProductos> {
   }
 }
 
-/// Widget que representa una fila de una categoría con su lista de productos horizontal.
 class _CategoryProductRow extends StatelessWidget {
   final String categoryTitle;
   final List<Product> products;
@@ -812,20 +794,47 @@ class _CategoryProductRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: Text(
-            categoryTitle,
-            style: const TextStyle(
+          padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 8.0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  APP_PRIMARY_COLOR.withOpacity(0.7),
+                  APP_PRIMARY_COLOR.withOpacity(0.4),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Text(
+              categoryTitle,
+              style: const TextStyle(
                 fontFamily: APP_FONT_FAMILY,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
-                shadows: [Shadow(blurRadius: 2.0, color: Colors.black54)]
+                shadows: [
+                  Shadow(
+                      blurRadius: 3.0,
+                      color: Colors.black54,
+                      offset: Offset(1, 1))
+                ],
+              ),
             ),
           ),
         ),
         SizedBox(
-          height: 300, // Altura fija para la lista horizontal de productos
+          height: 300,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -839,12 +848,6 @@ class _CategoryProductRow extends StatelessWidget {
     );
   }
 }
-
-
-// ==============================================================================
-// === LOS WIDGETS MODALES (_MisProductosModalWidget y _EditarProductoModalWidget) ===
-// ===     PERMANECEN IGUALES YA QUE SU LÓGICA INTERNA ES CORRECTA.         ===
-// ==============================================================================
 
 class _MisProductosModalWidget extends StatelessWidget {
   final String userId;
@@ -1207,8 +1210,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     return ProductImage(publicId: fileName, url: downloadUrl);
   }
 
-  /// ESTA ES LA FUNCIÓN CLAVE. ASEGURA QUE CADA VEZ QUE SE GUARDA
-  /// UN PRODUCTO, SE GENERAN LAS PALABRAS CLAVE PARA LA BÚSQUEDA.
   Future<void> _saveProductChanges() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -1239,26 +1240,22 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
         }
       }
 
-      // ---- INICIO DE LA LÓGICA DE KEYWORDS (LA PARTE MÁS IMPORTANTE) ----
       final String productName = _nameController.text.trim();
-
-      // Procesa el nombre para crear la lista de palabras clave (keywords).
       final List<String> searchKeywords = productName
-          .toLowerCase() // 1. Convertir a minúsculas: "comida para gatos"
-          .replaceAll(RegExp(r'[^\w\s]'), '') // 2. Opcional: quitar puntuación
-          .split(' ') // 3. Dividir por espacios: ["comida", "para", "gatos"]
-          .where((s) => s.isNotEmpty) // 4. Quitar posibles strings vacíos
-          .toSet() // 5. Opcional pero recomendado: eliminar duplicados
-          .toList(); // 6. Convertir de nuevo a una lista
-      // ---- FIN DE LA LÓGICA DE KEYWORDS ----
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^\w\s]'), '')
+          .split(' ')
+          .where((s) => s.isNotEmpty)
+          .toSet()
+          .toList();
 
       Map<String, dynamic> updatedData = {
         'name': productName,
-        'searchKeywords': searchKeywords, // <-- ¡EL CAMPO MÁGICO PARA LA BÚSQUEDA!
+        'searchKeywords': searchKeywords,
         'description': _descriptionController.text.trim(),
         'price': double.tryParse(_priceController.text) ?? widget.productToEdit.price,
         'stock': int.tryParse(_stockController.text) ?? widget.productToEdit.stock,
-        'category': _categoryController.text.trim(), // Se guarda el texto del controlador
+        'category': _categoryController.text.trim(),
         'images': finalImageInfos.map((img) => img.toJson()).toList(),
         'lastUpdated': FieldValue.serverTimestamp(),
       };
@@ -1346,7 +1343,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     );
   }
 
-  // Widget para el campo de categoría con un Dropdown
   Widget _buildCategoryDropdown() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -1489,7 +1485,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
                             ),
                           ],
                         ),
-                        _buildCategoryDropdown(), // Usando el nuevo Dropdown para categoría
+                        _buildCategoryDropdown(),
                         const SizedBox(height: 15),
                         Text("Imágenes:", style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.white.withOpacity(0.9), fontSize: 17, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
