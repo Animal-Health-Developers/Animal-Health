@@ -554,7 +554,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                     Tooltip(
                       message: 'Editar Producto',
                       child: IconButton(
-                        icon: Image.asset('assets/images/editar.png', width: 28, height: 28),
+                        icon: Image.asset('assets/images/editar.png', width: 55, height: 55),
                         onPressed: () => _mostrarModalEditarProducto(widget.product),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -565,7 +565,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                     Tooltip(
                       message: 'Eliminar Producto',
                       child: IconButton(
-                        icon: Image.asset('assets/images/eliminar.png', width: 28, height: 28),
+                        icon: Image.asset('assets/images/eliminar.png', width: 55, height: 55),
                         onPressed: () => _confirmAndDeleteProduct(widget.product),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
