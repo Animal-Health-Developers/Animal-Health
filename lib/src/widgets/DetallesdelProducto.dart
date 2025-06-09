@@ -18,6 +18,7 @@ import './Carritodecompras.dart';
 import './ComprarAhora.dart';
 import './Home.dart';
 import './CompradeProductos.dart';
+import './VenderProductos.dart';
 import '../services/auth_service.dart';
 import '../models/products.dart';
 import '../services/cart_service.dart';
@@ -146,6 +147,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                       _priceRangeFilter = null;
                     });
                     _applyFiltersAndSearch();
+                    Navigator.pop(context);
                   },
                   child: const Text('Limpiar Filtros', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.red)),
                 ),
@@ -157,6 +159,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                       _priceRangeFilter = tempPriceRange;
                     });
                     _applyFiltersAndSearch();
+                    Navigator.pop(context);
                   },
                   child: const Text('Aplicar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.white)),
                 ),
@@ -168,7 +171,38 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
     );
   }
 
+  Future<void> _mostrarModalMisProductos() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Debes iniciar sesión para ver tus productos.', style: TextStyle(fontFamily: APP_FONT_FAMILY))),
+        );
+      }
+      return;
+    }
+    developer.log('Mostrando modal Mis Productos para UID: ${currentUser.uid}');
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext modalBuildContext) {
+        return _MisProductosModalWidget(
+          key: Key('mis_productos_modal_details_${currentUser.uid}'),
+          userId: currentUser.uid,
+          parentContextForSnackbars: context,
+        );
+      },
+    );
+  }
+
+  // ==========================================================
+  // ===== INICIO: CAMBIO EN LA FUNCIÓN DE EDITAR PRODUCTO =====
+  // ==========================================================
   Future<void> _mostrarModalEditarProducto(Product product) async {
+    // La llamada al modal ahora funciona porque el widget _EditarProductoModalWidget
+    // se ha movido a este mismo archivo.
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -181,14 +215,13 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
         );
       },
     );
-    if(mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const CompradeProductos(key: Key("backToProductsAfterEdit"))),
-            (Route<dynamic> route) => false,
-      );
-    }
+    // Se eliminó el bloque de navegación que forzaba el regreso a CompradeProductos.
+    // Ahora, después de cerrar el modal, simplemente permanecerás en esta pantalla de detalles.
+    // Nota: Para ver los cambios reflejados, necesitarás volver y entrar de nuevo a los detalles del producto.
   }
+  // ==========================================================
+  // ===== FIN: CAMBIO EN LA FUNCIÓN DE EDITAR PRODUCTO =======
+  // ==========================================================
 
   Future<void> _confirmAndDeleteProduct(Product product) async {
     bool? confirmDelete = await showDialog<bool>(
@@ -366,7 +399,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
         if(mounted){
           setState(() {
             widget.product.opinions.add(newOpinion);
-            widget.product.qualification = newAverageQualification.round();
+            widget.product.qualification = newAverageQualification.toInt();
             widget.product.qualificationsNumber = newQualificationsNumber;
             _opinionsSectionKey = UniqueKey();
           });
@@ -644,16 +677,12 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
     );
   }
 
-  // ==============================================================================
-  // === INICIO DE LA SECCIÓN DE BUILD - CABECERA REESTRUCTURADA ===
-  // ==============================================================================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: APP_PRIMARY_COLOR, // Fondo de respaldo
+      backgroundColor: APP_PRIMARY_COLOR,
       body: Stack(
         children: <Widget>[
-          // Imagen de fondo
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -662,12 +691,9 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
               ),
             ),
           ),
-
-          // Contenido principal sobre el fondo
           SafeArea(
             child: Column(
               children: [
-                // Cabecera personalizada (igual a la de CompradeProductos)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0).copyWith(top: 8),
                   child: Column(
@@ -676,7 +702,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                         height: 90,
                         child: Stack(
                           alignment: Alignment.center,
-                          clipBehavior: Clip.none, // Permite que el logo se salga
+                          clipBehavior: Clip.none,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -686,7 +712,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                                   children: [
                                     _buildHeaderIconButton(
                                       assetPath: 'assets/images/back.png',
-                                      tooltip: 'Volver',
+                                      tooltip: 'Volver a la Tienda',
                                       width: 52.9,
                                       height: 50.0,
                                       onPressed: () => Navigator.of(context).pop(),
@@ -715,7 +741,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                             Positioned(
                               top: 40.0,
                               child: GestureDetector(
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Home(key: const Key('HomeFromDetails')))),
+                                onTap: () => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Home(key: const Key('HomeFromDetails'))), (route) => false),
                                 child: Tooltip(
                                   message: 'Ir a Inicio',
                                   child: Container(
@@ -738,7 +764,23 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          _buildProfileIcon(), // Icono de perfil
+                          _buildProfileIcon(),
+                          const Spacer(),
+                          _buildHeaderIconButton(
+                            assetPath: 'assets/images/vender.png',
+                            width: 60.0,
+                            height: 60.0,
+                            tooltip: 'Vender un Producto',
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => VenderProductos(key: const Key('VenderFromDetails')))),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildHeaderIconButton(
+                            assetPath: 'assets/images/misproductos.png',
+                            width: 60.0,
+                            height: 60.0,
+                            tooltip: 'Mis Productos Publicados',
+                            onPressed: _mostrarModalMisProductos,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 15),
@@ -764,7 +806,6 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                     ],
                   ),
                 ),
-                // Contenido desplazable
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 100.0),
@@ -841,7 +882,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                                 const SizedBox(height: 4.0),
                                 Row(
                                   children: [
-                                    _buildStarRating(widget.product.qualification.toDouble(), size: 28),
+                                    _buildStarRating(widget.product.qualification as double, size: 28),
                                     const SizedBox(width: 8),
                                     Text('(${widget.product.qualificationsNumber} ${widget.product.qualificationsNumber == 1 ? "opinión" : "opiniones"})', style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 14, color: Colors.black54)),
                                   ],
@@ -1012,9 +1053,271 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
   }
 }
 
-// ==============================================================================
-// === WIDGETS PRIVADOS PARA ESTE ARCHIVO (SOLUCIÓN DE ENCAPSULACIÓN) ===
-// ==============================================================================
+class _MisProductosModalWidget extends StatelessWidget {
+  final String userId;
+  final BuildContext parentContextForSnackbars;
+
+  const _MisProductosModalWidget({
+    super.key,
+    required this.userId,
+    required this.parentContextForSnackbars,
+  });
+
+  static Future<void> _deleteProductFromModal(
+      BuildContext contextForDialogsAndSnackbars,
+      String productId,
+      String productName,
+      String userIdOfProduct) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || currentUser.uid != userIdOfProduct) {
+      if (contextForDialogsAndSnackbars.mounted) {
+        ScaffoldMessenger.of(contextForDialogsAndSnackbars).showSnackBar(
+          const SnackBar(content: Text('No tienes permiso para eliminar este producto.', style: TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+
+    bool? confirmDelete = await showDialog<bool>(
+      context: contextForDialogsAndSnackbars,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xe3a0f4fe),
+          title: const Text('Confirmar Eliminación', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
+          content: Text('¿Estás seguro de que quieres eliminar "$productName"? Esta acción no se puede deshacer.', style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR)),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.grey)),
+              onPressed: () {
+                Navigator.of(ctx).pop(false);
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Eliminar', style: TextStyle(fontFamily: APP_FONT_FAMILY)),
+              onPressed: () {
+                Navigator.of(ctx).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmDelete == true) {
+      try {
+        DocumentSnapshot productDoc = await FirebaseFirestore.instance.collection('products').doc(productId).get();
+        if (productDoc.exists) {
+          final productData = Product.fromFirestore(productDoc.data() as Map<String, dynamic>, productDoc.id);
+          for (var imageInfo in productData.images) {
+            if (imageInfo.url.startsWith('https://firebasestorage.googleapis.com')) {
+              try {
+                await FirebaseStorage.instance.refFromURL(imageInfo.url).delete();
+              } catch (e) {
+                developer.log('Error eliminando imagen de storage (modal): ${imageInfo.url}, error: $e');
+              }
+            }
+          }
+        }
+
+        await FirebaseFirestore.instance.collection('products').doc(productId).delete();
+        if (contextForDialogsAndSnackbars.mounted) {
+          ScaffoldMessenger.of(contextForDialogsAndSnackbars).showSnackBar(
+            const SnackBar(content: Text('Producto eliminado correctamente.', style: TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.green),
+          );
+        }
+      } catch (e) {
+        developer.log('Error al eliminar producto desde modal: $e');
+        if (contextForDialogsAndSnackbars.mounted) {
+          ScaffoldMessenger.of(contextForDialogsAndSnackbars).showSnackBar(
+            SnackBar(content: Text('Error al eliminar el producto: $e', style: const TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext modalSheetContext) {
+    return FractionallySizedBox(
+      heightFactor: 0.85,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: const Text('Mis Productos Publicados', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.white)),
+            backgroundColor: APP_PRIMARY_COLOR,
+            elevation: 1,
+            automaticallyImplyLeading: false,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20.0),
+                topRight: Radius.circular(20.0),
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(modalSheetContext).pop(),
+                tooltip: 'Cerrar',
+              )
+            ],
+          ),
+          body: Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Animal Health Fondo de Pantalla.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: FirebaseFirestore.instance
+                    .collection('products')
+                    .where('userId', isEqualTo: userId)
+                    .orderBy('creationDate', descending: true)
+                    .snapshots(),
+                builder: (streamBuilderContext, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)));
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Text('Aún no has publicado ningún producto.\n¡Anímate a vender!',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: APP_FONT_FAMILY, fontWeight: FontWeight.w600)),
+                        ));
+                  }
+
+                  final userProducts = snapshot.data!.docs.map((doc) {
+                    try {
+                      return Product.fromFirestore(doc.data(), doc.id);
+                    } catch (e) {
+                      developer.log('Error parseando producto en modal: $e');
+                      return null;
+                    }
+                  }).whereType<Product>().toList();
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 60.0),
+                    itemCount: userProducts.length,
+                    itemBuilder: (BuildContext itemBuildContext, int index) {
+                      final product = userProducts[index];
+                      String? imageUrl = product.images.isNotEmpty ? product.images.first.url : null;
+
+                      return Card(
+                        color: const Color(0xe3a0f4fe).withOpacity(0.92),
+                        margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                          leading: SizedBox(
+                            width: 65,
+                            height: 65,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: imageUrl != null && imageUrl.isNotEmpty
+                                  ? CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (ctx, url) => Container(color: Colors.grey[300], child: const Center(child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation<Color>(APP_PRIMARY_COLOR)))),
+                                errorWidget: (ctx, url, err) => Container(color: Colors.grey[300], child: const Icon(Icons.broken_image, color: Colors.grey, size: 30)),
+                              )
+                                  : Container(color: Colors.grey[300], child: const Icon(Icons.inventory_2_outlined, color: Colors.grey, size: 30)),
+                            ),
+                          ),
+                          title: Text(product.name, style: const TextStyle(fontFamily: APP_FONT_FAMILY, fontWeight: FontWeight.bold, fontSize: 16, color: APP_TEXT_COLOR)),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('\$${product.price.toStringAsFixed(2)}', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.green[800], fontWeight: FontWeight.w700, fontSize: 15)),
+                              Text('Stock: ${product.stock}', style: const TextStyle(fontFamily: APP_FONT_FAMILY, color: APP_TEXT_COLOR, fontSize: 13)),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Image.asset(
+                                  'assets/images/editar.png',
+                                  height: 50.0,
+                                  width: 50.0,
+                                  fit: BoxFit.contain,
+                                ),
+                                onPressed: () {
+                                  Navigator.of(modalSheetContext).pop();
+                                  showModalBottomSheet(
+                                    context: parentContextForSnackbars,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (BuildContext editModalCtx) {
+                                      // ===> Llamando al modal de edición
+                                      return _EditarProductoModalWidget(
+                                        key: Key('edit_product_modal_list_${product.id}'),
+                                        productToEdit: product,
+                                        parentContextForSnackbars: parentContextForSnackbars,
+                                      );
+                                    },
+                                  );
+                                },
+                                tooltip: 'Editar producto',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 50, minHeight: 50),
+                              ),
+                              IconButton(
+                                icon: Image.asset(
+                                  'assets/images/eliminar.png',
+                                  height: 50.0,
+                                  width: 50.0,
+                                  fit: BoxFit.contain,
+                                ),
+                                onPressed: () {
+                                  _MisProductosModalWidget._deleteProductFromModal(itemBuildContext, product.id, product.name, product.userId);
+                                },
+                                tooltip: 'Eliminar producto',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 50, minHeight: 50),
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.of(modalSheetContext).pop();
+                            Navigator.push(
+                              parentContextForSnackbars,
+                              MaterialPageRoute(
+                                builder: (_) => DetallesdelProducto(
+                                  key: Key('DetallesModalList_${product.id}'),
+                                  product: product,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _FullScreenImageViewer extends StatelessWidget {
   final List<String> imageUrls;
@@ -1065,6 +1368,9 @@ class _FullScreenImageViewer extends StatelessWidget {
   }
 }
 
+// ==========================================================
+// ===== INICIO: CÓDIGO DEL MODAL DE EDICIÓN (MOVIDO AQUÍ) =====
+// ==========================================================
 
 class _EditarProductoModalWidget extends StatefulWidget {
   final Product productToEdit;
@@ -1569,3 +1875,6 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
     );
   }
 }
+// ==========================================================
+// ===== FIN: CÓDIGO DEL MODAL DE EDICIÓN =====================
+// ==========================================================

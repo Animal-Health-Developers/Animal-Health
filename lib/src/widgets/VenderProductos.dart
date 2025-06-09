@@ -149,9 +149,6 @@ class _VenderProductosState extends State<VenderProductos> {
   }
 
 
-  // ==============================================================================
-  // ===== INICIO: FUNCIÓN _publicarProducto CORREGIDA PARA INCLUIR KEYWORDS =====
-  // ==============================================================================
   Future<void> _publicarProducto() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -179,7 +176,6 @@ class _VenderProductosState extends State<VenderProductos> {
       _isUploading = true;
     });
 
-    // Subimos las imágenes y obtenemos una lista de mapas con sus datos
     List<Map<String, String>> uploadedImagesData = await _subirImagenes();
 
     if (uploadedImagesData.isEmpty && _selectedImageWrappers.isNotEmpty) {
@@ -196,30 +192,24 @@ class _VenderProductosState extends State<VenderProductos> {
     }
 
     try {
-      // 1. Obtener el nombre del producto
       final String productName = _nombreController.text.trim();
-
-      // 2. ¡LA PARTE MÁS IMPORTANTE! Generar las palabras clave para la búsqueda.
       final List<String> searchKeywords = _generateSearchKeywords(productName);
 
-      // 3. Crear el mapa de datos que se guardará en Firestore
       final Map<String, dynamic> productData = {
         'name': productName,
-        'searchKeywords': searchKeywords, // <-- ¡CAMPO AÑADIDO! Esto hace que el producto sea buscable.
+        'searchKeywords': searchKeywords,
         'price': double.tryParse(_precioController.text.trim()) ?? 0.0,
         'description': _descripcionController.text.trim(),
         'category': _categoriaSeleccionada!,
         'seller': _empresaController.text.trim(),
         'stock': int.tryParse(_cantidadController.text.trim()) ?? 0,
-        'images': uploadedImagesData, // La lista de mapas de imágenes
+        'images': uploadedImagesData,
         'userId': FirebaseAuth.instance.currentUser!.uid,
         'creationDate': FieldValue.serverTimestamp(),
-        // Añadimos valores por defecto para los campos de calificación
         'qualification': 0.0,
         'qualificationsNumber': 0,
       };
 
-      // 4. Guardar el mapa de datos directamente en Firestore
       await FirebaseFirestore.instance.collection('products').add(productData);
 
       if (mounted) {
@@ -235,7 +225,6 @@ class _VenderProductosState extends State<VenderProductos> {
           _selectedImageWrappers.clear();
           _categoriaSeleccionada = null;
         });
-        // Navegar a CompradeProductos después de publicar
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const CompradeProductos(key: Key('CompradeProductosPostVenta'))),
@@ -257,12 +246,6 @@ class _VenderProductosState extends State<VenderProductos> {
       }
     }
   }
-  // ============================================================================
-  // ===== FIN: FUNCIÓN _publicarProducto CORREGIDA =============================
-  // ============================================================================
-
-
-  // --- El resto del código no necesita cambios, ya que la UI y la lógica de los widgets son correctas ---
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -515,17 +498,21 @@ class _VenderProductosState extends State<VenderProductos> {
               ),
             ),
           ),
+
+          // ==========================================================
+          // ===== INICIO: BOTÓN DE "BACK" CORREGIDO ====================
+          // ==========================================================
           Pinned.fromPins(
             Pin(size: 52.9, start: 9.1),
             Pin(size: 50.0, start: 49.0),
             child: Tooltip(
-              message: 'Volver a Comprar Productos',
-              child: PageLink(
-                links: [
-                  PageLinkInfo(
-                    pageBuilder: () => const CompradeProductos(key: Key("CompradeProductosDesdeVenta")),
-                  ),
-                ],
+              message: 'Volver a la página anterior', // Mensaje genérico
+              child: InkWell(
+                onTap: () {
+                  // Acción correcta: regresar a la pantalla anterior
+                  Navigator.of(context).pop();
+                },
+                borderRadius: BorderRadius.circular(25), // Para efecto visual al tocar
                 child: Container(
                   decoration: const BoxDecoration(
                     image: DecorationImage(
@@ -537,6 +524,10 @@ class _VenderProductosState extends State<VenderProductos> {
               ),
             ),
           ),
+          // ==========================================================
+          // ===== FIN: BOTÓN DE "BACK" CORREGIDO =======================
+          // ==========================================================
+
           Pinned.fromPins(
             Pin(size: 74.0, middle: 0.5),
             Pin(size: 73.0, start: 42.0),
