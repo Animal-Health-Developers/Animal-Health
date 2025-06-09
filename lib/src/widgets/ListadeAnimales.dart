@@ -18,9 +18,9 @@ class ListadeAnimales extends StatefulWidget {
   final bool isSelectionMode;
 
   const ListadeAnimales({
-    Key? key,
+    super.key,
     this.isSelectionMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _ListadeAnimalesState createState() => _ListadeAnimalesState();
@@ -118,7 +118,7 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
         errorWidget: (context, url, error) {
           print('Error al cargar imagen de animal (URL original: $url): $error. Intentando obtener nueva URL...');
           // Si la URL que falló es una cadena vacía o nula, consideramos que es un placeholder, no un error de carga.
-          if (url == null || url.isEmpty) {
+          if (url.isEmpty) {
             return _buildPlaceholder();
           }
           return FutureBuilder<String?>(
@@ -199,6 +199,7 @@ class _ListadeAnimalesState extends State<ListadeAnimales> {
       // MODIFICACIÓN CLAVE AQUÍ: Asegurarse de que fotoPerfilUrl sea siempre un String.
       // Si por alguna razón no lo es (ej. Firebase guarda 'false' o null en lugar de ""),
       // esto lo convierte a una cadena vacía para evitar errores de tipo.
+      // ignore: unnecessary_type_check
       final String fotoUrl = (animalObjeto.fotoPerfilUrl is String) ? animalObjeto.fotoPerfilUrl : '';
       final nombre = animalObjeto.nombre;
       final especie = animalObjeto.especie;

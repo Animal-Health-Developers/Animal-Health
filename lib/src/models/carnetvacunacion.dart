@@ -24,7 +24,7 @@ class CarnetVacunacion {
 
   // Constructor factory para crear una instancia desde un mapa de Firestore
   factory CarnetVacunacion.fromMap(Map<String, dynamic> map) {
-    String _safeString(dynamic value) {
+    String safeString(dynamic value) {
       if (value == null) {
         return '';
       }
@@ -38,7 +38,7 @@ class CarnetVacunacion {
       return value.toString(); // Convierte cualquier otro tipo a string
     }
 
-    int _safeInt(dynamic value) {
+    int safeInt(dynamic value) {
       if (value == null) {
         return 0; // Valor por defecto si es nulo
       }
@@ -53,7 +53,7 @@ class CarnetVacunacion {
 
     // CRUCIAL: Helper para convertir un Timestamp de Firestore a DateTime
     // También maneja la posibilidad de que datos antiguos aún sean Strings ISO 8601.
-    DateTime _parseFirestoreDate(dynamic value) {
+    DateTime parseFirestoreDate(dynamic value) {
       if (value is Timestamp) {
         return value.toDate();
       }
@@ -65,13 +65,13 @@ class CarnetVacunacion {
     }
 
     return CarnetVacunacion(
-      nombreVacuna: _safeString(map['nombreVacuna']),
+      nombreVacuna: safeString(map['nombreVacuna']),
       // Usamos el helper para las fechas, esperando Timestamp pero siendo flexibles con String
-      fechaVacunacion: _parseFirestoreDate(map['fechaVacunacion']),
-      lote: _safeString(map['lote']),
-      veterinario: _safeString(map['veterinario']),
-      numeroDosis: _safeInt(map['numeroDosis']),
-      proximaDosis: _parseFirestoreDate(map['proximaDosis']),
+      fechaVacunacion: parseFirestoreDate(map['fechaVacunacion']),
+      lote: safeString(map['lote']),
+      veterinario: safeString(map['veterinario']),
+      numeroDosis: safeInt(map['numeroDosis']),
+      proximaDosis: parseFirestoreDate(map['proximaDosis']),
       // También se hace seguro para lastUpdated
       lastUpdated: (map['lastUpdated'] is Timestamp) ? (map['lastUpdated'] as Timestamp).toDate() : null,
     );

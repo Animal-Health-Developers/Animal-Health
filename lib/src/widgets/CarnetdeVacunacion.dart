@@ -12,7 +12,6 @@ import './Home.dart';
 import './Ayuda.dart';
 import './EditarPerfildeAnimal.dart';
 import './CrearVacuna.dart'; // Donde creas nuevas vacunas
-import './FuncionesdelaApp.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import '../models/animal.dart'; // Importar el modelo Animal
@@ -182,7 +181,7 @@ class _CarnetdeVacunacionState extends State<CarnetdeVacunacion> {
       backgroundColor: Colors.transparent, // Permite que el ClipRRect del modal tenga un fondo transparente
       builder: (BuildContext modalContext) {
         return _EditarVacunaModalWidget(
-          key: Key('edit_vaccine_modal_${vaccineId}'),
+          key: Key('edit_vaccine_modal_$vaccineId'),
           animalId: widget.animalId,
           vaccineId: vaccineId,
           vaccineData: vaccineData,
@@ -627,9 +626,9 @@ class _CarnetdeVacunacionState extends State<CarnetdeVacunacion> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22.5),
-                              child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
+                              child: (animalData.fotoPerfilUrl.isNotEmpty)
                                   ? CachedNetworkImage(
-                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
+                                imageUrl: animalData.fotoPerfilUrl, fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                                 errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
                               )
@@ -862,9 +861,6 @@ class __EditarVacunaModalWidgetState extends State<_EditarVacunaModalWidget> {
   Animal? _animalData; // Para almacenar los datos del animal para mostrar en el encabezado
 
   // Constantes de diseño para los campos del formulario, tomadas de VisitasalVeterinario/CrearVisitasVet
-  static const double _iconSize = 42.0;
-  static const double _iconLeftPadding = 10.0;
-  static const double _textFieldLeftPadding = _iconLeftPadding + _iconSize + 10.0;
 
   // NUEVA FUNCIÓN: Helper para convertir dynamic a String de forma segura
   String _safeString(dynamic value) {
@@ -895,7 +891,7 @@ class __EditarVacunaModalWidgetState extends State<_EditarVacunaModalWidget> {
   // Método para inicializar todos los TextEditingController y variables de estado
   void _initializeControllers() {
     // Helper para parsear la fecha de forma robusta
-    DateTime? _parseIncomingDate(dynamic rawDate) {
+    DateTime? parseIncomingDate(dynamic rawDate) {
       if (rawDate is Timestamp) {
         return rawDate.toDate(); // Convierte Timestamp a DateTime
       } else if (rawDate is DateTime) {
@@ -907,8 +903,8 @@ class __EditarVacunaModalWidgetState extends State<_EditarVacunaModalWidget> {
     }
 
     // 1. Inicializar las fechas a partir de widget.vaccineData (más robusto)
-    _selectedFechaVacunacion = _parseIncomingDate(widget.vaccineData['fechaVacunacion']) ?? DateTime.now();
-    _selectedProximaDosis = _parseIncomingDate(widget.vaccineData['proximaDosis']) ?? DateTime.now().add(const Duration(days: 365));
+    _selectedFechaVacunacion = parseIncomingDate(widget.vaccineData['fechaVacunacion']) ?? DateTime.now();
+    _selectedProximaDosis = parseIncomingDate(widget.vaccineData['proximaDosis']) ?? DateTime.now().add(const Duration(days: 365));
 
     // 2. Inicializar TextEditingControllers con los valores pre-existentes
     // CAMBIO AQUI: Utiliza _safeString() para asegurar que siempre se asigne un String al TextEditingController.
@@ -969,8 +965,7 @@ class __EditarVacunaModalWidgetState extends State<_EditarVacunaModalWidget> {
               primary: Color(0xff4ec8dd),
               onPrimary: Colors.white,
               onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -1033,9 +1028,11 @@ class __EditarVacunaModalWidgetState extends State<_EditarVacunaModalWidget> {
       developer.log("Error al actualizar vacuna: $e");
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al actualizar vacuna: $e')));
     } finally {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _isSaving = false;
       });
+      }
     }
   }
 
@@ -1227,8 +1224,8 @@ class __EditarVacunaModalWidgetState extends State<_EditarVacunaModalWidget> {
                   child: Tooltip( // Tooltip para la foto del animal en el modal
                     message: 'Ver perfil de ${_animalData!.nombre}',
                     child: GestureDetector(
-                      onTap: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
-                          ? () => _showLargeImage(_animalData!.fotoPerfilUrl!)
+                      onTap: (_animalData!.fotoPerfilUrl.isNotEmpty)
+                          ? () => _showLargeImage(_animalData!.fotoPerfilUrl)
                           : null,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -1244,9 +1241,9 @@ class __EditarVacunaModalWidgetState extends State<_EditarVacunaModalWidget> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22.5),
-                              child: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
+                              child: (_animalData!.fotoPerfilUrl.isNotEmpty)
                                   ? CachedNetworkImage(
-                                imageUrl: _animalData!.fotoPerfilUrl!, fit: BoxFit.cover,
+                                imageUrl: _animalData!.fotoPerfilUrl, fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                                 errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
                               )

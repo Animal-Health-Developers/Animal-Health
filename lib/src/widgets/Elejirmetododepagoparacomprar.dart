@@ -5,22 +5,19 @@ import 'package:adobe_xd/pinned.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // Imports de Navegación
 import './Home.dart';
 import './Ayuda.dart';
-import './Configuracion.dart';
-import '../services/auth_service.dart';
 
 // --- Clase Principal de la Página: ElegirMetodoDePagoParaComprar ---
 class Elejirmetododepagoparacomprar extends StatefulWidget {
   // Puedes pasar el ID de la tarjeta actualmente seleccionada si ya hay una
   final String? initialSelectedMethodId;
 
-  const Elejirmetododepagoparacomprar({Key? key, this.initialSelectedMethodId}) : super(key: key);
+  const Elejirmetododepagoparacomprar({super.key, this.initialSelectedMethodId});
 
   @override
   _ElejirmetododepagoparacomprarState createState() => _ElejirmetododepagoparacomprarState();
@@ -66,7 +63,7 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
     try {
       final querySnapshot = await FirebaseFirestore.instance
           .collection('users')
-          .doc(_currentUser!.uid)
+          .doc(_currentUser.uid)
           .collection('payment_methods')
           .orderBy('addedAt', descending: true)
           .get();
@@ -208,7 +205,7 @@ class _ElejirmetododepagoparacomprarState extends State<Elejirmetododepagoparaco
                                 activeColor: const Color(0xff4ec8dd),
                               ),
                             );
-                          }).toList(),
+                          }),
 
                         const Divider(height: 30, thickness: 1, indent: 40, endIndent: 40, color: Colors.white54),
                         // --- OPCIÓN PARA AÑADIR ---
@@ -266,8 +263,9 @@ class _MetodoDePagoModalFormState extends State<_MetodoDePagoModalForm> {
     try {
       final cardNumber = _numberController.text.replaceAll(' ', '');
       String brand = 'Tarjeta';
-      if (cardNumber.startsWith('4')) brand = 'Visa';
-      else if (cardNumber.startsWith('5')) brand = 'Mastercard';
+      if (cardNumber.startsWith('4')) {
+        brand = 'Visa';
+      } else if (cardNumber.startsWith('5')) brand = 'Mastercard';
       else if (cardNumber.startsWith('3')) brand = 'Amex';
 
       final expiryParts = _expiryController.text.split('/');

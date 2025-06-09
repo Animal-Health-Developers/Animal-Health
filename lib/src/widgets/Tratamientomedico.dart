@@ -906,9 +906,9 @@ class _TratamientomedicoState extends State<Tratamientomedico> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22.5),
-                              child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
+                              child: (animalData.fotoPerfilUrl.isNotEmpty)
                                   ? CachedNetworkImage(
-                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
+                                imageUrl: animalData.fotoPerfilUrl, fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                                 errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
                               )
@@ -1154,8 +1154,7 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
               primary: APP_PRIMARY_COLOR,
               onPrimary: Colors.white,
               onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -1254,9 +1253,11 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
       developer.log("Error al guardar/actualizar tratamiento: $e");
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar/actualizar tratamiento: $e', style: const TextStyle(fontFamily: APP_FONT_FAMILY)), backgroundColor: Colors.red));
     } finally {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _isSaving = false;
       });
+      }
     }
   }
 
@@ -1448,8 +1449,8 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
                   child: Tooltip( // Tooltip para la foto del animal en el modal
                     message: 'Ver perfil de ${_animalData!.nombre}',
                     child: GestureDetector(
-                      onTap: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
-                          ? () => _showLargeImage(_animalData!.fotoPerfilUrl!)
+                      onTap: (_animalData!.fotoPerfilUrl.isNotEmpty)
+                          ? () => _showLargeImage(_animalData!.fotoPerfilUrl)
                           : null,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -1465,9 +1466,9 @@ class _EditarTratamientoMedicoModalWidgetState extends State<_EditarTratamientoM
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22.5),
-                              child: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
+                              child: (_animalData!.fotoPerfilUrl.isNotEmpty)
                                   ? CachedNetworkImage(
-                                imageUrl: _animalData!.fotoPerfilUrl!, fit: BoxFit.cover,
+                                imageUrl: _animalData!.fotoPerfilUrl, fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                                 errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
                               )

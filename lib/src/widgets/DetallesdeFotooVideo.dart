@@ -3,7 +3,7 @@ import 'package:adobe_xd/pinned.dart';
 // Asegúrate de que la importación de Home sea la correcta y que
 // EditarPublicacionWidget sea accesible (puede que necesites moverlo
 // a un archivo separado si no está ya en Home.dart o un archivo común).
-import './Home.dart' hide Home; // Ocultar Home para evitar conflicto
+// Ocultar Home para evitar conflicto
 import 'package:animal_health/src/widgets/Home.dart' as home_widgets; // Alias para acceder a EditarPublicacionWidget
 
 import 'package:adobe_xd/page_link.dart';
@@ -25,7 +25,7 @@ import 'package:firebase_storage/firebase_storage.dart'; // Para eliminar de Sto
 // (Ya la tienes definida, asegúrate que sea la misma versión que en Home.dart)
 class _VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
-  const _VideoPlayerWidget({Key? key, required this.videoUrl}) : super(key: key);
+  const _VideoPlayerWidget({required this.videoUrl});
 
   @override
   __VideoPlayerWidgetState createState() => __VideoPlayerWidgetState();
@@ -191,7 +191,7 @@ class DetallesdeFotooVideo extends StatefulWidget {
   final String? ownerUserName; // Nombre del dueño de la publicación
   final String? ownerUserProfilePic; // Foto de perfil del dueño de la publicación
 
-  DetallesdeFotooVideo({
+  const DetallesdeFotooVideo({
     required Key key,
     required this.publicationId,
     this.mediaUrl,

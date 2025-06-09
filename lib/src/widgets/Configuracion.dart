@@ -10,8 +10,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 // Imports de Navegación
 import './Home.dart';
 import './Ayuda.dart';
-import './PerfilPublico.dart';
-import './ListadeAnimales.dart';
 import './PRIVACIDAD.dart';
 import './EditarinfodeUsuario.dart';
 import './VerMetodosdePago.dart';

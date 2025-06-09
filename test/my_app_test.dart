@@ -10,7 +10,6 @@ import 'package:firebase_auth/firebase_auth.dart' as firebaseauth;
 import 'package:animal_health/main.dart';
 import 'package:animal_health/src/services/auth_service.dart';
 import 'package:animal_health/src/widgets/AnimalHealth.dart';
-import 'package:animal_health/src/widgets/Home.dart';
 
 @GenerateMocks([
   AuthService,

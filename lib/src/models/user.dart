@@ -63,6 +63,6 @@ class User {
   }
 
   User updateProfilePhoto(String newPhotoUrl) {
-    return this.copyWith(profilePhotoUrl: newPhotoUrl);
+    return copyWith(profilePhotoUrl: newPhotoUrl);
   }
 }

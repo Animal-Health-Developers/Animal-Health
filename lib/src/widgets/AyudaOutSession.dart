@@ -5,7 +5,7 @@ import './Settingsoutsesion.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AyudaOutSession extends StatelessWidget {
-  AyudaOutSession({
+  const AyudaOutSession({
     required Key key,
   }) : super(key: key);
   @override

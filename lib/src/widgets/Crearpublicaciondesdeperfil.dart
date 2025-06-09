@@ -21,7 +21,7 @@ const Color _formContainerColor = Color(0xe3a0f4fe);
 
 
 class Crearpublicaciondesdeperfil extends StatefulWidget {
-  const Crearpublicaciondesdeperfil({Key? key}) : super(key: key);
+  const Crearpublicaciondesdeperfil({super.key});
 
   @override
   _CrearpublicaciondesdeperfilState createState() =>
@@ -159,7 +159,7 @@ class _CrearpublicaciondesdeperfilState
       }
 
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final userData = userDoc.data() as Map<String, dynamic>? ?? {};
+      final userData = userDoc.data() ?? {};
 
       await FirebaseFirestore.instance.collection('publicaciones').add({
         'usuarioId': user.uid,

@@ -9,7 +9,7 @@ import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
 class Chatenlnea extends StatelessWidget {
-  Chatenlnea({
+  const Chatenlnea({
     required Key key,
   }) : super(key: key);
   @override

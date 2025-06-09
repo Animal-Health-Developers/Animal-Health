@@ -1,5 +1,5 @@
 // --- Suscripcion.dart ---
-import 'package:animal_health/src/services/auth_service.dart'; // Para consistencia, aunque no se use directamente aquí
+// Para consistencia, aunque no se use directamente aquí
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import 'package:adobe_xd/page_link.dart';
@@ -22,7 +22,7 @@ import './Ayuda.dart';
 
 // --- Clase Suscripcion ---
 class Suscripcion extends StatefulWidget {
-  const Suscripcion({Key? key}) : super(key: key);
+  const Suscripcion({super.key});
   // Si necesitas AuthService para alguna lógica específica de suscripción, agrégalo
   // final AuthService authService;
 

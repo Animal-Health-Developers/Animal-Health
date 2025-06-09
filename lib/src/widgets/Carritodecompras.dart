@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import 'package:adobe_xd/page_link.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' as developer;
 import 'package:provider/provider.dart';
@@ -535,7 +534,7 @@ class _CarritodecomprasState extends State<Carritodecompras> {
                   else
                   // Se generan los items del carrito directamente en el Column
                   // Esto reemplaza al ListView.builder y asegura que todos los items se rendericen y scrolleen con el resto del contenido.
-                    ..._cartService.items.map((cartItem) => _buildCartItem(context, cartItem)).toList(),
+                    ..._cartService.items.map((cartItem) => _buildCartItem(context, cartItem)),
 
                   // El contenedor del total y los botones ahora forman parte del contenido scrolleable
                   if (_cartService.items.isNotEmpty)

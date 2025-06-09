@@ -13,7 +13,7 @@ import './Ayuda.dart'; // Asumiendo que tienes un Ayuda.dart
 
 // --- Clase PRIVACIDAD ---
 class PRIVACIDAD extends StatefulWidget {
-  const PRIVACIDAD({Key? key}) : super(key: key); // Key? para null safety
+  const PRIVACIDAD({super.key}); // Key? para null safety
 
   @override
   _PRIVACIDADState createState() => _PRIVACIDADState();

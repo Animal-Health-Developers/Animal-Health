@@ -18,7 +18,7 @@ import '../services/auth_service.dart';
 
 // --- Clase Principal de la Página: VerMetodosdePago ---
 class VerMetodosdePago extends StatefulWidget {
-  const VerMetodosdePago({Key? key}) : super(key: key);
+  const VerMetodosdePago({super.key});
 
   @override
   _VerMetodosdePagoState createState() => _VerMetodosdePagoState();
@@ -61,14 +61,14 @@ class _VerMetodosdePagoState extends State<VerMetodosdePago> {
     if (mounted) setState(() => _isLoading = true);
 
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).get();
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUser.uid).get();
       if (userDoc.exists) {
         _defaultPaymentMethodId = userDoc.data()?['defaultPaymentMethodId'];
       }
 
       final querySnapshot = await FirebaseFirestore.instance
           .collection('users')
-          .doc(_currentUser!.uid)
+          .doc(_currentUser.uid)
           .collection('payment_methods')
           .orderBy('addedAt', descending: true)
           .get();
@@ -105,7 +105,7 @@ class _VerMetodosdePagoState extends State<VerMetodosdePago> {
   Future<void> _setDefaultMethod(String methodId) async {
     if (_currentUser == null) return;
     try {
-      await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).update({
+      await FirebaseFirestore.instance.collection('users').doc(_currentUser.uid).update({
         'defaultPaymentMethodId': methodId,
       });
       if (mounted) {
@@ -137,9 +137,9 @@ class _VerMetodosdePagoState extends State<VerMetodosdePago> {
     if (confirmDelete != true || _currentUser == null) return;
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).collection('payment_methods').doc(methodId).delete();
+      await FirebaseFirestore.instance.collection('users').doc(_currentUser.uid).collection('payment_methods').doc(methodId).delete();
       if (_defaultPaymentMethodId == methodId) {
-        await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).update({'defaultPaymentMethodId': FieldValue.delete()});
+        await FirebaseFirestore.instance.collection('users').doc(_currentUser.uid).update({'defaultPaymentMethodId': FieldValue.delete()});
       }
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Método de pago eliminado.'), backgroundColor: Colors.green));
       _loadPaymentMethods();
@@ -234,7 +234,7 @@ class _VerMetodosdePagoState extends State<VerMetodosdePago> {
                             padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
                             child: Row(children: [
                               StreamBuilder<DocumentSnapshot>(
-                                stream: FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).snapshots(),
+                                stream: FirebaseFirestore.instance.collection('users').doc(_currentUser.uid).snapshots(),
                                 builder: (context, snapshot) {
                                   String? profilePhotoUrl;
                                   if (snapshot.hasData && snapshot.data!.exists) {
@@ -251,8 +251,8 @@ class _VerMetodosdePagoState extends State<VerMetodosdePago> {
                               const SizedBox(width: 15),
                               Expanded(
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text(_currentUser!.displayName ?? _currentUser!.email ?? 'Usuario', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                                  if (_currentUser!.email != null) Text(_currentUser!.email!, style: const TextStyle(fontFamily: 'Arial', fontSize: 14, color: Colors.black87), overflow: TextOverflow.ellipsis),
+                                  Text(_currentUser.displayName ?? _currentUser.email ?? 'Usuario', style: const TextStyle(fontFamily: 'Comic Sans MS', fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                                  if (_currentUser.email != null) Text(_currentUser.email!, style: const TextStyle(fontFamily: 'Arial', fontSize: 14, color: Colors.black87), overflow: TextOverflow.ellipsis),
                                 ]),
                               ),
                             ]),
@@ -281,7 +281,7 @@ class _VerMetodosdePagoState extends State<VerMetodosdePago> {
                                 IconButton(icon: Icon(Icons.delete_outline, color: isDefault ? Colors.grey : Colors.red.shade400), onPressed: isDefault ? null : () => _deleteMethod(method['id'])),
                               ]),
                             );
-                          }).toList(),
+                          }),
                       ],
                     ),
                   ),
@@ -335,8 +335,9 @@ class _MetodoDePagoModalFormState extends State<_MetodoDePagoModalForm> {
     try {
       final cardNumber = _numberController.text.replaceAll(' ', '');
       String brand = 'Tarjeta';
-      if (cardNumber.startsWith('4')) brand = 'Visa';
-      else if (cardNumber.startsWith('5')) brand = 'Mastercard';
+      if (cardNumber.startsWith('4')) {
+        brand = 'Visa';
+      } else if (cardNumber.startsWith('5')) brand = 'Mastercard';
       else if (cardNumber.startsWith('3')) brand = 'Amex';
 
       final expiryParts = _expiryController.text.split('/');

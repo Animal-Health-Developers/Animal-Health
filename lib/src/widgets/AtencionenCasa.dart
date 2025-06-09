@@ -62,7 +62,7 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
   String _currentLocationString = "Obteniendo ubicación..."; // Coordenadas GPS
   bool _isLocationLoading = true;
 
-  Map<String, String> _contactInfo = {
+  final Map<String, String> _contactInfo = {
     'name': 'Cargando...',
     'email': 'Cargando...',
     'documento': 'Cargando...',
@@ -246,7 +246,7 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
       // Construir la dirección estructurada
       String fullAddress = "";
       if (_selectedAddressType != null && _addressNumberController.text.isNotEmpty) {
-        fullAddress = "${_selectedAddressType} ${_addressNumberController.text}";
+        fullAddress = "$_selectedAddressType ${_addressNumberController.text}";
         if (_addressComplementController.text.isNotEmpty) {
           fullAddress += " - ${_addressComplementController.text}";
         }
@@ -332,10 +332,12 @@ class _AtencionenCasaState extends State<AtencionenCasa> {
     double height = 60.0,
   }) {
     double itemWidth;
-    if (fixedWidth != null) itemWidth = fixedWidth;
-    else {
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;

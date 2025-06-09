@@ -29,11 +29,11 @@ class SolucionAEMERGENCIAS extends StatefulWidget {
   final String? especieAnimal; // Opcional: Especie del animal
 
   const SolucionAEMERGENCIAS({
-    Key? key,
+    super.key,
     required this.descripcionDelProblema,
     this.nombreAnimal,
     this.especieAnimal,
-  }) : super(key: key);
+  });
 
   @override
   _SolucionAEMERGENCIASState createState() => _SolucionAEMERGENCIASState();
@@ -91,7 +91,7 @@ class _SolucionAEMERGENCIASState extends State<SolucionAEMERGENCIAS> {
       animalInfo += " para mi mascota ${widget.nombreAnimal!}";
     }
     if (widget.especieAnimal != null && widget.especieAnimal!.isNotEmpty) {
-      animalInfo += (animalInfo.isEmpty ? " para mi " : ", un/una ") + "${widget.especieAnimal!}";
+      animalInfo += "${animalInfo.isEmpty ? " para mi " : ", un/una "}${widget.especieAnimal!}";
     }
 
 
@@ -158,10 +158,12 @@ class _SolucionAEMERGENCIASState extends State<SolucionAEMERGENCIAS> {
     required VoidCallback onPressed,
   }) {
     double itemWidth;
-    if (fixedWidth != null) itemWidth = fixedWidth;
-    else {
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;

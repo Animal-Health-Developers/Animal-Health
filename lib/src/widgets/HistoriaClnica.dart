@@ -5,7 +5,6 @@ import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
 import './EditarPerfildeAnimal.dart';
-import './FuncionesdelaApp.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import 'dart:ui' as ui; // Para BackdropFilter

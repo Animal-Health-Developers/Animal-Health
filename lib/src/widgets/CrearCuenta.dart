@@ -253,7 +253,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
                 child: Column(
                   children: [
                     // Campo Email
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [
@@ -300,7 +300,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
                     SizedBox(height: 20),
 
                     // Campo Nombre de Usuario
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [
@@ -347,7 +347,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
                     SizedBox(height: 20),
 
                     // Campo Contraseña
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [
@@ -395,7 +395,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
                     SizedBox(height: 20),
 
                     // Campo Confirmar Contraseña
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [

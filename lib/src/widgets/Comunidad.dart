@@ -27,8 +27,8 @@ const String GEMINI_API_KEY_COMMUNITY = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3nenc
 
 class Comunidad extends StatefulWidget {
   const Comunidad({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _ComunidadState createState() => _ComunidadState();
@@ -157,8 +157,9 @@ class _ComunidadState extends State<Comunidad> {
       itemWidth = fixedWidth;
     } else {
       // Fallback si no se provee ancho específico
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;

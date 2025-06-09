@@ -20,7 +20,7 @@ import './CompradeProductos.dart';
 import './Carritodecompras.dart';
 import './Home.dart';
 import '../services/auth_service.dart';
-import '../models/products.dart'; // Asegúrate que ProductImage y Product estén definidos correctamente
+// Asegúrate que ProductImage y Product estén definidos correctamente
 
 const Color APP_PRIMARY_COLOR = Color(0xff4ec8dd);
 const Color APP_TEXT_COLOR = Color(0xff000000);
@@ -38,8 +38,8 @@ class _ImageWrapper {
 
 class VenderProductos extends StatefulWidget {
   const VenderProductos({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _VenderProductosState createState() => _VenderProductosState();
@@ -53,7 +53,7 @@ class _VenderProductosState extends State<VenderProductos> {
   final TextEditingController _empresaController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
 
-  List<_ImageWrapper> _selectedImageWrappers = [];
+  final List<_ImageWrapper> _selectedImageWrappers = [];
 
   bool _isUploading = false;
   String? _categoriaSeleccionada;

@@ -31,8 +31,8 @@ const String GEMINI_API_KEY_EMERGENCIES = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B3ne
 
 class Emergencias extends StatefulWidget {
   const Emergencias({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _EmergenciasState createState() => _EmergenciasState();
@@ -148,8 +148,9 @@ class _EmergenciasState extends State<Emergencias> {
       itemWidth = fixedWidth;
     } else {
       // Fallback si no se provee ancho específico
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;

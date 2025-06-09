@@ -31,7 +31,7 @@ const String GEMINI_API_KEY_HOME = 'AIzaSyBYFGiQrNtcOkfbf3Pz1rGKsgoYPyQejmM';
 // ---------------------------------
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  const Home({super.key});
 
   @override
   _HomeState createState() => _HomeState();
@@ -146,8 +146,9 @@ class _HomeState extends State<Home> {
     if (fixedWidth != null) {
       itemWidth = fixedWidth;
     } else {
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
@@ -711,8 +712,8 @@ class _HomeState extends State<Home> {
                 constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.55),
                 color: Colors.grey[200],
                 child: isVideo
-                    ? _VideoPlayerWidget(key: Key('video_pub_\${publicacion.id}'), videoUrl: mediaUrl!)
-                    : _buildImageWidget(mediaUrl!, context),
+                    ? _VideoPlayerWidget(key: Key('video_pub_\${publicacion.id}'), videoUrl: mediaUrl)
+                    : _buildImageWidget(mediaUrl, context),
               ),
             )
           else
@@ -1466,7 +1467,7 @@ class _EditarPublicacionWidgetState extends State<EditarPublicacionWidget> {
 // --- CLASE _VideoPlayerWidget ---
 class _VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
-  const _VideoPlayerWidget({Key? key, required this.videoUrl}) : super(key: key);
+  const _VideoPlayerWidget({super.key, required this.videoUrl});
 
   @override
   __VideoPlayerWidgetState createState() => __VideoPlayerWidgetState();

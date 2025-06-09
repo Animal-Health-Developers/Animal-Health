@@ -21,7 +21,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:developer' as developer;
-import '../models/animal.dart'; // Importa tu modelo Animal para leer especies y razas
+// Importa tu modelo Animal para leer especies y razas
 
 // --- CONFIGURACIÓN DE API KEYS ---
 const String GEMINI_API_KEY_CARE = 'AIzaSyBYFGiQrNtcOkfbf3Pz1rGKsgoYPyQejmM'; // <<< VERIFICAR ESTA CLAVE
@@ -149,10 +149,12 @@ class _CuidadosyRecomendacionesState extends State<CuidadosyRecomendaciones> {
     double height = 60.0,
   }) {
     double itemWidth;
-    if (fixedWidth != null) itemWidth = fixedWidth;
-    else {
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+    if (fixedWidth != null) {
+      itemWidth = fixedWidth;
+    } else {
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;

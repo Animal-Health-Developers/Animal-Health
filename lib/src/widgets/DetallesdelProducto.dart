@@ -30,9 +30,9 @@ class DetallesdelProducto extends StatefulWidget {
   final Product product;
 
   const DetallesdelProducto({
-    Key? key,
+    super.key,
     required this.product,
-  }) : super(key: key);
+  });
 
   @override
   _DetallesdelProductoState createState() => _DetallesdelProductoState();
@@ -120,7 +120,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                       hint: const Text('Todas las categorías'),
                       items: [
                         const DropdownMenuItem<String>(value: null, child: Text('Todas')),
-                        ..._listaDeCategorias.map((cat) => DropdownMenuItem(value: cat, child: Text(cat, style: const TextStyle(fontFamily: APP_FONT_FAMILY)))).toList(),
+                        ..._listaDeCategorias.map((cat) => DropdownMenuItem(value: cat, child: Text(cat, style: const TextStyle(fontFamily: APP_FONT_FAMILY)))),
                       ],
                       onChanged: (value) => setDialogState(() => tempCategory = value),
                     ),
@@ -464,9 +464,6 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                   ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: APP_PRIMARY_COLOR, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                    child: _isLoadingOpinion
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2,))
-                        : const Text('Enviar Opinión', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.white)),
                     onPressed: _isLoadingOpinion ? null : () {
                       if (_formKeyOpinion.currentState!.validate() && _opinionNuevaCalificacion > 0) {
                         _enviarOpinion(
@@ -480,6 +477,9 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                         );
                       }
                     },
+                    child: _isLoadingOpinion
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2,))
+                        : const Text('Enviar Opinión', style: TextStyle(fontFamily: APP_FONT_FAMILY, color: Colors.white)),
                   ),
                 ],
               );
@@ -936,7 +936,6 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    child: const Text('Comprar Ahora', style: TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: APP_PRIMARY_COLOR,
                       padding: const EdgeInsets.symmetric(vertical: 14.0),
@@ -944,6 +943,7 @@ class _DetallesdelProductoState extends State<DetallesdelProducto> {
                       elevation: 3,
                     ),
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => ComprarAhora(key: Key("buyNow_${widget.product.id}"), product: widget.product))),
+                    child: const Text('Comprar Ahora', style: TextStyle(fontFamily: APP_FONT_FAMILY, fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ),
               ],
@@ -1021,10 +1021,9 @@ class _FullScreenImageViewer extends StatelessWidget {
   final int initialIndex;
 
   const _FullScreenImageViewer({
-    Key? key,
     required this.imageUrls,
     required this.initialIndex,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1072,10 +1071,10 @@ class _EditarProductoModalWidget extends StatefulWidget {
   final BuildContext parentContextForSnackbars;
 
   const _EditarProductoModalWidget({
-    Key? key,
+    super.key,
     required this.productToEdit,
     required this.parentContextForSnackbars,
-  }) : super(key: key);
+  });
 
   @override
   __EditarProductoModalWidgetState createState() => __EditarProductoModalWidgetState();
@@ -1089,7 +1088,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
   late TextEditingController _stockController;
   late TextEditingController _categoryController;
   List<ProductImage> _currentImagesInfo = [];
-  List<XFile> _newImageFiles = [];
+  final List<XFile> _newImageFiles = [];
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
 

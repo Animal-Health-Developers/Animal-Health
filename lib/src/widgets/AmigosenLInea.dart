@@ -26,8 +26,8 @@ const String GEMINI_API_KEY_ONLINE_FRIENDS = 'AIzaSyAgv8dNt1etzPz8Lnl39e8Seb6N8B
 
 class AmigosenLInea extends StatefulWidget {
   const AmigosenLInea({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
   @override
   _AmigosenLIneaState createState() => _AmigosenLIneaState();
 }
@@ -156,8 +156,9 @@ class _AmigosenLIneaState extends State<AmigosenLInea> {
     if (fixedWidth != null) {
       itemWidth = fixedWidth;
     } else {
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;

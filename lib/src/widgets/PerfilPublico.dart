@@ -32,7 +32,7 @@ const Color _boxShadowColor = Color(0xff080808);
 const Color _scaffoldBgColorModal = Color(0xff4ec8dd);
 
 class PerfilPublico extends StatefulWidget {
-  const PerfilPublico({Key? key}) : super(key: key);
+  const PerfilPublico({super.key});
 
   @override
   _PerfilPublicoState createState() => _PerfilPublicoState();
@@ -1121,7 +1121,7 @@ class _PerfilPublicoState extends State<PerfilPublico> {
                 child: isVideo
                     ? _VideoPlayerWidgetFromHome(key: ValueKey('video_pub_perfil_${publicacion.id}'), videoUrl: mediaUrl)
                     : CachedNetworkImage(
-                    imageUrl: mediaUrl!,
+                    imageUrl: mediaUrl,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_buttonBackgroundColor))),
                     errorWidget: (context, url, error) {
@@ -1264,13 +1264,13 @@ class _StoryViewerWidget extends StatefulWidget {
   final String? userProfilePic;
 
   const _StoryViewerWidget({
-    Key? key,
+    super.key,
     required this.mediaUrl,
     required this.isVideo,
     required this.caption,
     required this.userName,
     this.userProfilePic,
-  }) : super(key: key);
+  });
 
   @override
   _StoryViewerWidgetState createState() => _StoryViewerWidgetState();
@@ -1426,7 +1426,7 @@ class _EditarPerfilUsuarioModalWidget extends StatefulWidget {
   final String userId;
   final Map<String, dynamic> currentUserData;
   final BuildContext parentContextForSnackbars;
-  const _EditarPerfilUsuarioModalWidget({Key? key, required this.userId, required this.currentUserData, required this.parentContextForSnackbars}) : super(key: key);
+  const _EditarPerfilUsuarioModalWidget({super.key, required this.userId, required this.currentUserData, required this.parentContextForSnackbars});
   @override
   __EditarPerfilUsuarioModalWidgetState createState() => __EditarPerfilUsuarioModalWidgetState();
 }
@@ -1499,13 +1499,12 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
               surface: _tabBackgroundColor,
               onSurface: _primaryTextColor,
             ),
-            dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                   foregroundColor: _buttonBackgroundColor,
                   textStyle: const TextStyle(fontFamily: _fontFamily, fontWeight: FontWeight.bold)
               ),
-            ),
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -1527,7 +1526,7 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
 
     void checkAndAdd(String key, dynamic newValue, dynamic oldValue) {
       var effNew = (newValue is String) ? newValue.trim() : newValue;
-      var effOld = (oldValue is String) ? oldValue?.trim() : oldValue;
+      var effOld = (oldValue is String) ? oldValue.trim() : oldValue;
 
       if (effNew != effOld) {
         if ((effNew is String && effNew.isEmpty) || effNew == null) {
@@ -1713,7 +1712,7 @@ class __EditarPerfilUsuarioModalWidgetState extends State<_EditarPerfilUsuarioMo
 // Código del widget _VideoPlayerWidgetFromHome (sin cambios funcionales significativos, solo optimizaciones)
 class _VideoPlayerWidgetFromHome extends StatefulWidget {
   final String videoUrl;
-  const _VideoPlayerWidgetFromHome({Key? key, required this.videoUrl}) : super(key: key);
+  const _VideoPlayerWidgetFromHome({super.key, required this.videoUrl});
 
   @override
   __VideoPlayerWidgetFromHomeState createState() => __VideoPlayerWidgetFromHomeState();
@@ -2296,12 +2295,12 @@ class _CrearHistoriaModalWidget extends StatefulWidget {
   final BuildContext parentContextForSnackbars;
 
   const _CrearHistoriaModalWidget({
-    Key? key,
+    super.key,
     required this.userId,
     required this.userName,
     this.userProfilePic,
     required this.parentContextForSnackbars,
-  }) : super(key: key);
+  });
 
   @override
   __CrearHistoriaModalWidgetState createState() => __CrearHistoriaModalWidgetState();

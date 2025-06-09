@@ -28,12 +28,12 @@ Future<void> mainAppRunner({
   bool skipDateFormatting = false,
   FirebaseFirestore? firestore,
 }) async {
-  final _authService = authService ?? AuthService();
+  final authService0 = authService ?? AuthService();
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<AuthService>(create: (_) => _authService), // <--- CORRECTO
+        ChangeNotifierProvider<AuthService>(create: (_) => authService0), // <--- CORRECTO
         ChangeNotifierProvider<CartService>(create: (_) => CartService()), // <--- CORRECTO
       ],
       child: const MyApp(),

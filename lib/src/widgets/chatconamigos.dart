@@ -9,7 +9,7 @@ import './ListadeAnimales.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class chatconamigos extends StatelessWidget {
-  chatconamigos({
+  const chatconamigos({
     required Key key,
   }) : super(key: key);
   @override

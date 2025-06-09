@@ -261,9 +261,9 @@ class _FuncionesdelaAppState extends State<FuncionesdelaApp> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22.5), // ClipRRect para que la imagen se adapte a los bordes redondeados
-                              child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
+                              child: (animalData.fotoPerfilUrl.isNotEmpty)
                                   ? CachedNetworkImage(
-                                  imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
+                                  imageUrl: animalData.fotoPerfilUrl, fit: BoxFit.cover,
                                   placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                                   errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
                                   : Icon(Icons.pets, size: 50, color: Colors.grey[600]),

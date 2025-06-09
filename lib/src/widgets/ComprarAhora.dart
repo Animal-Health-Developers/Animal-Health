@@ -1,6 +1,6 @@
 import 'package:animal_health/src/models/products.dart';
 import 'package:animal_health/src/services/auth_service.dart';
-import 'package:animal_health/src/widgets/CompradeProductos.dart'; // Para el botón back
+// Para el botón back
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import './Home.dart';
@@ -28,9 +28,9 @@ class ComprarAhora extends StatelessWidget {
   final Product product; // Recibe el producto
 
   const ComprarAhora({
-    Key? key,
+    super.key,
     required this.product, // Hacerlo requerido
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

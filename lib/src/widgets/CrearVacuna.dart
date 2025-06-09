@@ -14,7 +14,6 @@ import './EditarPerfildeAnimal.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
 import './CarnetdeVacunacion.dart'; // Para volver a esta pantalla
-import './FuncionesdelaApp.dart';
 import '../models/animal.dart'; // Importar el modelo Animal
 import '../models/carnetvacunacion.dart'; // Importar el modelo CarnetVacunacion
 
@@ -68,8 +67,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
               primary: Color(0xff4ec8dd),
               onPrimary: Colors.white,
               onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -372,9 +370,9 @@ class _CrearVacunaState extends State<CrearVacuna> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22.5),
-                              child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
+                              child: (animalData.fotoPerfilUrl.isNotEmpty)
                                   ? CachedNetworkImage(
-                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
+                                imageUrl: animalData.fotoPerfilUrl, fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                                 errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
                               )
@@ -556,7 +554,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
     String? Function(String?)? validator,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    return Container(
+    return SizedBox(
       height: 60, // Ajusta la altura si es necesario
       child: Stack(
         children: [
@@ -606,7 +604,7 @@ class _CrearVacunaState extends State<CrearVacuna> {
     required VoidCallback onTap,
     required String tooltipMessage, // Nuevo parámetro para el Tooltip
   }) {
-    return Container(
+    return SizedBox(
       height: 60,
       child: Stack(
         children: [

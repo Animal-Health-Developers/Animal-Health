@@ -25,7 +25,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:google_generative_ai/google_generative_ai.dart'; // Si necesitas búsqueda con IA aquí
-import 'dart:developer' as developer;
 
 // Modelo para los problemas de primeros auxilios
 class FirstAidProblem {
@@ -94,8 +93,9 @@ class _PrimerosAuxiliosState extends State<PrimerosAuxilios> {
     if (fixedWidth != null) {
       itemWidth = fixedWidth;
     } else {
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;

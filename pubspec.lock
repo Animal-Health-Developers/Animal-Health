@@ -966,7 +966,7 @@ packages:
     source: hosted
     version: "2.0.0"
   mockito:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: mockito
       sha256: "4546eac99e8967ea91bae633d2ca7698181d008e95fa4627330cf903d573277a"
@@ -998,7 +998,7 @@ packages:
     source: hosted
     version: "2.2.0"
   path:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path
       sha256: "75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5"

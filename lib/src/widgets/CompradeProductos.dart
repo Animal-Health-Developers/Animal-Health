@@ -36,11 +36,11 @@ class CompradeProductos extends StatefulWidget {
   final RangeValues? initialPriceRange;
 
   const CompradeProductos({
-    Key? key,
+    super.key,
     this.initialSearchTerm,
     this.initialCategory,
     this.initialPriceRange,
-  }) : super(key: key);
+  });
 
   @override
   _CompradeProductosState createState() => _CompradeProductosState();
@@ -161,7 +161,7 @@ class _CompradeProductosState extends State<CompradeProductos> {
                         ..._listaDeCategorias.map((cat) => DropdownMenuItem(
                           value: cat,
                           child: Text(cat, style: const TextStyle(fontFamily: APP_FONT_FAMILY)),
-                        )).toList(),
+                        )),
                       ],
                       onChanged: (value) {
                         setDialogState(() {
@@ -782,11 +782,10 @@ class _CategoryProductRow extends StatelessWidget {
   final Widget Function(Product product) buildProductCard;
 
   const _CategoryProductRow({
-    Key? key,
     required this.categoryTitle,
     required this.products,
     required this.buildProductCard,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -854,10 +853,10 @@ class _MisProductosModalWidget extends StatelessWidget {
   final BuildContext parentContextForSnackbars;
 
   const _MisProductosModalWidget({
-    Key? key,
+    super.key,
     required this.userId,
     required this.parentContextForSnackbars,
-  }) : super(key: key);
+  });
 
   static Future<void> _deleteProductFromModal(
       BuildContext contextForDialogsAndSnackbars,
@@ -1119,10 +1118,10 @@ class _EditarProductoModalWidget extends StatefulWidget {
   final BuildContext parentContextForSnackbars;
 
   const _EditarProductoModalWidget({
-    Key? key,
+    super.key,
     required this.productToEdit,
     required this.parentContextForSnackbars,
-  }) : super(key: key);
+  });
 
   @override
   __EditarProductoModalWidgetState createState() => __EditarProductoModalWidgetState();
@@ -1136,7 +1135,7 @@ class __EditarProductoModalWidgetState extends State<_EditarProductoModalWidget>
   late TextEditingController _stockController;
   late TextEditingController _categoryController;
   List<ProductImage> _currentImagesInfo = [];
-  List<XFile> _newImageFiles = [];
+  final List<XFile> _newImageFiles = [];
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
 

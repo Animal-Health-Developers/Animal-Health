@@ -27,9 +27,9 @@ class GolpedeCalor extends StatefulWidget {
   final Animal? animalPreseleccionado;
 
   const GolpedeCalor({
-    Key? key,
+    super.key,
     this.animalPreseleccionado,
-  }) : super(key: key);
+  });
 
   @override
   _GolpedeCalorState createState() => _GolpedeCalorState();
@@ -141,8 +141,9 @@ class _GolpedeCalorState extends State<GolpedeCalor> {
     if (fixedWidth != null) {
       itemWidth = fixedWidth;
     } else {
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;

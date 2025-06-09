@@ -1,5 +1,5 @@
 // src/services/auth_service.dart
-import 'package:flutter/material.dart'; // Para ChangeNotifier
+// Para ChangeNotifier
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart'; // Importar GoogleSignIn
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -227,7 +227,7 @@ class AuthService extends ChangeNotifier {
       await user.sendEmailVerification();
       notifyListeners();
       return usuario;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException {
       if (_auth.currentUser != null) {
         await _auth.currentUser?.delete();
       }
@@ -263,7 +263,7 @@ class AuthService extends ChangeNotifier {
       });
       notifyListeners();
       return usermodel.User.fromJson(userDoc.data() as Map<String, dynamic>);
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException {
       rethrow;
     } catch (e) {
       throw FirebaseAuthException(code: 'login-error', message: 'Error durante el inicio de sesión: ${e.toString()}',);
@@ -330,7 +330,7 @@ class AuthService extends ChangeNotifier {
 
       final Map<String, dynamic> userJson = userData as Map<String, dynamic>;
 
-      DateTime? _parseDate(dynamic date) {
+      DateTime? parseDate(dynamic date) {
         if (date == null) return null;
         if (date is Timestamp) return date.toDate();
         if (date is DateTime) return date;
@@ -351,9 +351,9 @@ class AuthService extends ChangeNotifier {
         userName: userJson['userName'] as String? ?? user.displayName ?? 'Usuario sin nombre',
         password: userJson['password'] as String? ?? '',
         emailVerified: userJson['emailVerified'] as bool? ?? user.emailVerified,
-        createdAt: _parseDate(userJson['createdAt']) ?? DateTime.now(),
-        updatedAt: _parseDate(userJson['updatedAt']) ?? DateTime.now(),
-        fechaNacimiento: _parseDate(userJson['fechaNacimiento']),
+        createdAt: parseDate(userJson['createdAt']) ?? DateTime.now(),
+        updatedAt: parseDate(userJson['updatedAt']) ?? DateTime.now(),
+        fechaNacimiento: parseDate(userJson['fechaNacimiento']),
         documento: userJson['documento'] as String?,
         contacto: userJson['contacto'] as String?,
         profilePhotoUrl: userJson['profilePhotoUrl'] as String? ?? user.photoURL,

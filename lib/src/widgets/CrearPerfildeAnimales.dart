@@ -14,8 +14,8 @@ import '../services/auth_service.dart';
 
 class CrearPerfildeAnimal extends StatefulWidget {
   const CrearPerfildeAnimal({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _CrearPerfildeAnimalState createState() => _CrearPerfildeAnimalState();
@@ -349,7 +349,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                     SizedBox(height: 30),
 
                     // Nombre
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [
@@ -393,7 +393,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                     SizedBox(height: 20),
 
                     // Fecha de Nacimiento
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [
@@ -442,7 +442,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                     SizedBox(height: 20),
 
                     // Especie - MODIFICACIÓN AQUÍ
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [
@@ -499,7 +499,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                     SizedBox(height: 20),
 
                     // Raza
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [
@@ -543,7 +543,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                     SizedBox(height: 20),
 
                     // Peso
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [
@@ -591,7 +591,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                     SizedBox(height: 20),
 
                     // Largo
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [
@@ -639,7 +639,7 @@ class _CrearPerfildeAnimalState extends State<CrearPerfildeAnimal> {
                     SizedBox(height: 20),
 
                     // Ancho
-                    Container(
+                    SizedBox(
                       height: 60,
                       child: Stack(
                         children: [

@@ -146,7 +146,7 @@ class _AnimalHealthState extends State<AnimalHealth> {
             child: Column(
               children: [
                 // Campo Email
-                Container(
+                SizedBox(
                   height: 60,
                   child: Stack(
                     children: [
@@ -193,7 +193,7 @@ class _AnimalHealthState extends State<AnimalHealth> {
                 SizedBox(height: 20),
 
                 // Campo Contraseña
-                Container(
+                SizedBox(
                   height: 60,
                   child: Stack(
                     children: [
@@ -254,7 +254,7 @@ class _AnimalHealthState extends State<AnimalHealth> {
                 SizedBox(height: 20),
 
                 // Botón Iniciar Sesión
-                Container(
+                SizedBox(
                   width: 242,
                   height: 49,
                   child: _isLoading
@@ -306,7 +306,7 @@ class _AnimalHealthState extends State<AnimalHealth> {
                 SizedBox(height: 10),
 
                 // Botón Registrarse
-                Container(
+                SizedBox(
                   width: 242,
                   height: 49,
                   child: PageLink(

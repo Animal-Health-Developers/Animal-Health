@@ -38,7 +38,7 @@ class _GoogleMapsState extends State<GoogleMaps> {
   );
   LatLng? _currentPosition;
   bool _isLoadingLocation = true;
-  Set<Marker> _markers = {};
+  final Set<Marker> _markers = {};
 
   @override
   void initState() {
@@ -151,8 +151,9 @@ class _GoogleMapsState extends State<GoogleMaps> {
     if (fixedWidth != null) {
       itemWidth = fixedWidth;
     } else {
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;

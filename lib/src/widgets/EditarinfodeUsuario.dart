@@ -155,8 +155,7 @@ class _EditarinfodeUsuarioState extends State<EditarinfodeUsuario> {
               primary: const Color(0xff4ec8dd), // Color principal del calendario
               onPrimary: Colors.white, // Color del texto en el color principal
               onSurface: Colors.black, // Color del texto en la superficie
-            ),
-            dialogBackgroundColor: Colors.white,
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );

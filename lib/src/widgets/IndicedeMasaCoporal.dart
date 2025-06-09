@@ -2,7 +2,7 @@ import 'package:animal_health/src/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:adobe_xd/pinned.dart';
 import 'package:adobe_xd/page_link.dart';
-import 'dart:ui' as ui; // Para BackdropFilter
+// Para BackdropFilter
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -410,10 +410,9 @@ class _IndicedeMasaCoporalState extends State<IndicedeMasaCoporal> {
                             ]),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(22.5),
-                          child: (_animalData!.fotoPerfilUrl != null &&
-                              _animalData!.fotoPerfilUrl!.isNotEmpty)
+                          child: (_animalData!.fotoPerfilUrl.isNotEmpty)
                               ? CachedNetworkImage(
-                            imageUrl: _animalData!.fotoPerfilUrl!,
+                            imageUrl: _animalData!.fotoPerfilUrl,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => const Center(
                                 child: CircularProgressIndicator(

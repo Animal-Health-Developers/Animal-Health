@@ -280,8 +280,7 @@ class _EditarPerfildeAnimalState extends State<EditarPerfildeAnimal> {
               primary: Color(0xff4ec8dd), // Color del encabezado del calendario
               onPrimary: Colors.white, // Color del texto del encabezado
               onSurface: Colors.black, // Color del texto del día
-            ),
-            dialogBackgroundColor: Colors.white,
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );

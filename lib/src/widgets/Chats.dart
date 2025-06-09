@@ -11,7 +11,7 @@ import './Configuracion.dart';
 import './ListadeAnimales.dart';
 
 class Chats extends StatelessWidget {
-  Chats({
+  const Chats({
     required Key key,
   }) : super(key: key);
   @override

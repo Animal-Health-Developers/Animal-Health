@@ -15,7 +15,6 @@ import '../models/animal.dart'; // Asume que Animal está en lib/src/models/anim
 import './Home.dart';
 import './Ayuda.dart';
 import './Configuracion.dart';
-import './ListadeAnimales.dart';
 import '../services/auth_service.dart'; // Si Auth_Service es necesario aquí
 
 class CrearVisitaVeterinariaScreen extends StatefulWidget {
@@ -185,8 +184,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
               primary: Color(0xff4ec8dd),
               onPrimary: Colors.white,
               onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -213,8 +211,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
               primary: Color(0xff4ec8dd),
               onPrimary: Colors.white,
               onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -234,7 +231,7 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
   String _buildFullAddress() {
     String fullAddress = "";
     if (_selectedAddressType != null && _addressNumberController.text.isNotEmpty) {
-      fullAddress = "${_selectedAddressType} ${_addressNumberController.text}";
+      fullAddress = "$_selectedAddressType ${_addressNumberController.text}";
       if (_addressComplementController.text.isNotEmpty) {
         fullAddress += " - ${_addressComplementController.text}";
       }
@@ -315,9 +312,11 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
       developer.log("Error al guardar visita: $e");
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al crear visita: $e')));
     } finally {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _isSaving = false;
       });
+      }
     }
   }
 
@@ -534,8 +533,8 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
               child: Tooltip( // Tooltip para la foto del animal
                 message: 'Ver perfil de ${_animalData!.nombre}',
                 child: GestureDetector(
-                  onTap: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
-                      ? () => _showLargeImage(_animalData!.fotoPerfilUrl!)
+                  onTap: (_animalData!.fotoPerfilUrl.isNotEmpty)
+                      ? () => _showLargeImage(_animalData!.fotoPerfilUrl)
                       : null,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -550,9 +549,9 @@ class _CrearVisitaVeterinariaScreenState extends State<CrearVisitaVeterinariaScr
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(22.5),
-                          child: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
+                          child: (_animalData!.fotoPerfilUrl.isNotEmpty)
                               ? CachedNetworkImage(
-                              imageUrl: _animalData!.fotoPerfilUrl!, fit: BoxFit.cover,
+                              imageUrl: _animalData!.fotoPerfilUrl, fit: BoxFit.cover,
                               placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                               errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]))
                               : const Icon(Icons.pets, size: 50, color: Colors.grey),

@@ -5,7 +5,6 @@ import 'package:adobe_xd/pinned.dart';
 import './Home.dart';
 import 'package:adobe_xd/page_link.dart';
 import './Ayuda.dart';
-import './EditarPerfildeAnimal.dart';
 import './FuncionesdelaApp.dart';
 import './Configuracion.dart';
 import './ListadeAnimales.dart';
@@ -405,7 +404,7 @@ class _VisitasalVeterinarioState extends State<VisitasalVeterinario> {
       backgroundColor: Colors.transparent, // Permite que el ClipRRect del modal tenga un fondo transparente
       builder: (BuildContext modalContext) {
         return _EditarVisitaVeterinariaModalWidget(
-          key: Key('edit_visit_modal_${visitId}'),
+          key: Key('edit_visit_modal_$visitId'),
           animalId: widget.animalId,
           visitId: visitId,
           visitData: visitData,
@@ -698,7 +697,7 @@ class _VisitasalVeterinarioState extends State<VisitasalVeterinario> {
       );
     }
 
-    final String currentUserId = currentUser!.uid;
+    final String currentUserId = currentUser.uid;
 
     return Scaffold(
       backgroundColor: APP_BACKGROUND_COLOR,
@@ -822,7 +821,7 @@ class _VisitasalVeterinarioState extends State<VisitasalVeterinario> {
             top: animalProfilePhotoTop,
             left: 0,
             right: 0,
-            child: currentUser != null && widget.animalId.isNotEmpty
+            child: widget.animalId.isNotEmpty
                 ? StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('users')
@@ -862,8 +861,8 @@ class _VisitasalVeterinarioState extends State<VisitasalVeterinario> {
                   child: Tooltip( // Tooltip añadido para la foto de perfil
                     message: 'Ver perfil de ${animalData.nombre}',
                     child: GestureDetector(
-                      onTap: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
-                          ? () => _showLargeImage(animalData.fotoPerfilUrl!)
+                      onTap: (animalData.fotoPerfilUrl.isNotEmpty)
+                          ? () => _showLargeImage(animalData.fotoPerfilUrl)
                           : null,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -878,9 +877,9 @@ class _VisitasalVeterinarioState extends State<VisitasalVeterinario> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22.5),
-                              child: (animalData.fotoPerfilUrl != null && animalData.fotoPerfilUrl!.isNotEmpty)
+                              child: (animalData.fotoPerfilUrl.isNotEmpty)
                                   ? CachedNetworkImage(
-                                imageUrl: animalData.fotoPerfilUrl!, fit: BoxFit.cover,
+                                imageUrl: animalData.fotoPerfilUrl, fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                                 errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
                               )
@@ -910,6 +909,7 @@ class _VisitasalVeterinarioState extends State<VisitasalVeterinario> {
             )
                 : Center(
                 child: Tooltip(
+                    // ignore: unnecessary_null_comparison
                     message: currentUser == null ? "Usuario no autenticado" : "ID de animal no válido",
                     child: CircleAvatar(radius: 45, backgroundColor: Colors.grey[200], child: const Icon(Icons.error_outline, size: 50, color: Colors.grey))
                 )
@@ -1272,8 +1272,7 @@ class __EditarVisitaVeterinariaModalWidgetState extends State<_EditarVisitaVeter
               primary: APP_PRIMARY_COLOR,
               onPrimary: Colors.white,
               onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -1298,8 +1297,7 @@ class __EditarVisitaVeterinariaModalWidgetState extends State<_EditarVisitaVeter
               primary: APP_PRIMARY_COLOR,
               onPrimary: Colors.white,
               onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -1316,7 +1314,7 @@ class __EditarVisitaVeterinariaModalWidgetState extends State<_EditarVisitaVeter
   String _buildFullAddress() {
     String fullAddress = "";
     if (_selectedAddressType != null && _addressNumberController.text.isNotEmpty) {
-      fullAddress = "${_selectedAddressType} ${_addressNumberController.text}";
+      fullAddress = "$_selectedAddressType ${_addressNumberController.text}";
       if (_addressComplementController.text.isNotEmpty) {
         fullAddress += " - ${_addressComplementController.text}";
       }
@@ -1394,9 +1392,11 @@ class __EditarVisitaVeterinariaModalWidgetState extends State<_EditarVisitaVeter
       developer.log("Error al actualizar visita: $e");
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al actualizar visita: $e')));
     } finally {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _isSaving = false;
       });
+      }
     }
   }
 
@@ -1586,8 +1586,8 @@ class __EditarVisitaVeterinariaModalWidgetState extends State<_EditarVisitaVeter
                   child: Tooltip( // Tooltip para la foto del animal en el modal
                     message: 'Ver perfil de ${_animalData!.nombre}',
                     child: GestureDetector(
-                      onTap: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
-                          ? () => _showLargeImage(_animalData!.fotoPerfilUrl!)
+                      onTap: (_animalData!.fotoPerfilUrl.isNotEmpty)
+                          ? () => _showLargeImage(_animalData!.fotoPerfilUrl)
                           : null,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -1603,9 +1603,9 @@ class __EditarVisitaVeterinariaModalWidgetState extends State<_EditarVisitaVeter
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(22.5),
-                              child: (_animalData!.fotoPerfilUrl != null && _animalData!.fotoPerfilUrl!.isNotEmpty)
+                              child: (_animalData!.fotoPerfilUrl.isNotEmpty)
                                   ? CachedNetworkImage(
-                                imageUrl: _animalData!.fotoPerfilUrl!, fit: BoxFit.cover,
+                                imageUrl: _animalData!.fotoPerfilUrl, fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
                                 errorWidget: (context, url, error) => Icon(Icons.pets, size: 50, color: Colors.grey[600]),
                               )

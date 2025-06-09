@@ -484,8 +484,9 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
     if (fixedWidth != null) {
       itemWidth = fixedWidth;
     } else {
-      if (imagePath.contains('noticias')) itemWidth = 54.3;
-      else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
+      if (imagePath.contains('noticias')) {
+        itemWidth = 54.3;
+      } else if (imagePath.contains('cuidadosrecomendaciones')) itemWidth = 63.0;
       else if (imagePath.contains('emergencias')) itemWidth = 65.0;
       else if (imagePath.contains('comunidad')) itemWidth = 67.0;
       else if (imagePath.contains('crearpublicacion')) itemWidth = 53.6;
@@ -838,7 +839,7 @@ class _CrearpublicacionesState extends State<Crearpublicaciones> {
                             backgroundColor: const Color(0xff4ec8dd),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15.0),
-                              side: const BorderSide(width: 1.0, color: const Color(0xff000000)),
+                              side: const BorderSide(width: 1.0, color: Color(0xff000000)),
                             ),
                             elevation: 3,
                             shadowColor: const Color(0xff000000),
